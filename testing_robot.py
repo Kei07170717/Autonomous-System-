@@ -16,8 +16,7 @@ time.sleep(1)
 # Parameters: [J1, J2, J3, J4, J5, J6], speed (1-100)
 print("Moving to Home...")
 mc.send_angles([0, 0, 0, 0, 0, 0], 50)
-time.sleep(3) # Give it time to move
-
+time.sleep(3) # Give it time to mov
 # 4. Simple movement: Move Joint 2 to 40 degrees
 print("Moving Joint 2...")
 mc.send_angle(2, 40, 50)

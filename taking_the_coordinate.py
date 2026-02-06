@@ -42,10 +42,10 @@ while True:
     coordinate = mc.get_coords()
 
     print(angles, gripper_val)
-    
+
     data_buffer.append([timestamp] + angles + coordinate + [gripper_val])
 
-    time.sleep(0.1)
+    time.sleep(0.15)
 
 print("Button pressed, stopping recording")
 

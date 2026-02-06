@@ -1,5 +1,5 @@
 import time
-from pymycobot.mycobot import MyCobot280
+from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import csv
 
@@ -35,7 +35,7 @@ while True:
 
     if btn == 0:
         break
-    
+
     timestamp = time.time()
     angles = mc.get_angles()
 

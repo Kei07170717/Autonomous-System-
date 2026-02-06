@@ -42,9 +42,8 @@ while True:
     coordinate = mc.get_coords()
 
     print(angles, gripper_val)
-
-    if angles and len(angles) == 6:
-        data_buffer.append([timestamp] + angles + coordinate +[gripper_val])
+    
+    data_buffer.append([timestamp] + angles + coordinate + [gripper_val])
 
     time.sleep(0.1)
 

@@ -31,16 +31,16 @@ def loading_trajectory_coord(path):
     traj = []
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
-        for row in reader:
-            ts = float(row["timestamp"])
+        for i in range(0, len(reader), 5):
+            ts = float(reader[i]["timestamp"])
             coordinate = []
-            coordinate.append(float(row['x']))
-            coordinate.append(float(row['y']))
-            coordinate.append(float(row['z']))
-            coordinate.append(float(row['rx']))
-            coordinate.append(float(row['ry']))
-            coordinate.append(float(row['rz']))
-            gripper_pos = float(row['gripper'])
+            coordinate.append(float(reader[i]['x']))
+            coordinate.append(float(reader[i]['y']))
+            coordinate.append(float(reader[i]['z']))
+            coordinate.append(float(reader[i]['rx']))
+            coordinate.append(float(reader[i]['ry']))
+            coordinate.append(float(reader[i]['rz']))
+            gripper_pos = float(reader[i]['gripper'])
             traj.append((ts, coordinate, gripper_pos))
     if not traj:
         raise ValueError("CSV is probably empty")
@@ -58,7 +58,7 @@ def main():
     time.sleep(0.5)
     ts0, coordinate0, gripper0 = traj[0]
     print("Going to first recorded pose...")
-    mc.send_coords(coordinate0, speed, 0)
+    mc.send_coords(coordinate0, speed, 1)
     time.sleep(2)
     mc.set_gripper_value(int(gripper0), speed)
 
@@ -75,7 +75,7 @@ def main():
                 dt = fixed_dt
 
             # Command
-            mc.send_coords(coords, speed, 0) # mode = 0
+            mc.send_coords(coords, speed, 1) # mode = 0
             mc.set_gripper_value(int(g), speed)
 
             # Wait roughly the recorded interval

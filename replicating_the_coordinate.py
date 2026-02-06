@@ -21,9 +21,10 @@ def loading_trajectory_angles(path):
         for row in reader:
             ts = float(row["timestamp"])
             angles = []
+            gripper_value = float(row.get("gripper"))
             for i in range(1,7):
                 angles.append(float(row[f"j{i}"]))
-            traj.append((ts, angles))
+            traj.append((ts, angles, gripper_value))
     if not traj:
         raise ValueError("CSV is probably empty")
     return traj

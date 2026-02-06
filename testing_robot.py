@@ -34,4 +34,7 @@ mc.send_angles([0,0,0, 0,0,0],50)
 angles = mc.get_angles()
 print(f"Current Joint Angles: {angles}")
 
+mc.send_angles([0, 0, 0, 0, 0, 0], 50)
+time.sleep(3) # Give it time to move
+
 print("Test Complete.")

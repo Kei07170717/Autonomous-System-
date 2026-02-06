@@ -32,7 +32,7 @@ def loading_trajectory_coord(path):
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
-            if i % 5 != 0:
+            if i % 10 != 0:
                 continue
 
             ts = float(row["timestamp"])

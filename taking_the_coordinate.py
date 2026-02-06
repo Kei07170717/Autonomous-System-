@@ -1,9 +1,9 @@
 import time
-from pymycobot.mycobot import MyCobot
+from pymycobot.mycobot import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import csv
 
-mc = MyCobot(PI_PORT, PI_BAUD)
+mc = MyCobot280(PI_PORT, PI_BAUD)
 
 print("Starting")
 
@@ -16,10 +16,14 @@ print("Setting it to initial position")
 mc.send_angles([0, 0, 0, 0, 0, 0], 50)
 time.sleep(5)
 
-mc.release_all_servos()  # <-- FIXED
+mc.release_all_servos() 
 time.sleep(1)
 
-print("Recording... press head button to stop")
+Bin_pin = 39
+mc.set_pin_mode(Bin_pin, 2)
+time.sleep(1)
+
+print("Recording, press head button to stop")
 
 # Button not pressed = 1
 while mc.get_basic_input(39) == 1:

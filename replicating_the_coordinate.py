@@ -91,7 +91,7 @@ def main():
                 mc.set_gripper_value(int(g), speed)
 
                 # Wait roughly the recorded interval
-                # time.sleep(dt)
+                time.sleep(fixed_dt)
                 # prev_ts = ts
 
         except KeyboardInterrupt:

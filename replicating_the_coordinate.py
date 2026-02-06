@@ -7,7 +7,7 @@ csv_path = "demo_mycobot.csv"
 
 speed = 10
 use_time_stamps = True
-fixed_dt = 0.15
+fixed_dt = 0.1
 max_dt = 0.3
 min_dt = 0.04
 
@@ -115,6 +115,7 @@ def main():
             prev_ts = ts0
             for ts, angles, g in traj:
                 # 2. Timing Logic
+                """
                 if use_time_stamps:
                     dt = ts - prev_ts
                     if dt < 0:
@@ -122,12 +123,13 @@ def main():
                     dt = max(min_dt, min(max_dt, dt))
                 else:
                     dt = fixed_dt
+                """
 
                 mc.send_angles(angles, speed) 
                 mc.set_gripper_value(int(g), speed)
 
-                time.sleep(dt)
-                prev_ts = ts
+                # time.sleep(dt)
+                # prev_ts = ts
 
         except KeyboardInterrupt:
             print("\nPlayback stopped by user.")

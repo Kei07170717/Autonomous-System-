@@ -11,8 +11,10 @@ fixed_dt = 0.10
 max_dt = 0.30
 min_dt = 0.02
 
+trajectory_joint_angle = True
+trajectory_coords = False
 
-def loading_trajectory(path):
+def loading_trajectory_angles(path):
     traj = []
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
@@ -58,42 +60,77 @@ def loading_trajectory_coord(path):
 def main():
     mc = MyCobot280(PI_PORT, PI_BAUD)
 
-    traj = loading_trajectory_coord(csv_path)
-    print(f"Loaded {len(traj)} frames from {csv_path}")
+    if trajectory_coords == True:
+        traj = loading_trajectory_coord(csv_path)
+        print(f"Loaded {len(traj)} frames from {csv_path}")
 
-    mc.power_on()
-    time.sleep(0.5)
-    ts0, coordinate0, gripper0 = traj[0]
-    print("Going to first recorded pose...")
-    mc.send_coords(coordinate0, speed, 1)
-    time.sleep(2)
-    mc.set_gripper_value(int(gripper0), speed)
+        mc.power_on()
+        time.sleep(0.5)
+        ts0, coordinate0, gripper0 = traj[0]
+        print("Going to first recorded pose...")
+        mc.send_coords(coordinate0, speed, 1)
+        time.sleep(2)
+        mc.set_gripper_value(int(gripper0), speed)
 
-    try:
-        prev_ts = ts0
-        for ts, coords, g in traj:
-            # Timing
-            if use_time_stamps:
-                dt = ts - prev_ts
-                if dt < 0:
+        try:
+            prev_ts = ts0
+            for ts, coords, g in traj:
+                # Timing
+                if use_time_stamps:
+                    dt = ts - prev_ts
+                    if dt < 0:
+                        dt = fixed_dt
+                    dt = max(min_dt, min(max_dt, dt))
+                else:
                     dt = fixed_dt
-                dt = max(min_dt, min(max_dt, dt))
-            else:
-                dt = fixed_dt
 
-            # Command
-            mc.send_coords(coords, speed, 1) # mode = 0
-            mc.set_gripper_value(int(g), speed)
+                # Command
+                mc.send_coords(coords, speed, 1) # mode = 0
+                mc.set_gripper_value(int(g), speed)
 
-            # Wait roughly the recorded interval
-            time.sleep(dt)
-            prev_ts = ts
+                # Wait roughly the recorded interval
+                time.sleep(dt)
+                prev_ts = ts
 
-    except KeyboardInterrupt:
-        print("\nStopped by user (Ctrl+C).")
+        except KeyboardInterrupt:
+            print("\nStopped by user (Ctrl+C).")
 
+        print("Done")
+    if trajectory_joint_angle == True:
+        traj = loading_trajectory_angles(csv_path) 
+        print(f"Loaded {len(traj)} frames from {csv_path}")
 
-    print("Done")
+        mc.power_on()
+        time.sleep(0.5)
+    
+        ts0, angles0, gripper0 = traj[0]
+        print("Moving to initial joint configuration")
+        mc.send_angles(angles0, speed) 
+        time.sleep(3) 
+        mc.set_gripper_value(int(gripper0), speed)
+
+        try:
+            prev_ts = ts0
+            for ts, angles, g in traj:
+                # 2. Timing Logic
+                if use_time_stamps:
+                    dt = ts - prev_ts
+                    if dt < 0:
+                        dt = fixed_dt
+                    dt = max(min_dt, min(max_dt, dt))
+                else:
+                    dt = fixed_dt
+
+                mc.send_angles(angles, speed) 
+                mc.set_gripper_value(int(g), speed)
+
+                time.sleep(dt)
+                prev_ts = ts
+
+        except KeyboardInterrupt:
+            print("\nPlayback stopped by user.")
+
+        print("Done")
 
 
 if __name__ == "__main__":

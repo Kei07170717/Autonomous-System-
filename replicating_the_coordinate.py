@@ -5,7 +5,7 @@ import csv
 
 csv_path = "demo_mycobot.csv"
 
-speed = 60
+speed = 30
 use_time_stamps = True
 fixed_dt = 0.04
 max_dt = 0.04

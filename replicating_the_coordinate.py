@@ -31,16 +31,23 @@ def loading_trajectory_coord(path):
     traj = []
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
-        for i in range(0, len(reader), 5):
-            ts = float(reader[i]["timestamp"])
-            coordinate = []
-            coordinate.append(float(reader[i]['x']))
-            coordinate.append(float(reader[i]['y']))
-            coordinate.append(float(reader[i]['z']))
-            coordinate.append(float(reader[i]['rx']))
-            coordinate.append(float(reader[i]['ry']))
-            coordinate.append(float(reader[i]['rz']))
-            gripper_pos = float(reader[i]['gripper'])
+        for i, row in enumerate(reader):
+            if i % 5 != 0:
+                continue
+
+            ts = float(row["timestamp"])
+
+            coordinate = [
+                float(row['x']),
+                float(row['y']),
+                float(row['z']),
+                float(row['rx']),
+                float(row['ry']),
+                float(row['rz'])
+            ]
+
+            gripper_pos = float(row['gripper'])
+
             traj.append((ts, coordinate, gripper_pos))
     if not traj:
         raise ValueError("CSV is probably empty")

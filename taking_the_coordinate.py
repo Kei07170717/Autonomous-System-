@@ -38,10 +38,13 @@ while True:
 
     timestamp = time.time()
     angles = mc.get_angles()
-    print(angles)
+    gripper_val = mc.get_gripper_value()
+    coordinate = mc.get_coords()
+
+    print(angles, gripper_val)
 
     if angles and len(angles) == 6:
-        data_buffer.append([timestamp] + angles)
+        data_buffer.append([timestamp] + angles + coordinate +[gripper_val])
 
     time.sleep(0.1)
 
@@ -54,7 +57,7 @@ mc.send_angles([0, 0, 0, 0, 0, 0], 50)
 filename = "demo_mycobot.csv"
 with open(filename, 'w', newline='') as f:
     writer = csv.writer(f)
-    writer.writerow(['timestamp', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6'])
+    writer.writerow(['timestamp', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'gripper'])
     writer.writerows(data_buffer)
 
 print(f"Data saved to {filename}")

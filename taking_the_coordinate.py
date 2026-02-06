@@ -46,7 +46,7 @@ while True:
     if angles and len(angles) == 6:
         data_buffer.append([timestamp] + angles + coordinate +[gripper_val])
 
-    time.sleep(0.04)
+    time.sleep(0.1)
 
 print("Button pressed, stopping recording")
 

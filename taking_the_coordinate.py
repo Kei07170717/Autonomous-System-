@@ -28,7 +28,7 @@ print("Recording, press head button to stop")
 # Button not pressed = 1
 while True:
     try:
-        btn = mc.get_basic_input(Bin_pin)
+        btn = mc.get_digital_input(Bin_pin)
     except Exception:
         time.sleep(0.05)
         continue
@@ -38,6 +38,7 @@ while True:
 
     timestamp = time.time()
     angles = mc.get_angles()
+    print(angles)
 
     if angles and len(angles) == 6:
         data_buffer.append([timestamp] + angles)

@@ -77,6 +77,7 @@ def main():
             prev_ts = ts0
             for ts, coords, g in traj:
                 # Timing
+                """
                 if use_time_stamps:
                     dt = ts - prev_ts
                     if dt < 0:
@@ -84,14 +85,14 @@ def main():
                     dt = max(min_dt, min(max_dt, dt))
                 else:
                     dt = fixed_dt
-
+                """
                 # Command
                 mc.send_coords(coords, speed, 1) # mode = 0
                 mc.set_gripper_value(int(g), speed)
 
                 # Wait roughly the recorded interval
-                time.sleep(dt)
-                prev_ts = ts
+                # time.sleep(dt)
+                # prev_ts = ts
 
         except KeyboardInterrupt:
             print("\nStopped by user (Ctrl+C).")

@@ -5,11 +5,11 @@ import csv
 
 csv_path = "demo_mycobot.csv"
 
-speed = 60
+speed = 40
 use_time_stamps = True
 fixed_dt = 0.1
-max_dt = 0.1
-min_dt = 0.1
+max_dt = 0.30
+min_dt = 0.04
 
 trajectory_joint_angle = True
 trajectory_coords = False

@@ -148,16 +148,16 @@ def main():
                     mc.send_angles(angles, speed)
                     
                     
-                    if gripper_binary != last_gripper_val:
-                        if gripper_steps_counter >= gripper_interval:
-                            time.sleep(0.02) 
-                            mc.set_gripper_value(int(gripper_binary), speed)
-                            time.sleep(0.02)  
+                    # if gripper_binary != last_gripper_val:
+                    #     if gripper_steps_counter >= gripper_interval:
+                    #         time.sleep(0.02) 
+                    #         mc.set_gripper_value(int(gripper_binary), speed)
+                    #         time.sleep(0.02)  
                             
-                            last_gripper_val = gripper_binary
-                            gripper_steps_counter = 0 
+                    #         last_gripper_val = gripper_binary
+                    #         gripper_steps_counter = 0 
                     
-                    gripper_steps_counter += 1
+                    # gripper_steps_counter += 1
                     
                     wait = next_step_time - time.time()
                     if wait > 0:

@@ -1,99 +1,100 @@
 import numpy as np
-from scipy.signal import savgol_filter
 import csv
 
-window_size = 11
-poly_order = 4
-
-filename = input("Please select the filename to write to:")
-
-timestamp = []
-j1 = []
-j2 = []
-j3 = []
-j4 = []
-j5 = []
-j6 = []
-
-x = []
-y = []
-z = []
-rx = []
-ry = []
-rz = []
-gripper_val = []
-
-trajectory_joint_angle = True
-trajectory_coords = False
-
-def smooth_angle_array(angle_list, window, poly):
-        rads = np.deg2rad(angle_list)
-        unwrapped = np.unwrap(rads)
-        smoothed = savgol_filter(unwrapped, window, poly)
-        degs = np.rad2deg(smoothed)
-        return (degs + 180) % 360 - 180 #back to -180, 180 range
-
-if trajectory_coords == True:
-    with open('demo_mycobot.csv', 'r') as csv_file:
-        reader = csv.DictReader(csv_file)
-
-        for row in reader:
-            timestamp.append(row['timestamp'])
-            x.append(float(row['x']))
-            y.append(float(row['y']))
-            z.append(float(row['z']))
-            rx.append(float(row['rx']))
-            ry.append(float(row['ry']))
-            rz.append(float(row['rz']))
-            gripper_val.append((row['gripper']))
-
-        csv_file.close()
-
-
-    x_smoothener = savgol_filter(x, window_size, poly_order)
-    y_smoothener = savgol_filter(y, window_size, poly_order)
-    z_smoothener = savgol_filter(z, window_size, poly_order)
-    rx_smoothener = smooth_angle_array(rx, window_size, poly_order)
-    ry_smoothener = smooth_angle_array(ry, window_size, poly_order)
-    rz_smoothener = smooth_angle_array(rz, window_size, poly_order)
-
-    clean_data = zip(timestamp, x_smoothener, y_smoothener, z_smoothener, rx_smoothener, ry_smoothener, rz_smoothener, gripper_val)
-    header = ['timestamp', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'gripper']
-
-    with open(filename, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(clean_data)
-
-if trajectory_joint_angle == True:
-    with open('demo_mycobot.csv', 'r') as csv_file:
-        reader = csv.DictReader(csv_file)
-
-        for row in reader:
-            timestamp.append(row['timestamp'])
-            j1.append(float(row['j1']))
-            j2.append(float(row['j2']))
-            j3.append(float(row['j3']))
-            j4.append(float(row['j4']))
-            j5.append(float(row['j5']))
-            j6.append(float(row['j6']))
-            gripper_val.append((row['gripper']))
-
-        csv_file.close()
-
+def fill_timestamp_gaps(input_csv, output_csv, expected_freq=10, threshold_multiplier=3):
+    """
+    Fills large timestamp gaps with interpolated waypoints.
     
-    j1_smoothener = savgol_filter(j1, window_size, poly_order)
-    j2_smoothener = savgol_filter(j2, window_size, poly_order)
-    j3_smoothener = savgol_filter(j3, window_size, poly_order)
-    j4_smoothener = savgol_filter(j4, window_size, poly_order)
-    j5_smoothener = savgol_filter(j5, window_size, poly_order)
-    j6_smoothener = savgol_filter(j6, window_size, poly_order)
-
-    clean_data = zip(timestamp, j1, j2, j3, j4, j5, j6, gripper_val)
-    header = ['timestamp', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'gripper']
-
-    with open(filename, 'w', newline='') as f:
+    Args:
+        input_csv: Input CSV file path
+        output_csv: Output CSV file path
+        expected_freq: Expected recording frequency in Hz (default 10)
+        threshold_multiplier: Gaps larger than this * expected_dt get filled
+    """
+    
+    expected_dt = 1.0 / expected_freq
+    threshold = expected_dt * threshold_multiplier
+    
+    print(f"Expected interval: {expected_dt:.3f}s")
+    print(f"Gap threshold: {threshold:.3f}s")
+    print(f"Filling gaps larger than {threshold:.3f}s with interpolated points\n")
+    
+    # Load all data
+    data = []
+    with open(input_csv, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            data.append({
+                'timestamp': float(row['timestamp']),
+                'j1': float(row['j1']),
+                'j2': float(row['j2']),
+                'j3': float(row['j3']),
+                'j4': float(row['j4']),
+                'j5': float(row['j5']),
+                'j6': float(row['j6']),
+                'x': float(row['x']),
+                'y': float(row['y']),
+                'z': float(row['z']),
+                'rx': float(row['rx']),
+                'ry': float(row['ry']),
+                'rz': float(row['rz']),
+                'gripper': float(row['gripper'])
+            })
+    
+    # Fill gaps
+    filled_data = []
+    for i in range(len(data)):
+        filled_data.append(data[i])
+        
+        if i < len(data) - 1:
+            current = data[i]
+            next_point = data[i + 1]
+            dt = next_point['timestamp'] - current['timestamp']
+            
+            if dt > threshold:
+                # Calculate how many interpolation points needed
+                num_fills = int(dt / expected_dt) - 1
+                
+                print(f"⚠️  Gap detected: {dt:.4f}s between points {i+1} and {i+2}")
+                print(f"   Inserting {num_fills} interpolated points")
+                
+                # Linear interpolation for each field
+                for fill_idx in range(1, num_fills + 1):
+                    alpha = fill_idx / (num_fills + 1)  # 0 to 1
+                    
+                    interpolated = {}
+                    for key in current.keys():
+                        if key == 'gripper':
+                            # Keep gripper from previous (step-wise)
+                            interpolated[key] = current[key]
+                        else:
+                            # Linear interpolation
+                            interpolated[key] = current[key] + alpha * (next_point[key] - current[key])
+                    
+                    filled_data.append(interpolated)
+    
+    # Write output
+    with open(output_csv, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(clean_data)
+        writer.writerow(['timestamp', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6', 
+                        'x', 'y', 'z', 'rx', 'ry', 'rz', 'gripper'])
+        
+        for row in filled_data:
+            writer.writerow([
+                row['timestamp'], row['j1'], row['j2'], row['j3'], 
+                row['j4'], row['j5'], row['j6'], row['x'], row['y'], 
+                row['z'], row['rx'], row['ry'], row['rz'], row['gripper']
+            ])
+    
+    print(f"\n✓ Original points: {len(data)}")
+    print(f"✓ Filled points: {len(filled_data)}")
+    print(f"✓ Added {len(filled_data) - len(data)} interpolated waypoints")
+    print(f"✓ Saved to: {output_csv}")
 
+
+if __name__ == "__main__":
+    input_file = input("Enter input CSV filename: ")
+    output_file = input("Enter output CSV filename: ")
+    freq = float(input("Enter expected frequency (Hz, default 10): ") or "10")
+    
+    fill_timestamp_gaps(input_file, output_file, expected_freq=freq)

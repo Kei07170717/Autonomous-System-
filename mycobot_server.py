@@ -1,5 +1,4 @@
 import socket
-import serial
 import time
 import threading
 import json 

@@ -5,6 +5,11 @@ import csv
 
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
+freq = int(input("Please type frequency:"))
+T = 1/freq
+
+filename = input("Please select the filename to save to:")
+
 print("Starting")
 
 data_buffer = []
@@ -45,7 +50,7 @@ while True:
 
     data_buffer.append([timestamp] + angles + coordinate + [gripper_val])
 
-    time.sleep(0.1)
+    time.sleep(T)
 
 print("Button pressed, stopping recording")
 
@@ -53,7 +58,7 @@ mc.power_on()
 time.sleep(1)
 mc.send_angles([0, 0, 0, 0, 0, 0], 50)
 
-filename = "demo_mycobot.csv"
+
 with open(filename, 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(['timestamp', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'x', 'y', 'z', 'rx', 'ry', 'rz', 'gripper'])

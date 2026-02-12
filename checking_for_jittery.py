@@ -52,9 +52,9 @@ def main():
     #initial position
     mc.send_angles([0,0,0,0,0,0], speed)
     time.sleep(2)
-    mc.set_gripper_value(0, speed) #speed = 30
+    mc.set_gripper_value(0, 100) #speed = 30
     last_g_val = 0
-    
+
     start_time = time.time()
 
     try:
@@ -73,7 +73,7 @@ def main():
             # Execute Gripper ONLY on state change (The Jitter Fix)
             if current_g_val != last_g_val:
                 time.sleep(0.02) # Serial Breather
-                mc.set_gripper_value(current_g_val, speed)
+                mc.set_gripper_value(current_g_val, 100)
                 last_g_val = current_g_val
                 time.sleep(0.02) # Post-gripper Breather
 
@@ -86,7 +86,8 @@ def main():
         print("\nStopping...")
     finally:
         mc.stop()
-        mc.release_all_servos()
+        # mc.release_all_servos()
+        mc.send_angles([0,0,0,0,0,0], speed)
         print("Done.")
 
 if __name__ == "__main__":

@@ -105,31 +105,31 @@ def main():
             print(f"Connected by {addr}")
 
             while client:
-                while True:
-                    try:
-                        length_bytes = client.recv(4) #4byte length header
-                        if not length_bytes:
-                            break
-
-                        msg_len = int.from_bytes(length_bytes, byteorder='big')
-                        data_bytes = client.recv(msg_len)
-                        
-                        if not data_bytes: 
-                            break
-
-                        request = json.loads(data_bytes.decode('utf-8'))
-                        
-                        
-                        if 'action_chunk' in request: #chunking action 
-                            mycobot280.add_chunk(request['action_chunk'])
-                            
-                        
-                        response = { "joint_angles": mycobot280.get_state(), "buffer_size": mycobot280.queue.qsize()}
-                        
-                        resp_json = json.dumps(response).encode('utf-8')
-                        client.sendall(len(resp_json).to_bytes(4, byteorder='big') + resp_json)
-                    except Exception: 
+                try:
+                    length_bytes = client.recv(4) #4byte length header
+                    if not length_bytes:
                         break
+
+                    msg_len = int.from_bytes(length_bytes, byteorder='big')
+                    data_bytes = client.recv(msg_len)
+                    
+                    if not data_bytes: 
+                        break
+
+                    request = json.loads(data_bytes.decode('utf-8'))
+                    
+                    
+                    if 'action_chunk' in request: #chunking action 
+                        mycobot280.add_chunk(request['action_chunk'])
+                        
+                    
+                    response = { "joint_angles": mycobot280.get_state(), "buffer_size": mycobot280.queue.qsize()}
+                    
+                    resp_json = json.dumps(response).encode('utf-8')
+                    client.sendall(len(resp_json).to_bytes(4, byteorder='big') + resp_json)
+                except Exception: 
+                    break
+                
     except KeyboardInterrupt:
         print("\n Stopping the robot")
     finally:

@@ -88,6 +88,7 @@ def main():
                 """
                 # Command
                 mc.send_coords(coords, speed, 1) # mode = 0
+                time.sleep(0.01)
                 mc.set_gripper_value(int(g), speed)
 
                 # Wait roughly the recorded interval
@@ -125,7 +126,8 @@ def main():
                     dt = fixed_dt
                 """
 
-                mc.send_angles(angles, speed) 
+                mc.send_angles(angles, speed)
+                time.sleep(0.01) 
                 mc.set_gripper_value(int(g), speed)
 
                 # time.sleep(dt)

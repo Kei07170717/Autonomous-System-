@@ -146,6 +146,7 @@ def main():
                     
                     # Send joint angles
                     mc.send_angles(angles, speed)
+                    time.sleep(0.01)
                     
                     
                     if gripper_binary != last_gripper_val:

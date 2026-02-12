@@ -50,6 +50,7 @@ class RobotController:
                     arm_val = action_chunks[0] #arm value
                     gripper_val_binary = action_chunks[1]
 
+                    print(f"Robot: Executing arm={[round(a,2) for a in arm_val]}, gripper={gripper_val_binary}, queue_size={self.queue.qsize()}")
                     self.mc.send_angles(arm_val, 100)
 
                     if gripper_val_binary != self.last_gripper_val:
@@ -110,9 +111,16 @@ def main():
                         break
 
                     msg_len = int.from_bytes(length_bytes, byteorder='big')
-                    data_bytes = client.recv(msg_len)
                     
-                    if not data_bytes: 
+                    # Receive full message (handle partial reads)
+                    data_bytes = b''
+                    while len(data_bytes) < msg_len:
+                        packet = client.recv(msg_len - len(data_bytes))
+                        if not packet:
+                            break
+                        data_bytes += packet
+                    
+                    if not data_bytes or len(data_bytes) < msg_len: 
                         break
 
                     request = json.loads(data_bytes.decode('utf-8'))
@@ -126,7 +134,8 @@ def main():
                     
                     resp_json = json.dumps(response).encode('utf-8')
                     client.sendall(len(resp_json).to_bytes(4, byteorder='big') + resp_json)
-                except Exception: 
+                except Exception as e: 
+                    print(f"Server Error: {e}")
                     break
 
     except KeyboardInterrupt:

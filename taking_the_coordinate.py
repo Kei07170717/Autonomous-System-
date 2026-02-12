@@ -5,10 +5,10 @@ import csv
 
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
-freq = int(input("Please type frequency:"))
+freq = int(input("Please type frequency: "))
 T = 1/freq
 
-filename = input("Please select the filename to save to:")
+filename = input("Please select the filename to save to: ")
 
 print("Starting")
 

@@ -26,7 +26,7 @@ class RobotController:
         time.sleep(2)
 
         
-        self.queue = Queue(maxsize = 25) #max size of the buffer 
+        self.queue = Queue(maxsize = 100) #max size of the buffer 
         self.running = True
         self.current_angles = [0,0,0,0,0,0]
 
@@ -129,7 +129,7 @@ def main():
                     client.sendall(len(resp_json).to_bytes(4, byteorder='big') + resp_json)
                 except Exception: 
                     break
-                
+
     except KeyboardInterrupt:
         print("\n Stopping the robot")
     finally:

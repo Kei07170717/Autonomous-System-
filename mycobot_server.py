@@ -26,7 +26,7 @@ class RobotController:
         time.sleep(2)
 
         
-        self.queue = Queue(maxsize = 20) #max size of the buffer 
+        self.queue = Queue(maxsize = 25) #max size of the buffer 
         self.running = True
         self.current_angles = [0,0,0,0,0,0]
 

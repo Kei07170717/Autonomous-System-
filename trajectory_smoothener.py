@@ -5,7 +5,7 @@ import csv
 window_size = 11
 poly_order = 4
 
-filename = 'Savitzky_Golay_denoised.csv'
+filename = input("Please select the filename to write to:")
 
 timestamp = []
 j1 = []

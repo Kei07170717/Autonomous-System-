@@ -3,11 +3,14 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import csv
 
-csv_path = "demo_mycobot.csv"
+csv_path = input("Please select the csv file to use:")
 
-speed = 40
+
+speed = int(input("Please choose the speed:"))
 use_time_stamps = True
-fixed_dt = 0.1
+freq = float(input("Please type frequency:"))
+T = 1/freq
+fixed_dt = T
 max_dt = 0.30
 min_dt = 0.04
 

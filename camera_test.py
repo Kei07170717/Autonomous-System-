@@ -1,32 +1,35 @@
 import cv2
+import time
+import os
 
-camera_num = int(input("Enter camera number: "))
-filename = input("Enter filename to save (e.g., photo.jpg): ")
+def snap(cam_index: int, out_path: str, warmup_frames: int = 10):
+    cap = cv2.VideoCapture(cam_index)
+    if not cap.isOpened():
+        raise RuntimeError(f"Could not open camera index {cam_index} (/dev/video{cam_index}).")
 
-cap = cv2.VideoCapture(camera_num)
+    # Optional: set a reasonable capture size (USB cams usually handle this well)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-if not cap.isOpened():
-    print(f"Error: Could not open camera {camera_num}")
-    exit()
+    # Warm up exposure/auto-focus
+    for _ in range(warmup_frames):
+        cap.read()
+        time.sleep(0.03)
 
-print("Press SPACE to take photo, ESC to cancel")
-
-while True:
     ret, frame = cap.read()
-    if not ret:
-        print("Error: Could not read frame")
-        break
-    
-    cv2.imshow(f"Camera {camera_num}", frame)
-    
-    key = cv2.waitKey(1)
-    if key == 32:  # SPACE
-        cv2.imwrite(filename, frame)
-        print(f"Photo saved to {filename}")
-        break
-    elif key == 27:  # ESC
-        print("Cancelled")
-        break
+    cap.release()
 
-cap.release()
-cv2.destroyAllWindows()
+    if not ret or frame is None:
+        raise RuntimeError("Failed to capture frame.")
+
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    ok = cv2.imwrite(out_path, frame)
+    if not ok:
+        raise RuntimeError(f"Failed to write image to {out_path}")
+
+    print(f"Saved: {out_path}  shape={frame.shape}")
+
+if __name__ == "__main__":
+    cam = int(input("Enter camera number (e.g., 0 or 2): ").strip())
+    fn = input("Enter filename to save (e.g., photo.jpg): ").strip()
+    snap(cam, fn)

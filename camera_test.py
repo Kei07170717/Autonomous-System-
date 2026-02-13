@@ -1,17 +1,32 @@
 import cv2
 
-cap0 = cv2.VideoCapture(0)
-cap2 = cv2.VideoCapture(2)
+camera_num = int(input("Enter camera number: "))
+filename = input("Enter filename to save (e.g., photo.jpg): ")
+
+cap = cv2.VideoCapture(camera_num)
+
+if not cap.isOpened():
+    print(f"Error: Could not open camera {camera_num}")
+    exit()
+
+print("Press SPACE to take photo, ESC to cancel")
 
 while True:
-    _, f0 = cap0.read()
-    _, f2 = cap2.read()
-
-    cv2.imshow("cam0", f0)
-    cv2.imshow("cam2", f2)
-
-    if cv2.waitKey(1)==27:
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Could not read frame")
+        break
+    
+    cv2.imshow(f"Camera {camera_num}", frame)
+    
+    key = cv2.waitKey(1)
+    if key == 32:  # SPACE
+        cv2.imwrite(filename, frame)
+        print(f"Photo saved to {filename}")
+        break
+    elif key == 27:  # ESC
+        print("Cancelled")
         break
 
-    
-
+cap.release()
+cv2.destroyAllWindows()

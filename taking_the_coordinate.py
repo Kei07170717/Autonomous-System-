@@ -41,7 +41,7 @@ while True:
     if btn == 0:
         break
 
-    timestamp = time.time()
+    timestamp = time.monotonic()
     angles = mc.get_angles()
     gripper_val = mc.get_gripper_value()
     coordinate = mc.get_coords()

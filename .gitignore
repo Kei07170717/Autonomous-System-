@@ -1,0 +1,6 @@
+.vscode
+
+# Draw io
+**/*.dtmp
+**/*.$*.bkp
+

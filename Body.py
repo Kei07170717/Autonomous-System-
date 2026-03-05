@@ -15,7 +15,15 @@ class Body(ABC):
     @abstractmethod
     def affect_world(self, action: Action) -> None:
         #Apply action to the world
-        raise NotImplementedError
+        pass
+
+class RobotStateProvider(ABC):
+    @abstractmethod
+    def get_joint_angles(self) -> list[float]:
+        pass
+    @abstractmethod
+    def get_gripper_value(self) -> int:
+        pass
 
 class MyCobot280PiPhysicalBody(Body):
     def __init__(

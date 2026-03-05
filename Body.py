@@ -1,0 +1,48 @@
+import time 
+import numpy as np
+from pymycobot.mycobot280 import MyCobot280
+from pymycobot import PI_PORT, PI_BAUD
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional, Sequence #maybe sequence
+
+@dataclass(frozen=True) #dataclass instances remain immutable
+class Action:
+    arm: list[float]
+    gripper: Optional[int] = None
+
+class Body(ABC):
+    @abstractmethod
+    def affect_world(self, action: Action) -> None:
+        #Apply action to the world
+        raise NotImplementedError
+
+class MyCobot280PiPhysicalBody(Body):
+    def __init__(
+            self, 
+            PI_PORT, 
+            PI_BAUD,
+            speed_arm = 100, #speed of the robot arm 
+            speed_gripper = 100, #speed of the gripper
+            ):
+        
+        self.mc = MyCobot280(PI_PORT, PI_BAUD)
+        self.speed_arm = speed_arm
+        self.speed_gripper = speed_gripper
+        super().__init__()
+
+    def set_gripper(self, gripper_pos: int) -> None:
+        self.mc.set_gripper_value(int(gripper_pos), self.speed_gripper)
+
+    def set_arm(self, arm_pos: list[float]) -> None: #actually this might cause issue, needs to be list[float]
+        self.mc.send_angles(arm_pos, self.speed_gripper)
+
+    def affect_world(self, action: Action):
+        self.set_arm(action.arm)
+
+        if action.gripper is not None:
+            self.set_gripper(action.gripper)
+
+class MyCobot280PiVirtualBody(Body):
+    pass
+

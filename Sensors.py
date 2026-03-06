@@ -18,12 +18,6 @@ class Camera(Sensor):
     def __init__(
             self):
         pass
-        
-    def record_video(self):
-        pass
-
-    def take_photo(self):
-        pass
 
     def get_data(self):
         pass

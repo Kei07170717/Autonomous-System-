@@ -6,24 +6,39 @@ from pymycobot import PI_PORT, PI_BAUD
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Sequence 
-from Body import RobotStateProvider
+from body import RobotStateProvider
 
 
-class Sensor(ABC):
+class Sensor(ABC): 
+    '''
+    Sensor based class
+    '''
+    def __init__(self, id: str):
+        self.id: str = id
+
+    def get_id(self):
+        return self.id
+
     @abstractmethod
     def get_data(self) -> any: 
         pass
 
 class Camera(Sensor):
     def __init__(
-            self):
-        pass
-
+            self,
+            id: str):
+        super().__init__(self, id = id)
+        
     def get_data(self):
         pass
 
 class Proprioceptive(Sensor):
-    def __init__(self, state: RobotStateProvider):
+    def __init__(
+            self, 
+            id: str, 
+            state: RobotStateProvider):
+        
+        super().__init__(self, id=id)
         self.state = state
 
     def get_data(self):

@@ -1,0 +1,6 @@
+#create a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+#pip install
+pip install dm_env

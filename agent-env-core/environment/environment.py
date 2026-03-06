@@ -22,8 +22,11 @@ class Observer:
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: Observer):
-        pass
+    def __init__(
+            self, 
+            observer: Observer):
+        
+        self.observer : Observer = observer
 
 
     def reset(self) -> TimeStep:

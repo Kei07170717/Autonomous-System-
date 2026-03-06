@@ -39,7 +39,7 @@ class Proprioceptive(Sensor):
         }
 
 """
-when definition proprioceptive,
+when defining proprioceptive,
 body = MyCobot280PiPhysicalBody(...)
 proprio = Proprioceptive(state = body)
 """

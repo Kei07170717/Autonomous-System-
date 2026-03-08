@@ -4,6 +4,13 @@ from abc import ABC, abstractmethod
 """Contains the core interfaces that the application depends on."""
 
 
+class ISensor(ABC):
+    """Interface for all sensors"""
+    @abstractmethod
+    def get_data(self) -> any:
+        pass
+
+
 class IBody(ABC):
     """Capable of affecting the world."""
     @abstractmethod
@@ -12,10 +19,24 @@ class IBody(ABC):
         pass
 
 
-class ISensor(ABC):
-    """Interface for all sensors"""
+class IArmActuator(ABC):
     @abstractmethod
-    def get_data(self) -> any:
+    def set_joint_angles(self, arm_pos: list[float]):
+        pass
+
+
+class IArmSensor(ABC, ISensor):
+    @abstractmethod
+    def get_joint_angles(self) -> list[float]:
+        pass
+
+
+class IGripperActuator(ABC):
+    @abstractmethod
+    def set_gripper_closed(self) -> None:
+        pass
+
+    def set_gripper_open(self) -> None:
         pass
 
 

@@ -2,23 +2,9 @@ import dm_env
 from dm_env import specs, _environment, TimeStep
 import numpy as np
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from body import Body
-from sensors import Sensor
+from core.interfaces import IBody
 
-class Observer:
-    def __init__(
-            self, 
-            sensors: list[Sensor]
-            ):
-    
-        self.sensors: list[Sensor] = sensors
- 
-    def get_observation(self):
-        sensor_states = dict(map(lambda sensor: (sensor.get_id(), sensor.get_data()), self.sensors))
-        return {
-            "Sensor_states": sensor_states,
-        }
 
 
 class Environment(dm_env.Environment):

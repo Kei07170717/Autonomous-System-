@@ -1,14 +1,5 @@
-
-from abc import ABC, abstractmethod
 from environment import Action
-
-class Agent(ABC):
-
-
-    @abstractmethod
-    def get_action(obs: dict) -> Action:
-        pass
-
+from core.interfaces import Agent
 
 
 class KinestheticAgent(Agent):

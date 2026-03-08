@@ -1,10 +1,10 @@
 import dm_env 
-from dm_env import specs, _environment
+from dm_env import specs, _environment, TimeStep
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from body import Body
-from sensors.sensors import Sensor
+from sensors import Sensor
 
 class Observer:
     def __init__(

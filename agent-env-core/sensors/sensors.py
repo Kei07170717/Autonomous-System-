@@ -5,32 +5,17 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Sequence 
+from typing import Optional, Sequence
 import torch
+from core.interfaces import ISensor
 # from body import RobotStateProvider
 
 
-class Sensor(ABC): 
-    '''
-    Sensor based class
-    '''
-    def __init__(self, id: str):
-        self.id: str = id
-
-    def get_id(self):
-        return self.id
-
-    @abstractmethod
-    def get_data(self) -> any: 
-        pass
-
-
-class Camera(Sensor):
+class Camera(ISensor):
     def __init__(self, id: str, path: str):
-        super().__init__(self, id = id)
         self.path = path
         self.capture = cv.VideoCapture(id)
-     
+
     def get_tensorized_frame(self):
         """This function will process the frame and turn it into a tensor"""
         does_frame_exist, frame = self.capture.read()
@@ -50,7 +35,7 @@ class Camera(Sensor):
         return self.get_tensorized_frame()
     
     def __del__(self):
-        """This ends the programs access to the video. So it doesn't continue for ever """
+        """Making sure the camera resources are released properly."""
         self.capture.release()
         #cv.destroyAllWindows()
 

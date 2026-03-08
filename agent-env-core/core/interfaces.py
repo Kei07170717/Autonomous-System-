@@ -9,6 +9,13 @@ class IBody(ABC):
         pass
 
 
+class ISensor(ABC):
+    '''Interface for all sensors'''
+    @abstractmethod
+    def get_data(self) -> any:
+        pass
+
+
 class Agent(ABC):
     @abstractmethod
     def get_action(obs: dict) -> Action:

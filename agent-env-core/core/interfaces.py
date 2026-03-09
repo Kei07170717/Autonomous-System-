@@ -25,7 +25,7 @@ class IArmActuator(ABC):
         pass
 
 
-class IArmSensor(ABC, ISensor):
+class IArmSensor(ISensor):
     @abstractmethod
     def get_joint_angles(self) -> list[float]:
         pass
@@ -36,7 +36,12 @@ class IGripperActuator(ABC):
     def set_gripper_closed(self) -> None:
         pass
 
+    @abstractmethod
     def set_gripper_open(self) -> None:
+        pass
+
+    @abstractmethod
+    def set_gripper_value(self, value) -> None:
         pass
 
 

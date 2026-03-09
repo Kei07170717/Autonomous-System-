@@ -1,1 +1,1 @@
-from .environment import Environment, RecordedEnvironment, Observer
+from .environment import Environment, RecordedEnvironment

@@ -1,11 +1,18 @@
 from ..interfaces import State, IANCController
+from .idle import IdlingState
+
+# _STATE_NAME = "Resetting"
 
 class ResettingState(State):
   
     def __init__(self, context: IANCController):
-        super().__init__(context)
+        super().__init__(context, state_name="Resetting")
+        # self._dummy_state = 0
 
     def execute(self):
+        # if self._dummy_state > 10:
+        #     self.context.set_state(IdlingState(self.context))
+        # self._dummy_state += 1
         pass
 
     def open_gripper(self):

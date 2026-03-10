@@ -1,9 +1,12 @@
 from ..interfaces import State, IANCController
 
+
+# _STATE_NAME = "Idling"
+
 class IdlingState(State):
   
     def __init__(self, context: IANCController):
-        super().__init__(context)
+        super().__init__(context, state_name="Idling")
 
     def execute(self):
         pass

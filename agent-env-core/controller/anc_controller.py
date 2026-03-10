@@ -1,16 +1,24 @@
 from .interfaces import IANCController, State
 from .states import ResettingState
+# from 
 import time
 
 
 class ANCController(IANCController):
-    def __init__(self):
+    def __init__(self, ):
+        print("Entering Resetting state")
         self.state: State = ResettingState(self)
+        self.terminating: bool = False
         pass
 
+    def set_state(self, state: State) -> None:
+        print("Entering {} state".format(state.get_state_name()))
+        self.state = state
+
     def run_loop(self):
-        for _ in range(5):
-            time.sleep(0.1)
+        while not self.terminating:
+            self.state.execute()
+            time.sleep(0.1) # TODO: Remove
 
     def open_gripper(self):
         pass

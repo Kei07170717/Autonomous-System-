@@ -1,11 +1,15 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
 class IANCController(ABC):
 
     @abstractmethod
-    def run_loop(self):
+    def set_state(self, state: State):
         pass
 
+    @abstractmethod
+    def run_loop(self):
+        pass
 
     @abstractmethod
     def open_gripper(self):
@@ -40,8 +44,12 @@ class IANCController(ABC):
     #     pass
 
 class State(ABC):
-    def __init__(self, context: IANCController):
+    def __init__(self,  context: IANCController, state_name: str = "Undefined"):
+        self.state_name: str = state_name
         self.context: IANCController = context
+
+    def get_state_name(self) -> str:
+        return self.state_name
 
     @abstractmethod
     def execute(self):

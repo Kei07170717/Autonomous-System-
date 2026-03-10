@@ -1,9 +1,13 @@
-from .interfaces import IANCController
+from ..interfaces import State, IANCController
 
-class ANCController(IANCController):
-    def __init__(self):
-        # self.state: State = 
+class ResettingState(State):
+  
+    def __init__(self, context: IANCController):
+        super().__init__(context)
+
+    def execute(self):
         pass
+
     def open_gripper(self):
         pass
 

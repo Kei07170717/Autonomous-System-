@@ -26,18 +26,21 @@ class IANCController(ABC):
     def stop_drag_record(self):
         pass
 
-    @abstractmethod
-    def start_inference(self):
-        pass
-
-    @abstractmethod
-    def stop_inference(self):
-        pass
+    # @abstractmethod
+    # def start_inference(self):
+    #     pass
+    #
+    # @abstractmethod
+    # def stop_inference(self):
+    #     pass
 
 class State(ABC):
     def __init__(self, context: IANCController):
         self.context: IANCController = context
 
+    @abstractmethod
+    def execute(self):
+        pass
     @abstractmethod
     def open_gripper(self):
         pass
@@ -62,10 +65,10 @@ class State(ABC):
     def stop_drag_record(self):
         pass
 
-    @abstractmethod
-    def start_inference(self):
-        pass
-
-    @abstractmethod
-    def stop_inference(self):
-        pass
+    # @abstractmethod
+    # def start_inference(self):
+    #     pass
+    #
+    # @abstractmethod
+    # def stop_inference(self):
+    #     pass

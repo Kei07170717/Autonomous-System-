@@ -1,5 +1,5 @@
 from .interfaces import IANCController, State
-from states.reset import ResettingState
+from .states import ResettingState
 import time
 
 

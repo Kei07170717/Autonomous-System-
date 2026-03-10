@@ -45,6 +45,18 @@ class IGripperActuator(ABC):
         pass
 
 
+class IResettable(ABC):
+    """
+    Interface used for objects that reset (such as cobot)
+    """
+    @abstractmethod
+    def reset(self):
+        pass
+
+    @abstractmethod
+    def is_reset(self):
+        pass
+
 # TODO: should it be an interface or an abstract class?
 class Agent(ABC):
     @abstractmethod

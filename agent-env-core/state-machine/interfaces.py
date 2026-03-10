@@ -3,6 +3,11 @@ from abc import ABC, abstractmethod
 class IANCController(ABC):
 
     @abstractmethod
+    def run_loop(self):
+        pass
+
+
+    @abstractmethod
     def open_gripper(self):
         pass
 

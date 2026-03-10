@@ -1,9 +1,17 @@
-from .interfaces import IANCController
+from .interfaces import IANCController, State
+from states.reset import ResettingState
+import time
+
 
 class ANCController(IANCController):
     def __init__(self):
-        # self.state: State = 
+        self.state: State = ResettingState(self)
         pass
+
+    def run_loop(self):
+        for _ in range(5):
+            time.sleep(0.1)
+
     def open_gripper(self):
         pass
 

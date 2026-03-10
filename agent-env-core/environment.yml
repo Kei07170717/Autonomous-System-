@@ -1,0 +1,11 @@
+name: anc
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+      - opencv-python==4.13.0.92
+      - dm-env==1.6
+      - pymycobot==4.0.4

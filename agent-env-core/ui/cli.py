@@ -5,19 +5,19 @@ from controller.interfaces import IANCController, ICommand
 # from controller import ANCController
 from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
 
-command_mapping: dict[str, ICommand] = {
-        "exit": ExitCommand(),
-        "drag": StartDragRecordCommand(),
-        "replay": ReplayRecordCommand()
-        }
-
-help_command = ListCommandsCommand(command_mapping)
-command_mapping["help"] = help_command
-
 
 class ANCConsoleUI:
     def __init__(self, anc_controller: IANCController) -> None:
         self.anc_controller: IANCController = anc_controller
+        
+        self.command_mapping: dict[str, ICommand] = {
+            "exit": ExitCommand(),
+            "drag": StartDragRecordCommand(anc_controller),
+            "replay": ReplayRecordCommand(anc_controller)
+        }
+        help_command = ListCommandsCommand(self.command_mapping)
+        self.command_mapping["help"] = help_command
+
 
     def start(self):
         # Spawn a separate thread for the ANCController (because the 
@@ -28,7 +28,7 @@ class ANCConsoleUI:
         while True:
             prompt = input("agent-env-core> ").strip().lower()
             
-            command = command_mapping.get(prompt)
+            command = self.command_mapping.get(prompt)
 
             # Don't run the command if it's not valid
             if command:

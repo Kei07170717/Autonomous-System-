@@ -1,4 +1,5 @@
-from ..interfaces import State, IANCController
+from ..interfaces import IANCController
+from .state import State
 from .idle import IdlingState
 
 # _STATE_NAME = "Resetting"

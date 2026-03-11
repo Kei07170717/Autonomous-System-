@@ -22,13 +22,15 @@ class ListCommandsCommand(ICommand):
 
 class StartDragRecordCommand(ICommand):
     """Should change state to DragRecord"""
-    def __init__(self) -> None:
-        pass 
+    def __init__(self, anc_controller: IANCController) -> None:
+        self.anc_controller = anc_controller
 
     def execute(self) -> None:
-        print("StartDrag command not implemented yet")
-        pass
+        self.anc_controller.start_drag_record()
 
 class ReplayRecordCommand(ICommand):
+    def __init__(self, anc_controller: IANCController) -> None:
+        self.anc_controller = anc_controller
+
     def execute(self) -> None:
-        print("ReplayRecord command not implemented yet")
+        self.anc_controller.start_replay_record()

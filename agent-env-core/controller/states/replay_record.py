@@ -1,4 +1,6 @@
-from ..interfaces import State, IANCController
+from ..interfaces import IANCController
+from .state import State
+
 
 class ReplayRecordingState(State):
     """

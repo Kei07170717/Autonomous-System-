@@ -1,11 +1,12 @@
 import threading
 
-from controller.commands import ListCommandsCommand, StartDragRecordCommand
+from controller.commands import *
 from controller.interfaces import IANCController, ICommand
 # from controller import ANCController
 from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
 
 command_mapping: dict[str, ICommand] = {
+        "exit": ExitCommand(),
         "start drag": StartDragRecordCommand()
         }
 

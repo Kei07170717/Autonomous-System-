@@ -20,22 +20,22 @@ class ANCController(IANCController):
             time.sleep(0.1) # TODO: Remove
 
     def open_gripper(self):
-        pass
+        self.state.open_gripper()
 
     def close_gripper(self):
-        pass
+        self.state.close_gripper()
 
     def start_replay_record(self):
-        pass
+        self.state.start_replay_record()
 
     # def stop_replay_record(self):
     #     pass
 
     def start_drag_record(self):
-        pass
+        self.state.start_drag_record()
 
     def stop(self):
-        pass
+        self.state.stop()
 
     # def stop_drag_record(self):
     #     pass

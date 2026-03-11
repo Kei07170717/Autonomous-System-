@@ -25,11 +25,8 @@ class DragRecordingState(State):
     def start_replay_record(self):
         pass
 
-    def stop_replay_record(self):
-        pass
-
     def start_drag_record(self):
         pass
 
-    def stop_drag_record(self):
+    def stop(self):
         pass

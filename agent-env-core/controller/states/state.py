@@ -32,6 +32,10 @@ class State(ABC):
     def start_drag_record(self):
         pass
 
+    @abstractmethod
+    def stop(self):
+        pass
+
     # @abstractmethod
     # def stop_drag_record(self):
     #     pass

@@ -7,7 +7,8 @@ from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
 
 command_mapping: dict[str, ICommand] = {
         "exit": ExitCommand(),
-        "start drag": StartDragRecordCommand()
+        "drag": StartDragRecordCommand(),
+        "replay": ReplayRecordCommand()
         }
 
 help_command = ListCommandsCommand(command_mapping)

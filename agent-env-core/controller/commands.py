@@ -17,6 +17,7 @@ class StartDragRecordCommand(ICommand):
         pass 
 
     def execute(self) -> None:
+        print("StartDrag command not implemented yet")
         pass
 
 # class ReplayCommand(ICommand):

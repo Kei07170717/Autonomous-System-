@@ -10,7 +10,7 @@ class DragRecordingState(State):
     """
   
     def __init__(self, context: IANCController):
-        super().__init__(context, state_name="DragRecord")
+        super().__init__(context, state_name="DragRecording")
 
     def execute(self):
         pass

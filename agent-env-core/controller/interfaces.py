@@ -85,3 +85,9 @@ class State(ABC):
     # @abstractmethod
     # def stop_inference(self):
     #     pass
+
+class ICommand(ABC):
+
+    @abstractmethod
+    def execute(self) -> None:
+        pass

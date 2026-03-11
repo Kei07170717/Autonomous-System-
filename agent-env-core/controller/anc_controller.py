@@ -9,7 +9,6 @@ class ANCController(IANCController):
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.terminating: bool = False
-        pass
 
     def set_state(self, state: State) -> None:
         print("Entering {} state".format(state.get_state_name()))

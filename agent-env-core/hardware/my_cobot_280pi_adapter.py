@@ -14,19 +14,20 @@ _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE)
 class MyCobot280PiAdapter(IArmActuator, IArmSensor, IGripperActuator):
     def __init__(
             self,
-            PI_PORT,
-            PI_BAUD,
+            pi_port=PI_PORT,
+            pi_baud=PI_BAUD,
             speed_arm=100,  # speed of the robot arm
             speed_gripper=100,  # speed of the gripper
     ):
 
-        self.mc = MyCobot280(PI_PORT, PI_BAUD)
+        self.mc = MyCobot280(pi_port, pi_baud)
         self.speed_arm = speed_arm
         self.speed_gripper = speed_gripper
 
         # Questionable, but is to get an 'awareness' of our initial state
         init_gripper_val: int = self.mc.get_gripper_value()
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
+
     def set_gripper_value(self, gripper_pos: int) -> None:
         """
         Could theoretically set the gripper to a range of values, 
@@ -47,11 +48,13 @@ class MyCobot280PiAdapter(IArmActuator, IArmSensor, IGripperActuator):
     def set_gripper_open(self) -> None:
         self.mc.set_gripper_value(_GRIPPER_OPEN_VALUE, self.speed_gripper)
 
+    def get
+
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: list[float]) -> None:
         self.mc.send_angles(arm_pos, self.speed_gripper)
 
     # Maybe there is a numpy function for this? Surely it's performant enough though..
-    def _gripper_value_to_is_closed_bool(gripper_val) -> bool:
+    def _gripper_value_to_is_closed_bool(self, gripper_val) -> bool:
         return False if gripper_val < _GRIPPER_CLOSED_THRESHOLD  else True
 

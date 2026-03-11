@@ -1,4 +1,5 @@
 from ..interfaces import IANCController, State
+from ..utils import disabled_in_this_state
 from .idle import IdlingState
 
 # _STATE_NAME = "Resetting"
@@ -15,18 +16,22 @@ class ResettingState(State):
         # self._dummy_state += 1
         pass
 
+    @disabled_in_this_state
     def open_gripper(self):
         pass
 
+    @disabled_in_this_state
     def close_gripper(self):
         pass
 
+    @disabled_in_this_state
     def start_replay_record(self):
         pass
 
     # def stop_replay_record(self):
     #     pass
 
+    @disabled_in_this_state
     def start_drag_record(self):
         pass
 

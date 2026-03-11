@@ -12,11 +12,12 @@ class ANCConsoleUI:
         
         self.command_mapping: dict[str, ICommand] = {
             "exit": ExitCommand(),
+            "stop": StopCommand(anc_controller),
             "drag": StartDragRecordCommand(anc_controller),
             "replay": ReplayRecordCommand(anc_controller)
         }
-        help_command = ListCommandsCommand(self.command_mapping)
-        self.command_mapping["help"] = help_command
+        self.help_command = ListCommandsCommand(self.command_mapping)
+        self.command_mapping["help"] = self.help_command
 
 
     def start(self):
@@ -34,7 +35,7 @@ class ANCConsoleUI:
             if command:
                 command.execute()
             else:
-                help_command.execute()
+                self.help_command.execute()
 
 
             # if cmd == "help":

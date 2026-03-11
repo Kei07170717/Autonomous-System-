@@ -20,6 +20,13 @@ class ListCommandsCommand(ICommand):
     def execute(self) -> None:
         print(self.command_mapping.keys())
 
+class StopCommand(ICommand):
+    def __init__(self, anc_controller: IANCController) -> None:
+        self.anc_controller = anc_controller
+
+    def execute(self) -> None:
+        self.anc_controller.stop()
+
 class StartDragRecordCommand(ICommand):
     """Should change state to DragRecord"""
     def __init__(self, anc_controller: IANCController) -> None:
@@ -34,3 +41,5 @@ class ReplayRecordCommand(ICommand):
 
     def execute(self) -> None:
         self.anc_controller.start_replay_record()
+
+

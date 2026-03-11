@@ -1,5 +1,4 @@
-from ..interfaces import IANCController
-from .state import State
+from ..interfaces import IANCController, State
 
 # _STATE_NAME = "Idling"
 

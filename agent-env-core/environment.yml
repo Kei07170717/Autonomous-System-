@@ -1,9 +1,12 @@
 name: anc
 channels:
+  - pytorch
   - conda-forge
   - defaults
 dependencies:
   - python=3.13
+  - pytorch=2.8.0
+  - cpuonly # Needs to be different for inference though
   - pip
   - pip:
       - opencv-python==4.13.0.92

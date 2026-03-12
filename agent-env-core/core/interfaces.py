@@ -1,5 +1,6 @@
 from .types import Action
 from abc import ABC, abstractmethod
+import torch
 
 """Contains the core interfaces that the application depends on."""
 
@@ -71,7 +72,7 @@ class Agent(ABC):
 
 class IObserver(ABC):
     """
-    Responsible for managing sensors and returning a 'formal' observation.
+    Responsible for managing sensor-modules and returning a 'formal' observation.
     """
     @abstractmethod
     def get_observation(self) -> dict:
@@ -88,7 +89,7 @@ class JointAnglesSensorModule(SensorModule):
         super().__init__(id)
         self.joint_angles_sensor = joint_angles_sensor
 
-    def get_data(self):
+    def get_data(self) -> any:
         return self.joint_angles_sensor.get_joint_angles()
 
 class ICameraSensor(ABC):
@@ -103,4 +104,4 @@ class CameraSensorModule(SensorModule):
         self.camera_sensor = camera_sensor
 
     def get_data(self):
-        return super().get_data()
+        return self.camera_sensor.get_current_frame()

@@ -20,26 +20,28 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator):
             speed_gripper=100,  # speed of the gripper
     ):
 
-        self.mc = MyCobot280(pi_port, pi_baud)
+        self.mc = MyCobot280(pi_port, str(pi_baud))
         self.speed_arm = speed_arm
         self.speed_gripper = speed_gripper
 
         # Questionable, but is to get an 'awareness' of our initial state
-        init_gripper_val: int = self.mc.get_gripper_value()
+        # init_gripper_val: int = self.mc.get_gripper_value()
+        init_gripper_val: int = 0 # TODO: Implement
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
 
-    def set_gripper_value(self, gripper_pos: int) -> None:
+    def set_gripper_value(self, value: int) -> None:
         """
         Could theoretically set the gripper to a range of values, 
         but isn't very practical unless high precision is needed. 
         Therefore, it will simply be converted to 'open' or 'closed' by
-        converting it to a bool. Might not be ideal though."""
-        is_closing_value: bool = self._gripper_value_to_is_closed_bool(gripper_pos)
+        converting it to a bool. Might not be ideal though.
+        """
+        is_closing_value: bool = self._gripper_value_to_is_closed_bool(value)
         if self.is_last_gripper_state_close == is_closing_value:
             return
         else: 
             self.is_last_gripper_state_close = is_closing_value
-            self.mc.set_gripper_state(is_closing_value)
+            self.mc.set_gripper_state(is_closing_value, self.speed_gripper)
         #self.mc.set_gripper_value(int(gripper_pos), self.speed_gripper)
 
     def set_gripper_closed(self) -> None:
@@ -50,7 +52,9 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator):
 
     # BLOCKING CALL!!! Will take long time, carefull
     def get_joint_angles(self) -> list[float]:
-        return self.mc.get_joint_angles()
+        # return self.mc.get_angles()
+        # TODO: implement
+        return []
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: list[float]) -> None:

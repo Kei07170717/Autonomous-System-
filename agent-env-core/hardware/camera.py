@@ -2,10 +2,9 @@ import time
 import numpy as np
 import cv2 as cv
 import torch
-from core.interfaces import ISensor
+from core.interfaces import ICameraSensor, SensorModule
 
-
-class Camera(ISensor):
+class Camera(ICameraSensor):
     def __init__(self, id: str, path: str):
         self.path = path
         self.capture = cv.VideoCapture(id)
@@ -25,7 +24,7 @@ class Camera(ISensor):
         tensor = torch.from_numpy(frame)
         return tensor
 
-    def get_data(self):
+    def get_current_frame(self):
         return self.get_tensorized_frame()
     
     def __del__(self):

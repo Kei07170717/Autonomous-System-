@@ -1,9 +1,9 @@
-from core.interfaces import IObserver, ISensor
+from core.interfaces import IObserver, SensorModule
 
 
 class Observer(IObserver):
-    def __init__(self, sensors: list[ISensor]):
-        self.sensors: list[ISensor] = sensors
+    def __init__(self, sensors: list[SensorModule]):
+        self.sensors: list[SensorModule] = sensors
 
     def get_observation(self):
         sensor_states = dict(

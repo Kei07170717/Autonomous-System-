@@ -29,7 +29,7 @@ class ANCConsoleUI:
         while True:
             prompt = input("agent-env-core> ").strip().lower()
             
-            command = self.command_mapping.get(prompt)
+            command: ICommand | None = self.command_mapping.get(prompt)
 
             # Don't run the command if it's not valid
             if command:

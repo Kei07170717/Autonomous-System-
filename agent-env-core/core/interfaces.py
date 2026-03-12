@@ -1,15 +1,26 @@
 from .types import Action
 from abc import ABC, abstractmethod
+import torch
 
 """Contains the core interfaces that the application depends on."""
 
 
-class ISensor(ABC):
-    """Interface for all sensors"""
-    @abstractmethod
-    def get_data(self) -> any:
-        pass
+# class ISensor(ABC):
+#     """Interface for all sensors"""
+#     @abstractmethod
+#     def get_data(self) -> any:
+#         pass
 
+class SensorModule(ABC):
+    def __init__(self, id: str) -> None:
+        self.id: str = id
+
+    def get_id(self) -> str:
+        return self.id
+
+    @abstractmethod
+    def get_data(self):
+        pass
 
 class IBody(ABC):
     """Capable of affecting the world."""
@@ -25,11 +36,6 @@ class IArmActuator(ABC):
         pass
 
 
-class IArmSensor(ISensor):
-    @abstractmethod
-    def get_joint_angles(self) -> list[float]:
-        pass
-
 
 class IGripperActuator(ABC):
     @abstractmethod
@@ -41,7 +47,7 @@ class IGripperActuator(ABC):
         pass
 
     @abstractmethod
-    def set_gripper_value(self, value) -> None:
+    def set_gripper_value(self, value: int) -> None:
         pass
 
 
@@ -66,8 +72,36 @@ class Agent(ABC):
 
 class IObserver(ABC):
     """
-    Responsible for managing sensors and returning a 'formal' observation.
+    Responsible for managing sensor-modules and returning a 'formal' observation.
     """
     @abstractmethod
     def get_observation(self) -> dict:
         pass
+
+# --- sensor modules ---
+class IJointAnglesSensor(ABC):
+    @abstractmethod
+    def get_joint_angles(self) -> list[float]:
+        pass
+
+class JointAnglesSensorModule(SensorModule):
+    def __init__(self, id: str, joint_angles_sensor: IJointAnglesSensor) -> None:
+        super().__init__(id)
+        self.joint_angles_sensor = joint_angles_sensor
+
+    def get_data(self) -> any:
+        return self.joint_angles_sensor.get_joint_angles()
+
+class ICameraSensor(ABC):
+    # TODO: return tensor
+    @abstractmethod
+    def get_current_frame(self):
+        pass
+
+class CameraSensorModule(SensorModule):
+    def __init__(self, id: str, camera_sensor: ICameraSensor) -> None:
+        super().__init__(id)
+        self.camera_sensor = camera_sensor
+
+    def get_data(self):
+        return self.camera_sensor.get_current_frame()

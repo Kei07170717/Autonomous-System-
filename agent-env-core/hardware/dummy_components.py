@@ -1,6 +1,6 @@
-from core.interfaces import IArmActuator, IGripperActuator 
+from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor 
 
-class DummyComponent(IArmActuator, IGripperActuator):
+class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor):
 
     def set_joint_angles(self, arm_pos: list[float]):
         pass
@@ -13,3 +13,6 @@ class DummyComponent(IArmActuator, IGripperActuator):
 
     def set_gripper_value(self, value) -> None:
         pass
+
+    def get_joint_angles(self) -> list[float]:
+        return []

@@ -1,11 +1,28 @@
+import time
+
+from environment import Body, IBody
+
 from .interfaces import IANCController, State
 from .states import ResettingState
-from environment import IBody, Body
-import time
 
 
 class ANCController(IANCController):
-    def __init__(self, ):
+    """
+    This class controlls the program using states (state design pattern).
+    The ANCController has its own loop and will delegate its corresponding 
+    actions to the underlying states. ANCController can serve as a 'backbone'
+    for a UI.
+    It receives a drag_body and optionally a live_body. The drag_body is a 
+    simply dummy body that doesn't do anything, even when sending actions.
+    The live_body is composed of the actual actuators, sending an action will
+    have impact on the environment and hence should be used for
+    ReplayRecordingState or other automated motion states.
+    """
+    def __init__(self,
+                 drag_body: IBody,
+                 live_body: IBody | None = None):
+        self.drag_body: IBody | None = drag_body
+        self.live_body: IBody | None = live_body
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.terminating: bool = False
@@ -17,7 +34,7 @@ class ANCController(IANCController):
     def run_loop(self):
         while not self.terminating:
             self.state.execute()
-            time.sleep(0.1) # TODO: Remove
+            time.sleep(0.1)  # TODO: Remove
 
     def open_gripper(self):
         self.state.open_gripper()

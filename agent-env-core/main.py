@@ -19,7 +19,8 @@ if __name__ == "__main__":
             gripper_actuator=dummy_component
             )
 
-    controller: IANCController = ANCController()
+    controller: IANCController = ANCController(
+            drag_body=drag_body)
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()
 

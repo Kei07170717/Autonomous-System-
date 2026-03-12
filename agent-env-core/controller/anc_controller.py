@@ -1,5 +1,6 @@
 import time
 
+from core.interfaces import IObserver
 from environment import Body, IBody
 
 from .interfaces import IANCController, State
@@ -20,7 +21,9 @@ class ANCController(IANCController):
     """
     def __init__(self,
                  drag_body: IBody,
-                 live_body: IBody | None = None):
+                 observer: IObserver,
+                 live_body: IBody | None = None
+                 ):
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         print("Entering Resetting state")

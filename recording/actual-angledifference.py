@@ -3,7 +3,6 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
-#this is vibe coded:
 n = 10000
 times = []
 for _ in range(n):
@@ -21,8 +20,6 @@ print(f"min ms difference: {min(times)}ms")
 print(f"max ms difference: {max(times)}ms")
 
 
-
-#This ofcourse is not vibe coded:
 #code to test the angles
 #mc.send_angles([-50,-50,0,0,0,0], 50)
 #time.sleep(5)

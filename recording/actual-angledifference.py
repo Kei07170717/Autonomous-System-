@@ -8,7 +8,7 @@ times = []
 for _ in range(n):
     start = time.perf_counter()
     angles = mc.get_angles()
-    times.append(time.perf_counter - start)
+    times.append(time.perf_counter() - start)
 
 times_ms = [t*1000 for t in times]
 print(f"Samples:  {n}")

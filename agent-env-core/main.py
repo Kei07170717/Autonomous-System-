@@ -12,6 +12,13 @@ if __name__ == "__main__":
     
     # drag_body: IBody
     dummy_component: DummyComponent = DummyComponent()
+
+    drag_body: IBody = Body(
+            arm_sensor=dummy_component,
+            arm_actuator=dummy_component,
+            gripper_actuator=dummy_component
+            )
+
     controller: IANCController = ANCController()
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

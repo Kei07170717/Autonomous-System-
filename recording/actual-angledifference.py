@@ -4,7 +4,7 @@ from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
 #this is vibe coded:
-n = 1000
+n = 10000
 times = []
 for _ in range(n):
     #mc.send_angles([-50,-50,0,0,0,0], 50)

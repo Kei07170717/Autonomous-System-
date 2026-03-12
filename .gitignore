@@ -4,3 +4,5 @@
 **/*.dtmp
 **/*.$*.bkp
 **/__pycache__
+
+**/pyrightconfig.json

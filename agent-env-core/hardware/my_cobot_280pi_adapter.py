@@ -2,7 +2,7 @@ import time
 import numpy as np
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
-from core.interfaces import IArmActuator, IArmSensor, IGripperActuator
+from core.interfaces import IArmActuator, IArmSensor, IGripperActuator, IJointAnglesSensor
 from core.types import Action
 
 _GRIPPER_OPEN_VALUE = 0 # Gripper min
@@ -11,7 +11,7 @@ _GRIPPER_CLOSED_VALUE = 100 # Gripper max
 # Values higher than this are considered 'closed' (TODO: justify this number)
 _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE) 
 
-class MyCobot280PiAdapter(IArmActuator, IArmSensor, IGripperActuator):
+class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator):
     def __init__(
             self,
             pi_port=PI_PORT,
@@ -48,7 +48,9 @@ class MyCobot280PiAdapter(IArmActuator, IArmSensor, IGripperActuator):
     def set_gripper_open(self) -> None:
         self.mc.set_gripper_value(_GRIPPER_OPEN_VALUE, self.speed_gripper)
 
-    def get
+    # BLOCKING CALL!!! Will take long time, carefull
+    def get_joint_angles(self) -> list[float]:
+        return self.mc.get_joint_angles()
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: list[float]) -> None:

@@ -4,12 +4,22 @@ from abc import ABC, abstractmethod
 """Contains the core interfaces that the application depends on."""
 
 
-class ISensor(ABC):
-    """Interface for all sensors"""
-    @abstractmethod
-    def get_data(self) -> any:
-        pass
+# class ISensor(ABC):
+#     """Interface for all sensors"""
+#     @abstractmethod
+#     def get_data(self) -> any:
+#         pass
 
+class SensorModule(ABC):
+    def __init__(self, id: str) -> None:
+        self.id: str = id
+
+    def get_id(self) -> str:
+        return self.id
+
+    @abstractmethod
+    def get_data(self):
+        pass
 
 class IBody(ABC):
     """Capable of affecting the world."""
@@ -24,11 +34,6 @@ class IArmActuator(ABC):
     def set_joint_angles(self, arm_pos: list[float]):
         pass
 
-
-class IArmSensor(ISensor):
-    @abstractmethod
-    def get_joint_angles(self) -> list[float]:
-        pass
 
 
 class IGripperActuator(ABC):
@@ -71,3 +76,31 @@ class IObserver(ABC):
     @abstractmethod
     def get_observation(self) -> dict:
         pass
+
+# --- sensor modules ---
+class IJointAnglesSensor(ABC):
+    @abstractmethod
+    def get_joint_angles(self) -> list[float]:
+        pass
+
+class JointAnglesSensorModule(SensorModule):
+    def __init__(self, id: str, joint_angles_sensor: IJointAnglesSensor) -> None:
+        super().__init__(id)
+        self.joint_angles_sensor = joint_angles_sensor
+
+    def get_data(self):
+        return self.joint_angles_sensor.get_joint_angles()
+
+class ICameraSensor(ABC):
+    # TODO: return tensor
+    @abstractmethod
+    def get_current_frame(self):
+        pass
+
+class CameraSensorModule(SensorModule):
+    def __init__(self, id: str, camera_sensor: ICameraSensor) -> None:
+        super().__init__(id)
+        self.camera_sensor = camera_sensor
+
+    def get_data(self):
+        return super().get_data()

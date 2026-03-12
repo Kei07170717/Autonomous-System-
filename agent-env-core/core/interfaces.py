@@ -47,7 +47,7 @@ class IGripperActuator(ABC):
         pass
 
     @abstractmethod
-    def set_gripper_value(self, value) -> None:
+    def set_gripper_value(self, value: int) -> None:
         pass
 
 

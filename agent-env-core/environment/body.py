@@ -1,9 +1,9 @@
-from core.interfaces import IBody, IArmSensor, IArmActuator, IGripperActuator
+from core.interfaces import IBody, IJointAnglesSensor, IArmActuator, IGripperActuator
 from core.types import Action
 
 class Body(IBody):
-    def __init__(self, arm_sensor: IArmSensor, arm_actuator: IArmActuator, gripper_actuator: IGripperActuator):
-        self.arm_sensor: IArmSensor = arm_sensor
+    def __init__(self, arm_sensor: IJointAnglesSensor, arm_actuator: IArmActuator, gripper_actuator: IGripperActuator):
+        self.arm_sensor: IJointAnglesSensor = arm_sensor
         self.arm_actuator: IArmActuator = arm_actuator
         self.gripper_actuator: IGripperActuator = gripper_actuator
 

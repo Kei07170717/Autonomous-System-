@@ -1,9 +1,17 @@
 from controller.interfaces import IANCController
 from controller import ANCController
+from hardware.dummy_components import DummyComponent
 from ui import ANCConsoleUI
+from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IBody
+from environment import Body
+from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 
 if __name__ == "__main__":
     print("Starting agent-env-core")
+    # cobot_adapter = MyCobot280PiAdapter()
+    
+    # drag_body: IBody
+    dummy_component: DummyComponent = DummyComponent()
     controller: IANCController = ANCController()
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

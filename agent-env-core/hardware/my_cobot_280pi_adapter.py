@@ -2,7 +2,7 @@ import time
 import numpy as np
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
-from core.interfaces import IArmActuator, IArmSensor, IGripperActuator, IJointAnglesSensor
+from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor
 from core.types import Action
 
 _GRIPPER_OPEN_VALUE = 0 # Gripper min

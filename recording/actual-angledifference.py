@@ -11,4 +11,4 @@ mc.send_angles([0,0,0,0,0,0], 50)
 time.sleep(2)
 angles = mc.get_angles()
 print(angles)
-
+mc.set_color(255,255,0)

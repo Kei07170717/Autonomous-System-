@@ -4,12 +4,16 @@ from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
 #this is vibe coded:
-n = 100 
+n = 10
 times = []
 for _ in range(n):
+    mc.send_angles([-50,-50,0,0,0,0], 50)
     start = time.perf_counter()
     mc.get_angles()
     times.append((time.perf_counter()-start)*1000)
+    time.sleep(3)
+    mc.send_angles([0,0,0,0,0,0], 50)
+    time.sleep(3)
 
 print(f"samples: {n}")
 print(f"mean: {sum(times)/len(times)}ms")

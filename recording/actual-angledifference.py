@@ -3,7 +3,7 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 
 mc = MyCobot280(PI_PORT, PI_BAUD)
-mc.send_angles([50,50,0,0,0,0], 50)
+mc.send_angles([50.7,50,0,0,0,0], 50)
 time.sleep(1)
 angles1 = mc.get_angles()
 time.sleep(1)

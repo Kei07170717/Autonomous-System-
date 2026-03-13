@@ -3,7 +3,7 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
-n = 10000
+n = 10
 times = []
 for _ in range(n):
     #mc.send_angles([-50,-50,0,0,0,0], 50)

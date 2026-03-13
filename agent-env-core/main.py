@@ -28,10 +28,11 @@ if __name__ == "__main__":
         arm_actuator=dummy_component,
         gripper_actuator=dummy_component,
     )
+    camera1_id: str = "USB 2.0 Camera: USB Camera" # CHANGE TO ACTUAL NAME
 
     observer: IObserver = Observer(
         [
-            # CameraSensorModule(id="Cam1", camera_sensor=Camera("1"))
+            CameraSensorModule(id="Cam1", camera_sensor=Camera(camera1_id)),
             JointAnglesSensorModule(
                 id="arm_angles", joint_angles_sensor=dummy_component
             )

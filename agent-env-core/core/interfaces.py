@@ -1,6 +1,6 @@
 from .types import Action
 from abc import ABC, abstractmethod
-import torch
+from torch import Tensor
 
 """Contains the core interfaces that the application depends on."""
 
@@ -19,7 +19,7 @@ class SensorModule(ABC):
         return self.id
 
     @abstractmethod
-    def get_data(self):
+    def get_data(self) -> Tensor:
         pass
 
 class IBody(ABC):
@@ -89,13 +89,13 @@ class JointAnglesSensorModule(SensorModule):
         super().__init__(id)
         self.joint_angles_sensor = joint_angles_sensor
 
-    def get_data(self) -> any:
+    def get_data(self) -> Tensor:
         return self.joint_angles_sensor.get_joint_angles()
 
 class ICameraSensor(ABC):
     # TODO: return tensor
     @abstractmethod
-    def get_current_frame(self):
+    def get_current_frame_as_tensor(self) -> Tensor:
         pass
 
 class CameraSensorModule(SensorModule):
@@ -103,5 +103,5 @@ class CameraSensorModule(SensorModule):
         super().__init__(id)
         self.camera_sensor = camera_sensor
 
-    def get_data(self):
-        return self.camera_sensor.get_current_frame()
+    def get_data(self) -> Tensor:
+        return self.camera_sensor.get_current_frame_as_tensor()

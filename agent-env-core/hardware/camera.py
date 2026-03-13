@@ -5,8 +5,11 @@ import platform
 import threading
 from torch import Tensor
 
+from core.interfaces import ICameraSensor
 
-class Camera:
+
+
+class Camera(ICameraSensor):
     """
     This class gets as input the camera name(example names are in get_camera_path docstring) 
     and returns either the actual frame or a tensorized version of the frame
@@ -69,9 +72,10 @@ class Camera:
             if self.latest_frame is None:
                 return None
             return self.latest_frame.copy()
+
     
 
-    def get_tensorized_frame(self) -> Tensor:
+    def get_current_frame_as_tensor(self) -> Tensor:
         """This function will process the frame and turn it into a tensor"""
         frame = self.get_current_frame()
         

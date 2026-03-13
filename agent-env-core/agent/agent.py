@@ -8,6 +8,6 @@ class KinestheticAgent(Agent):
     which can later be replayed through another agent. The environment should
     not exectute actions using this agent (observe_only mode).'''
 
-    def get_action(obs: dict) -> Action:
+    def get_action(self, obs: dict) -> Action:
         # TODO: return observed angles
-        return Action([0, 0, 0, 0, 0, 0])
+        return Action([0, 0, 0, 0, 0, 0], 0)

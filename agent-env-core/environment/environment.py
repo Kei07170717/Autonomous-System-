@@ -3,6 +3,7 @@ from dm_env import specs, TimeStep
 import numpy as np
 from abc import ABC, abstractmethod
 from core.interfaces import IBody, IObserver
+from core.types import Action
 
 
 
@@ -28,8 +29,13 @@ class Environment(dm_env.Environment):
     def action_spec(self):
         pass
 
-    def step(self):
-        pass
+    def step(self, action: Action) -> TimeStep:
+        self.body.affect_world(action)
+        observation = self.observer.get_observation()
+        return dm_env.transition(
+                observation=observation,
+                reward=None
+                )
 
 
 class RecordedEnvironment(dm_env.Environment, ABC):

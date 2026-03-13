@@ -4,7 +4,7 @@ from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
 
-n = 10
+n = 20
 gripperlist1 = []
 gripperlist2 = []
 for _ in range(n):
@@ -16,8 +16,8 @@ for _ in range(n):
     time.sleep(3)
     pos1 = mc.get_gripper_value()
     gripperlist2.append(pos1) 
-print(gripperlist1)
-print(gripperlist2)
+print("The angle difference if the gripper is open: ", gripperlist1)
+print("The angle difference if the gripper is closed: "gripperlist2)
 
 
 

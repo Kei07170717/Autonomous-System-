@@ -8,8 +8,20 @@ time.sleep(1)
 angles = mc.get_angles()
 print(angles)
 
-
-
+mc.set_gripper_state(0, 50)
+time.sleep(3)  # Open  (speed 0-100)
+pos = mc.get_gripper_value()
+print(pos)
+time.sleep(1)
+mc.set_gripper_state(1, 50)  # Close (speed 0-100)
+time.sleep(3)
+pos1 = mc.get_gripper_value()
+print(pos1)
+time.sleep(1)
+mc.send_angles([0,0,0,0,0,0], 50)
+time.sleep(1)
+angles1 = mc.get_angles()
+print(angles1)
 
 
 

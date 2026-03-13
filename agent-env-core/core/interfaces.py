@@ -60,7 +60,7 @@ class IResettable(ABC):
         pass
 
     @abstractmethod
-    def is_reset(self):
+    def is_reset(self) -> bool:
         pass
 
 # TODO: should it be an interface or an abstract class?

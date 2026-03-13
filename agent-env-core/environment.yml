@@ -12,3 +12,4 @@ dependencies:
       - opencv-python==4.13.0.92
       - dm-env==1.6
       - pymycobot==4.0.4
+      - cv2-enumerate-cameras=1.3.3

@@ -1,4 +1,4 @@
-from .interfaces import ICommand, IANCController
+from .controller import ICommand, IANCController
 
 """
 Command pattern: https://refactoring.guru/design-patterns/command .

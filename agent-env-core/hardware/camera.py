@@ -83,7 +83,6 @@ class Camera:
             return tensorized_frame
         else:
             raise RuntimeError("Frame doesn't exist")
-        
     
     def stop(self):
         """Stop the camera thread and release the camera."""

@@ -22,12 +22,13 @@ class DragRecordingState(State):
     the ResettingState when done or terminated.
     """
   
-    def __init__(self, context: ANCController):
+    def __init__(self, context: ANCController, verbose_mode=True):
         super().__init__(context, state_name="DragRecording")
         assert self.context.drag_body is not None
 
         self.environment: dm_env.Environment = Environment(self.context.observer, self.context.drag_body)
         self.agent: Agent = KinestheticAgent()
+        self.verbose_mode = verbose_mode
         
     
     def on_state_enter(self):
@@ -40,7 +41,10 @@ class DragRecordingState(State):
         assert self.timestep is not None
 
         action = self.agent.get_action(self.timestep.observation)
+        if self.verbose_mode: print("Action: ", action.arm)
         self.observation = self.environment.step(action)
+        if self.verbose_mode: print("Obs: ", self.observation.observation)
+
         pass
 
     def open_gripper(self):

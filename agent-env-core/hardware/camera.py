@@ -3,6 +3,7 @@ from cv2_enumerate_cameras import enumerate_cameras
 import torch
 import platform
 import threading
+from torch import Tensor
 
 
 class Camera:
@@ -10,14 +11,14 @@ class Camera:
     This class gets as input the camera name(example names are in get_camera_path docstring) 
     and returns either the actual frame or a tensorized version of the frame
     """
-    def __init__(self, camera_name: str) -> any:
+    def __init__(self, camera_name: str):
         self.camera_name: str = camera_name
         self.path: int = self.get_camera_path()
-        self.capture: cv2 = cv2.VideoCapture(self.path)
+        self.capture = cv2.VideoCapture(self.path)
         self.latest_frame = None
-        self.lock: threading = threading.Lock()
-        self.stop_event: threading = threading.Event()
-        self.thread: threading = threading.Thread(target=self.update_frames, daemon=True)
+        self.lock = threading.Lock()
+        self.stop_event = threading.Event()
+        self.thread = threading.Thread(target=self.update_frames, daemon=True)
         self.thread.start()
     
     def get_camera_path(self) -> int:
@@ -35,11 +36,11 @@ class Camera:
             Different os have different backend values to access for camera 
             """
             if platform.system() == 'Darwin':
-                backend:any = cv2.CAP_AVFOUNDATION  #mac
+                backend = cv2.CAP_AVFOUNDATION  #mac
             elif platform.system() == 'Windows':
-                backend: any = cv2.CAP_MSMF #windows
+                backend = cv2.CAP_MSMF #windows
             else:
-                backend: any = cv2.CAP_V4L2 #linux
+                backend = cv2.CAP_V4L2 #linux
             return backend
 
         cams: list = enumerate_cameras(get_os()) 
@@ -70,16 +71,16 @@ class Camera:
             return self.latest_frame.copy()
     
 
-    def get_tensorized_frame(self) -> torch:
+    def get_tensorized_frame(self) -> Tensor:
         """This function will process the frame and turn it into a tensor"""
         frame = self.get_current_frame()
         
-        def convert_to_tensor(frame) -> torch:
+        def convert_to_tensor(frame) -> Tensor:
             """This function converts each frame to a tensor"""
             return torch.from_numpy(frame)
         
         if frame is not None:
-            tensorized_frame:torch = convert_to_tensor(frame)
+            tensorized_frame: Tensor = convert_to_tensor(frame)
             return tensorized_frame
         else:
             raise RuntimeError("Frame doesn't exist")

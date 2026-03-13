@@ -12,6 +12,12 @@ class ReplayRecordingState(State):
     def __init__(self, context: IANCController):
         super().__init__(context, state_name="ReplayRecording")
 
+    def on_state_enter(self):
+        pass
+
+    def on_state_exit(self):
+        pass
+
     def execute(self):
         pass
 

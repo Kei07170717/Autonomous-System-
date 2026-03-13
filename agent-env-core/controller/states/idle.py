@@ -11,6 +11,12 @@ class IdlingState(State):
     def __init__(self, context: ANCController):
         super().__init__(context, state_name="Idling")
 
+    def on_state_enter(self):
+        pass
+
+    def on_state_exit(self):
+        pass
+
     def execute(self):
         pass
 

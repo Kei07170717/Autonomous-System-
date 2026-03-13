@@ -21,20 +21,28 @@ class ResettingState(State):
   
     def __init__(self, context: ANCController):
         super().__init__(context, state_name="Resetting")
-        # self._dummy_state = 0
 
     def execute(self):
-        # if self._dummy_state > 10:
-        #     self.context.set_state(IdlingState(self.context))
-        # self._dummy_state += 1
-        if not self.context.resettable:
-            print("a")
-            return
+        assert self.context.resettable is not None
 
         if self.context.resettable.is_reset():
             self.context.set_state(IdlingState(self.context))
+            return
+
+
+    def on_state_enter(self):
+        """
+        For this state, first check if we have an actual resettable instance or if it's already reset
+        if so, just change to IdlingState. Otherwise call the reset method.
+        """
+        if self.context.resettable is None or self.context.resettable.is_reset():
+            self.context.set_state(IdlingState(self.context))
+            return
         else:
             self.context.resettable.reset()
+
+    def on_state_exit(self):
+        pass
 
     @disabled_in_this_state
     def open_gripper(self):

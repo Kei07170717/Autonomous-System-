@@ -17,7 +17,7 @@ for _ in range(n):
     pos1 = mc.get_gripper_value()
     gripperlist2.append(pos1) 
 print("The angle difference if the gripper is open: ", gripperlist1)
-print("The angle difference if the gripper is closed: "gripperlist2)
+print("The angle difference if the gripper is closed: ", gripperlist2)
 
 
 

@@ -16,7 +16,8 @@ for _ in range(n):
     time.sleep(3)
     pos1 = mc.get_gripper_value()
     gripperlist2.append(pos1) 
-
+print(gripperlist1)
+print(gripperlist2)
 
 
 

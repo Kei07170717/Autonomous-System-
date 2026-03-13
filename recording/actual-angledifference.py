@@ -3,21 +3,32 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
-n = 10
-times = []
-for _ in range(n):
+mc.send_angles([0,0,0,0,0,0], 50)
+time.sleep(1)
+angles = mc.get_angles()
+print(angles)
+
+
+
+
+
+
+
+#n = 10
+#times = []
+#for _ in range(n):
     #mc.send_angles([-50,-50,0,0,0,0], 50)
-    start = time.perf_counter()
-    mc.get_angles()
-    times.append((time.perf_counter()-start)*1000)
+    #start = time.perf_counter()
+    #mc.get_angles()
+    #times.append((time.perf_counter()-start)*1000)
     #time.sleep(3)
     #mc.send_angles([0,0,0,0,0,0], 50)
     #time.sleep(3)
 
-print(f"samples: {n}")
-print(f"mean: {sum(times)/len(times)}ms")
-print(f"min ms difference: {min(times)}ms")
-print(f"max ms difference: {max(times)}ms")
+#print(f"samples: {n}")
+#print(f"mean: {sum(times)/len(times)}ms")
+#print(f"min ms difference: {min(times)}ms")
+#print(f"max ms difference: {max(times)}ms")
 
 
 #code to test the angles

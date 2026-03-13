@@ -1,43 +1,100 @@
-import time 
-import numpy as np
-import cv2 as cv
+import cv2 
+from cv2_enumerate_cameras import enumerate_cameras
 import torch
-from core.interfaces import ICameraSensor, SensorModule
+import platform
+import threading
 
-class Camera(ICameraSensor):
-    def __init__(self, id: str, path: str):
-        self.path = path
-        self.capture = cv.VideoCapture(id)
 
-    def get_tensorized_frame(self):
+class Camera:
+    """
+    This class gets as input the camera name(example names are in get_camera_path docstring) 
+    and returns either the actual frame or a tensorized version of the frame
+    """
+    def __init__(self, camera_name: str) -> any:
+        self.camera_name: str = camera_name
+        self.path: int = self.get_camera_path()
+        self.capture: cv2 = cv2.VideoCapture(self.path)
+        self.latest_frame = None
+        self.lock: threading = threading.Lock()
+        self.stop_event: threading = threading.Event()
+        self.thread: threading = threading.Thread(target=self.update_frames, daemon=True)
+        self.thread.start()
+    
+    def get_camera_path(self) -> int:
+        """
+        Finding the correct camera to start the thread in the correct index
+        Corrrect Camera names:
+        USB 2.0 Camera ~ wrist camera from robot arm
+        USB Camera ~ Bartinos camera
+        FaceTime HD Camera ~ any macbook face camera
+        """
+        
+        def get_os():
+            """
+            Autodetect which OS is being used  -> important for the detection of the camera name / index.
+            Different os have different backend values to access for camera 
+            """
+            if platform.system() == 'Darwin':
+                backend:any = cv2.CAP_AVFOUNDATION  #mac
+            elif platform.system() == 'Windows':
+                backend: any = cv2.CAP_MSMF #windows
+            else:
+                backend: any = cv2.CAP_V4L2 #linux
+            return backend
+
+        cams: list = enumerate_cameras(get_os()) 
+        for cam in cams:
+            if cam.name.lower() == self.camera_name.lower():
+                return cam.index
+        raise ValueError("Camera could not be found for use")
+    
+    def update_frames(self):
+        """Continuously grab frames for the thread"""
+        while not self.stop_event.is_set(): 
+            does_frame_exist, frame = self.capture.read()
+            
+            if not does_frame_exist:
+                self.running = False
+                print("Frame does not exist exiting update_frames")
+                break
+            with self.lock:
+                self.latest_frame = frame
+    
+    def get_current_frame(self):
+        """Return the latest frame read by the background thread.
+        returns the actual frame and not the tensor so might not be needed in the future
+        """
+        with self.lock:
+            if self.latest_frame is None:
+                return None
+            return self.latest_frame.copy()
+    
+
+    def get_tensorized_frame(self) -> torch:
         """This function will process the frame and turn it into a tensor"""
-        does_frame_exist, frame = self.capture.read()
-        if does_frame_exist:
-            tensorized_frame = self.convert_to_tensor(frame)
+        frame = self.get_current_frame()
+        
+        def convert_to_tensor(frame) -> torch:
+            """This function converts each frame to a tensor"""
+            return torch.from_numpy(frame)
+        
+        if frame is not None:
+            tensorized_frame:torch = convert_to_tensor(frame)
             return tensorized_frame
-            #cv.imshow('Video Not Resized', frame)# This is just to show the video but isnt needed  
         else:
             raise RuntimeError("Frame doesn't exist")
-
-    def convert_to_tensor(self, frame):
-        """This function will convert the frame to a tensor"""
-        tensor = torch.from_numpy(frame)
-        return tensor
-
-    def get_current_frame(self):
-        return self.get_tensorized_frame()
+        
+    
+    def stop(self):
+        """Stop the camera thread and release the camera."""
+        self.stop_event.set()
+        if self.thread.is_alive():
+            self.thread.join()
     
     def __del__(self):
         """Making sure the camera resources are released properly."""
-        self.capture.release()
-        #cv.destroyAllWindows()
+        self.stop()
 
-
-"""
-when defining proprioceptive,
-body = MyCobot280PiPhysicalBody(...)
-proprio = Proprioceptive(state = body)
-"""
 
 
 

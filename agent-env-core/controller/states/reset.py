@@ -27,7 +27,11 @@ class ResettingState(State):
         # if self._dummy_state > 10:
         #     self.context.set_state(IdlingState(self.context))
         # self._dummy_state += 1
-        if not self.context.resettable or self.context.resettable.is_reset():
+        if not self.context.resettable:
+            print("a")
+            return
+
+        if self.context.resettable.is_reset():
             self.context.set_state(IdlingState(self.context))
         else:
             self.context.resettable.reset()

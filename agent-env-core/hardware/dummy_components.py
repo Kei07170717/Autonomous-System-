@@ -28,11 +28,12 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
         if self.is_resetting:
             return
 
-        self.reset_timestamp = (time.time() * 1000) + self.time_to_reset
+        self.reset_timestamp = (time.time() * 1000) + self.time_to_reset * 1000
         self.is_resetting = True
 
-    
-
     def is_reset(self) -> bool:
+        if not self.is_resetting:
+            return False
+
         reset_done = self.reset_timestamp < (time.time() * 1000)
         return reset_done

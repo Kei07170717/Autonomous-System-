@@ -7,23 +7,18 @@ mc = MyCobot280(PI_PORT, PI_BAUD)
 n = 20
 gripperlist1 = []
 gripperlist2 = []
-gripperlist3 = []
 for _ in range(n):
     mc.set_gripper_state(0, 50)
     time.sleep(4)
     pos = mc.get_gripper_value()
-    gripperlist1.append(pos-100)  
-    mc.set_gripper_state(43, 50)
-    time.sleep(4)
-    pos3 = mc.get_gripper_value()
-    gripperlist3.append(pos3-43)  
+    gripperlist1.append(pos-100)    
     mc.set_gripper_state(100, 50)
     time.sleep(3)
     pos1 = mc.get_gripper_value()
     gripperlist2.append(pos1) 
 print("The angle difference if the gripper is open: ", gripperlist1)
 print("The angle difference if the gripper is closed: ", gripperlist2)
-print("The angle difference if the gripper in position 43: ", gripperlist3)
+
 
 
 #n = 10

@@ -1,16 +1,19 @@
 import time
 import numpy as np
+from numpy._typing import NDArray
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable
 from core.types import Action
+import math
+
 
 _GRIPPER_OPEN_VALUE = 0 # Gripper min
 _GRIPPER_CLOSED_VALUE = 100 # Gripper max
 
 # Values higher than this are considered 'closed' (TODO: justify this number)
 _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE) 
-_RESET_ANGLES: list[float] = [0,0,0,0,0,0] # We consider these angles to be the idle pos
+_RESET_ANGLES: NDArray = np.array([0,0,0,0,0,0]) # We consider these angles to be the idle pos
 
 class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable):
     def __init__(
@@ -54,8 +57,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     # BLOCKING CALL!!! Will take long time, carefull
     def get_joint_angles(self) -> list[float]:
         # return self.mc.get_angles()
-        # TODO: implement
-        return []
+        return self.mc.get_angles()
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: list[float]) -> None:
@@ -66,7 +68,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         return False if gripper_val < _GRIPPER_CLOSED_THRESHOLD  else True
     
     def is_reset(self) -> bool:
-        return 
+        return math.isclose(np.array(self.get_joint_angles()), _RESET_ANGLES, abs_tol=0.05)        
+        
 
     def reset(self):
-        pass
+        self.mc.send_angles(_RESET_ANGLES, 10)

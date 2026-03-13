@@ -3,21 +3,21 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
-
-n = 20
-gripperlist1 = []
-gripperlist2 = []
-for _ in range(n):
-    mc.set_gripper_state(0, 50)
-    time.sleep(4)
-    pos = mc.get_gripper_value()
-    gripperlist1.append(pos-100)    
-    mc.set_gripper_state(1, 50)
-    time.sleep(3)
-    pos1 = mc.get_gripper_value()
-    gripperlist2.append(pos1) 
-print("The angle difference if the gripper is open: ", gripperlist1)
-print("The angle difference if the gripper is closed: ", gripperlist2)
+mc.send_angles([90,0,0,0,0,0], 50)
+#n = 20
+#gripperlist1 = []
+#gripperlist2 = []
+#for _ in range(n):
+    #mc.set_gripper_state(0, 50)
+    #time.sleep(4)
+    #pos = mc.get_gripper_value()
+    #gripperlist1.append(pos-100)    
+    #mc.set_gripper_state(1, 50)
+    #time.sleep(3)
+    #pos1 = mc.get_gripper_value()
+    #gripperlist2.append(pos1) 
+#print("The angle difference if the gripper is open: ", gripperlist1)
+#print("The angle difference if the gripper is closed: ", gripperlist2)
 
 
 

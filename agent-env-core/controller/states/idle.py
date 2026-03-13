@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from . import drag_record
+
 if TYPE_CHECKING:
     from ..controller import ANCController
 
@@ -30,7 +32,8 @@ class IdlingState(State):
         pass
 
     def start_drag_record(self):
-        pass
+        self.context.set_state(drag_record.DragRecordingState(self.context))
+
 
     def stop(self):
         pass

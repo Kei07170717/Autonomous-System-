@@ -72,6 +72,7 @@ class ANCController(IANCController):
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
                  ):
+        self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable

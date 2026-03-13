@@ -1,5 +1,5 @@
 import dm_env 
-from dm_env import specs, _environment, TimeStep
+from dm_env import specs, TimeStep
 import numpy as np
 from abc import ABC, abstractmethod
 from core.interfaces import IBody, IObserver
@@ -9,13 +9,18 @@ from core.interfaces import IBody, IObserver
 class Environment(dm_env.Environment):
     def __init__(
             self, 
-            observer: IObserver):
+            observer: IObserver,
+            body: IBody):
         
         self.observer: IObserver = observer
+        self.body: IBody = body
 
 
     def reset(self) -> TimeStep:
-        pass
+        observation = self.observer.get_observation()
+        return dm_env.restart(
+                observation=observation,
+                )
 
     def observation_spec(self):
         pass

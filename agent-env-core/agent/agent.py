@@ -1,4 +1,4 @@
-from environment import Action
+from core.types import Action
 from core.interfaces import Agent
 
 

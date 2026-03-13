@@ -1,10 +1,57 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod
 import time
-
-from core.interfaces import IObserver
+from core.interfaces import IObserver, IResettable
 from environment import Body, IBody
-
-from .interfaces import IANCController, State
 from .states import ResettingState
+from .base_state import State
+
+class IANCController(ABC):
+
+    @abstractmethod
+    def set_state(self, state: State):
+        pass
+
+    @abstractmethod
+    def run_loop(self):
+        pass
+
+    @abstractmethod
+    def open_gripper(self):
+        pass
+
+    @abstractmethod
+    def close_gripper(self):
+        pass
+
+    @abstractmethod
+    def start_replay_record(self):
+        pass
+
+    # @abstractmethod
+    # def stop_replay_record(self):
+    #     pass
+
+    @abstractmethod
+    def start_drag_record(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
+    # @abstractmethod
+    # def stop_drag_record(self):
+    #     pass
+
+    # @abstractmethod
+    # def start_inference(self):
+    #     pass
+    #
+    # @abstractmethod
+    # def stop_inference(self):
+    #     pass
+
 
 
 class ANCController(IANCController):
@@ -22,10 +69,12 @@ class ANCController(IANCController):
     def __init__(self,
                  drag_body: IBody,
                  observer: IObserver,
-                 live_body: IBody | None = None
+                 live_body: IBody | None = None,
+                 resettable: IResettable | None = None,
                  ):
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
+        self.resettable: IResettable | None = resettable
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.terminating: bool = False
@@ -65,3 +114,14 @@ class ANCController(IANCController):
     #
     # def stop_inference(self):
     #     pass
+
+class ICommand(ABC):
+
+    @abstractmethod
+    def execute(self) -> None:
+        pass
+
+
+
+
+

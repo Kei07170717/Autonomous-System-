@@ -1,5 +1,5 @@
 from controller import ANCController
-from controller.interfaces import IANCController
+from controller.controller import IANCController
 from core.interfaces import (
     CameraSensorModule,
     IArmActuator,
@@ -38,6 +38,6 @@ if __name__ == "__main__":
         ]
     )
 
-    controller: IANCController = ANCController(drag_body=drag_body, observer=observer)
+    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, resettable=dummy_component)
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

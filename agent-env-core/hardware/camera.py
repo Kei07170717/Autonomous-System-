@@ -24,7 +24,7 @@ class Camera(ICameraSensor):
         tensor = torch.from_numpy(frame)
         return tensor
 
-    def get_current_frame(self):
+    def get_cu(self):
         return self.get_tensorized_frame()
     
     def __del__(self):

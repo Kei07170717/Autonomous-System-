@@ -1,7 +1,7 @@
 import threading
 
 from controller.commands import *
-from controller.interfaces import IANCController, ICommand
+from controller.controller import IANCController, ICommand
 # from controller import ANCController
 from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
 

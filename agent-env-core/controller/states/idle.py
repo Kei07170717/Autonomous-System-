@@ -1,10 +1,14 @@
-from ..interfaces import IANCController, State
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-# _STATE_NAME = "Idling"
+if TYPE_CHECKING:
+    from ..controller import ANCController
+
+from ..base_state import State
 
 class IdlingState(State):
   
-    def __init__(self, context: IANCController):
+    def __init__(self, context: ANCController):
         super().__init__(context, state_name="Idling")
 
     def execute(self):

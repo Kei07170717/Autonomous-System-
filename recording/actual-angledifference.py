@@ -12,16 +12,19 @@ angleswithsleep = []
 for _ in range(n):
     mc.send_angles([0,0,0,0,0,0], 50)
     mc.send_angles([0,-45,0,0,0,60], 50)
-    mc.get_angles()
+    firstrec = mc.get_angles()
+    angleswithoutsleep.append(firstrec)
     time.sleep(2)
-    mc.get_angles()
+    secondrec = mc.get_angles()
+    angleswithsleep.append(secondrec)
     mc.send_angles([0,0,0,0,0,0], 50)
-    mc.get_angles()
+    thirdrec = mc.get_angles()
+    angleswithoutsleep.append(thirdrec)
     time.sleep(2)
-    mc.get_angles()
-
-
-
+    fourthrec = mc.get_angles()
+    angleswithsleep.append(fourthrec)
+print("the angles without sleep:", angleswithoutsleep)
+print("the angles with sleep: ", angleswithsleep)
 
 
 

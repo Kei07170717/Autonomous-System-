@@ -4,19 +4,45 @@ from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
 
-mc.send_angles([0,0,0,0,0,0], 50)
-time.sleep(4)
-mc.send_angles([90,0,0,0,0,0], 50)
-time.sleep(4)
-mc.send_angles([90,-55,-40,0,0,0], 50)
-time.sleep(4)
-mc.set_gripper_state(0, 100)
-time.sleep(1)
-mc.set_gripper_state(1, 100)
-time.sleep(1)
-mc.send_angles([90,0,0,0,0,0], 50)
-time.sleep(4)
-mc.send_angles([0,0,0,0,0,0], 50)
+
+
+n = 5 
+angleswithoutsleep = []
+angleswithsleep = []
+for _ in range(n):
+    mc.send_angles([0,0,0,0,0,0], 50)
+    mc.send_angles([0,-45,0,0,0,60], 50)
+    mc.get_angles()
+    time.sleep(2)
+    mc.get_angles()
+    mc.send_angles([0,0,0,0,0,0], 50)
+    mc.get_angles()
+    time.sleep(2)
+    mc.get_angles()
+
+
+
+
+
+
+#mc.send_angles([0,0,0,0,0,0], 50)
+#time.sleep(4)
+#mc.send_angles([90,0,0,0,0,0], 50)
+#time.sleep(4)
+#mc.send_angles([90,-55,-40,0,0,0], 50)
+#time.sleep(4)
+#mc.set_gripper_state(0, 100)
+#time.sleep(1)
+#mc.set_gripper_state(1, 100)
+#time.sleep(1)
+#mc.send_angles([90,0,0,0,0,0], 50)
+#time.sleep(4)
+#mc.send_angles([0,0,0,0,0,0], 50)
+
+
+
+
+
 #n = 20
 #gripperlist1 = []
 #gripperlist2 = []

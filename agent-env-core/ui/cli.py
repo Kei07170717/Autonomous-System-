@@ -4,7 +4,8 @@ from controller.commands import *
 from controller.controller import IANCController, ICommand
 # from controller import ANCController
 from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
-
+from prompt_toolkit import prompt
+from prompt_toolkit.patch_stdout import patch_stdout
 
 class ANCConsoleUI:
     def __init__(self, anc_controller: IANCController) -> None:
@@ -26,24 +27,25 @@ class ANCConsoleUI:
         self.controller_thread = threading.Thread(target=self.anc_controller.run_loop, daemon=True)
         self.controller_thread.start()
 
-        while True:
-            prompt = input("agent-env-core> ").strip().lower()
-            
-            command: ICommand | None = self.command_mapping.get(prompt)
+        with patch_stdout():
+            while True:
+                prompt_input = prompt("agent-env-core> ").strip().lower()
+                
+                command: ICommand | None = self.command_mapping.get(prompt_input)
 
-            # Don't run the command if it's not valid
-            if command:
-                command.execute()
-            else:
-                self.help_command.execute()
+                # Don't run the command if it's not valid
+                if command:
+                    command.execute()
+                else:
+                    self.help_command.execute()
 
 
-            # if cmd == "help":
-            #     print("Possible commands: ")
-            # elif cmd == "reset":
-            #     self.anc_controller.set_state(ResettingState(self.anc_controller))
-            # elif cmd == "idle":
-            #     self.anc_controller.set_state(IdlingState(self.anc_controller))
+                # if cmd == "help":
+                #     print("Possible commands: ")
+                # elif cmd == "reset":
+                #     self.anc_controller.set_state(ResettingState(self.anc_controller))
+                # elif cmd == "idle":
+                #     self.anc_controller.set_state(IdlingState(self.anc_controller))
 
 
         

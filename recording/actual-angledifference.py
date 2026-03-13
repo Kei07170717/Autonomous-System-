@@ -3,10 +3,16 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 mc = MyCobot280(PI_PORT, PI_BAUD)
 
+
+mc.send_angles([0,0,0,0,0,0], 50)
+time.sleep(4)
 mc.send_angles([90,0,0,0,0,0], 50)
-mc.send_angles([90,45,0,0,0,0], 50)
+time.sleep(4)
+mc.send_angles([90,-45,0,0,0,0], 50)
+time.sleep(4)
 mc.send_angles([90,0,0,0,0,0], 50)
-mc.send_angles([90,0,0,0,0,0], 50)
+time.sleep(4)
+mc.send_angles([0,0,0,0,0,0], 50)
 #n = 20
 #gripperlist1 = []
 #gripperlist2 = []

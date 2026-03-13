@@ -77,10 +77,19 @@ class ANCController(IANCController):
         self.resettable: IResettable | None = resettable
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
+        self.state.on_state_enter()
         self.terminating: bool = False
 
     def set_state(self, state: State) -> None:
+        # 1. Clean up the current state before leaving
+        if self.state:
+            self.state.on_state_exit()
+        
+        # 2. Change the state
         print("Entering {} state".format(state.get_state_name()))
+        self.state = state
+        
+        self.state.on_state_enter()
         self.state = state
 
     def run_loop(self):

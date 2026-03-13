@@ -14,6 +14,21 @@ class State(ABC):
         return self.state_name
 
     @abstractmethod
+    def on_state_enter(self):
+        """
+        Similar to init, but more safe since this can
+        be ran after the previous state has exit.
+        """
+        pass
+
+    @abstractmethod
+    def on_state_exit(self):
+        """
+        Similar to destructor of current state.
+        """
+        pass
+
+    @abstractmethod
     def execute(self):
         pass
     @abstractmethod

@@ -4,9 +4,9 @@ import time
 class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable):
 
     def __init__(self, time_to_reset: int=2) -> None:
-        self.is_resetting: bool = False
+        # self.is_resetting: bool = False
         self.time_to_reset = time_to_reset
-        self.reset_timestamp = 0
+        self.reset_timestamp = float('inf')
         
 
     def set_joint_angles(self, arm_pos: list[float]):
@@ -25,15 +25,14 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
         return []
 
     def reset(self):
-        if self.is_resetting:
-            return
-
+        # if self.is_resetting:
+        #     return
         self.reset_timestamp = (time.time() * 1000) + self.time_to_reset * 1000
-        self.is_resetting = True
+        # self.is_resetting = True
 
     def is_reset(self) -> bool:
-        if not self.is_resetting:
-            return False
+        # if not self.is_resetting:
+        #     return False
 
         reset_done = self.reset_timestamp < (time.time() * 1000)
         return reset_done

@@ -2,7 +2,7 @@ import time
 import numpy as np
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
-from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor
+from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable
 from core.types import Action
 
 _GRIPPER_OPEN_VALUE = 0 # Gripper min
@@ -10,8 +10,9 @@ _GRIPPER_CLOSED_VALUE = 100 # Gripper max
 
 # Values higher than this are considered 'closed' (TODO: justify this number)
 _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE) 
+_RESET_ANGLES: list[float] = [0,0,0,0,0,0] # We consider these angles to be the idle pos
 
-class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator):
+class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable):
     def __init__(
             self,
             pi_port=PI_PORT,
@@ -63,4 +64,9 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator):
     # Maybe there is a numpy function for this? Surely it's performant enough though..
     def _gripper_value_to_is_closed_bool(self, gripper_val) -> bool:
         return False if gripper_val < _GRIPPER_CLOSED_THRESHOLD  else True
+    
+    def is_reset(self) -> bool:
+        return 
 
+    def reset(self):
+        pass

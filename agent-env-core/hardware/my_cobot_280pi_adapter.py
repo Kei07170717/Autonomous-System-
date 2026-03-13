@@ -68,8 +68,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         return False if gripper_val < _GRIPPER_CLOSED_THRESHOLD  else True
     
     def is_reset(self) -> bool:
-        return math.isclose(np.array(self.get_joint_angles()), _RESET_ANGLES, abs_tol=0.05)        
+        return np.allclose(np.array(self.get_joint_angles()), _RESET_ANGLES, atol=0.6)        
         
 
     def reset(self):
-        self.mc.send_angles(_RESET_ANGLES, 10)
+        self.mc.send_angles(_RESET_ANGLES.tolist(), 10)

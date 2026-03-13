@@ -90,7 +90,6 @@ class ANCController(IANCController):
         self.state = state
         
         self.state.on_state_enter()
-        self.state = state
 
     def run_loop(self):
         while not self.terminating:
@@ -129,8 +128,3 @@ class ICommand(ABC):
     @abstractmethod
     def execute(self) -> None:
         pass
-
-
-
-
-

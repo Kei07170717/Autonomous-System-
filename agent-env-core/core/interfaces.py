@@ -22,6 +22,7 @@ class SensorModule(ABC):
     def get_data(self) -> Tensor:
         pass
 
+
 class IBody(ABC):
     """Capable of affecting the world."""
     @abstractmethod
@@ -35,6 +36,10 @@ class IArmActuator(ABC):
     def set_joint_angles(self, arm_pos: list[float]):
         pass
 
+    @abstractmethod
+    def release_joints(self) -> None:
+        """Releases the joints, allowing for manual manipulation."""
+        pass
 
 
 class IGripperActuator(ABC):

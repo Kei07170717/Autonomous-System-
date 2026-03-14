@@ -33,6 +33,7 @@ class DragRecordingState(State):
     
     def on_state_enter(self):
         self.timestep = self.environment.reset()
+        self.context.arm_actuator.release_joints()
 
     def on_state_exit(self):
         pass

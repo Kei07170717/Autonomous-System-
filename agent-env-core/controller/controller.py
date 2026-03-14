@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import time
-from core.interfaces import IObserver, IResettable
+from core.interfaces import IObserver, IResettable, IArmActuator
 from environment import Body, IBody
 from .states import ResettingState
 from .base_state import State
@@ -69,6 +69,7 @@ class ANCController(IANCController):
     def __init__(self,
                  drag_body: IBody,
                  observer: IObserver,
+                 arm_actuator: IArmActuator,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
                  ):
@@ -76,6 +77,7 @@ class ANCController(IANCController):
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable
+        self.arm_actuator: IArmActuator = arm_actuator
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.state.on_state_enter()

@@ -67,6 +67,6 @@ if __name__ == "__main__":
         ]
     )
 
-    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, resettable=resettable)
+    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable)
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

@@ -36,3 +36,6 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
 
         reset_done = self.reset_timestamp < (time.time() * 1000)
         return reset_done
+
+    def release_joints(self):
+        pass

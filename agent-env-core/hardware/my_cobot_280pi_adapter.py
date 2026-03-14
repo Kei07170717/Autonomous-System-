@@ -63,6 +63,10 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     def set_joint_angles(self, arm_pos: list[float]) -> None:
         self.mc.send_angles(arm_pos, self.speed_gripper)
 
+    def release_joints(self) -> None:
+        """Releases the joints, allowing for manual manipulation."""
+        self.mc.release_all_servos()
+
     # Maybe there is a numpy function for this? Surely it's performant enough though..
     def _gripper_value_to_is_closed_bool(self, gripper_val) -> bool:
         return False if gripper_val < _GRIPPER_CLOSED_THRESHOLD  else True

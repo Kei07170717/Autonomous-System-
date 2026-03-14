@@ -64,7 +64,6 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         self.mc.send_angles(arm_pos, self.speed_gripper)
 
     def release_joints(self) -> None:
-        """Releases the joints, allowing for manual manipulation."""
         self.mc.release_all_servos()
 
     # Maybe there is a numpy function for this? Surely it's performant enough though..

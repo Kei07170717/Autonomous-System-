@@ -38,7 +38,6 @@ class IArmActuator(ABC):
 
     @abstractmethod
     def release_joints(self) -> None:
-        """Releases the joints, allowing for manual manipulation."""
         pass
 
 

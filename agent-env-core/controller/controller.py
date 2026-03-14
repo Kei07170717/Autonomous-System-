@@ -72,6 +72,7 @@ class ANCController(IANCController):
                  arm_actuator: IArmActuator,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
+                 hz: float = 20.0
                  ):
         self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
@@ -82,6 +83,7 @@ class ANCController(IANCController):
         self.state: State = ResettingState(self)
         self.state.on_state_enter()
         self.terminating: bool = False
+        self.loop_period = 1.0 / hz
 
     def set_state(self, state: State) -> None:
         # 1. Clean up the current state before leaving
@@ -95,9 +97,27 @@ class ANCController(IANCController):
         self.state.on_state_enter()
 
     def run_loop(self):
+        # period = 1.0 / 20.0  # 0.05s budget
+        next_wake_time = time.perf_counter()
+
         while not self.terminating:
+            next_wake_time += self.loop_period
+            exec_start = time.perf_counter()
+
             self.state.execute()
-            time.sleep(0.1)  # TODO: Remove
+
+            exec_duration = time.perf_counter() - exec_start
+            sleep_duration = next_wake_time - time.perf_counter()
+
+            if sleep_duration > 0:
+                time.sleep(sleep_duration)
+            else:
+                delay = -sleep_duration
+                print(f"OVERRUN: Delayed by {delay:.4f}s. "
+                      f"Execution took {exec_duration:.4f}s (Budget: {self.loop_period:.4f}s)")
+                
+                # Reset clock to prevent the loop from rapid-firing to "catch up"
+                next_wake_time = time.perf_counter()
 
     def open_gripper(self):
         self.state.open_gripper()

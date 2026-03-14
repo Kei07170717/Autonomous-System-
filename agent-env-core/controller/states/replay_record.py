@@ -1,5 +1,10 @@
-from ..interfaces import IANCController, State
+from __future__ import annotations
+from ..base_state import State
+from . import reset
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..controller import ANCController
 
 class ReplayRecordingState(State):
     """
@@ -9,8 +14,9 @@ class ReplayRecordingState(State):
     should have a ReplayAgent which sends the actions from a file to the RecordedEnvironment.
     """
   
-    def __init__(self, context: IANCController):
+    def __init__(self, context: ANCController):
         super().__init__(context, state_name="ReplayRecording")
+        assert self.context.live_body is not None
 
     def on_state_enter(self):
         pass
@@ -34,4 +40,4 @@ class ReplayRecordingState(State):
         pass
 
     def stop(self):
-        pass
+        self.context.set_state(reset.ResettingState(self.context))

@@ -56,6 +56,12 @@ if __name__ == "__main__":
         gripper_actuator=dummy_component,
     )
 
+    live_body: IBody = Body(
+            arm_sensor=arm_sensor,
+            arm_actuator=arm_actuator,
+            gripper_actuator=dummy_component
+            )
+
     camera1_id: str = "USB 2.0 Camera: USB Camera" # CHANGE TO ACTUAL NAME
     # sensor_modules: [SensorModule]
     observer: IObserver = Observer(
@@ -67,6 +73,6 @@ if __name__ == "__main__":
         ]
     )
 
-    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable)
+    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable, live_body=live_body)
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

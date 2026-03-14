@@ -46,8 +46,6 @@ class DragRecordingState(State):
         self.observation = self.environment.step(action)
         if self.verbose_mode: print("Obs: ", self.observation.observation)
 
-        pass
-
     def open_gripper(self):
         pass
 

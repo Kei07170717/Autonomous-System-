@@ -1,1 +1,1 @@
-from .agent import Agent, KinestheticAgent
+from .agent import Agent, KinestheticAgent, RotatingAgent

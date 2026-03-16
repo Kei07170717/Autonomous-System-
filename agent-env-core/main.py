@@ -50,6 +50,10 @@ if __name__ == "__main__":
         arm_actuator = cobot_adapter
         resettable = cobot_adapter
 
+    # if args.camera_id:
+    #     print(args.camera_id)
+
+
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
         arm_actuator=dummy_component,
@@ -62,16 +66,21 @@ if __name__ == "__main__":
             gripper_actuator=dummy_component
             )
 
-    camera1_id: str = "USB 2.0 Camera: USB Camera" # CHANGE TO ACTUAL NAME
     # sensor_modules: [SensorModule]
     observer: IObserver = Observer(
         [
-            # CameraSensorModule(id="Cam1", camera_sensor=Camera(camera1_id)),
             JointAnglesSensorModule(
                 id="arm_angles", joint_angles_sensor=arm_sensor
             )
         ]
     )
+
+    # Quick and dirty
+    try:
+        cam1 =Camera(camera_name=args.camera_id) 
+        observer.attach_sensor_module(CameraSensorModule(id="cam1", camera_sensor=cam1))
+    except Exception as e:
+        print("Couldn't init camera, most likely wrong path: ", args.camera_id)
 
     controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable, live_body=live_body)
     ui: ANCConsoleUI = ANCConsoleUI(controller)

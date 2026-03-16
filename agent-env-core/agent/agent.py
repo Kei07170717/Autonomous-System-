@@ -9,8 +9,8 @@ class KinestheticAgent(Agent):
     not execute actions using this agent.'''
 
     def get_action(self, obs: dict) -> Action:
-        # TODO: return observed angles
-        return Action([0, 0, 0, 0, 0, 0], 0)
+        # TODO: return gripper state
+        return Action(obs["sensor_states"]["arm_angles"], 0) # Hardcoding these keys is bad!!!
 
 
 # Vibe coded agent just for the sake of testing

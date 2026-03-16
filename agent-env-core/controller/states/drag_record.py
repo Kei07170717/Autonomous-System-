@@ -49,8 +49,8 @@ class DragRecordingState(State):
 
         action = self.agent.get_action(self.timestep.observation)
         if self.verbose_mode: print("Action: ", action.arm)
-        self.observation = self.environment.step(action)
-        if self.verbose_mode: print("Obs: ", self.observation.observation)
+        self.timestep = self.environment.step(action)
+        if self.verbose_mode: print("Obs: ", self.timestep.observation)
 
     def open_gripper(self):
         pass

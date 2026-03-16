@@ -82,6 +82,10 @@ class IObserver(ABC):
     def get_observation(self) -> dict:
         pass
 
+    @abstractmethod
+    def attach_sensor_module(self, module: SensorModule):
+        pass
+
 # --- sensor modules ---
 class IJointAnglesSensor(ABC):
     @abstractmethod

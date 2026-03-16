@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from core.interfaces import Agent
 from agent import KinestheticAgent
+from envio.episode_manager import ActionSequenceManager
 from envio.writing import NumpyActionSequenceWriter, IActionSequenceWriter
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ class DragRecordingState(State):
 
         # Decorate the current environment with a recorder
         writer: IActionSequenceWriter = NumpyActionSequenceWriter(write_path="a.txt", metadata=None)
-        self.environment: dm_env.Environment = ActionRecordedEnvironment(self.environment, writer)
+        self.environment: dm_env.Environment = ActionRecordedEnvironment(self.environment, writer, ActionSequenceManager())
         self.agent: Agent = KinestheticAgent()
         self.verbose_mode = verbose_mode
         

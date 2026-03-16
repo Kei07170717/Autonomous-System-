@@ -6,6 +6,7 @@ from dm_env import TimeStep, specs
 
 from core.interfaces import IBody, IObserver
 from core.types import Action
+from envio.episode_manager import IActionSequenceManager
 from envio.writing import IActionSequenceWriter
 
 
@@ -75,14 +76,16 @@ class EnvironmentWrapper(dm_env.Environment):
     #     pass
 
 class ActionRecordedEnvironment(EnvironmentWrapper):
-    def __init__(self, env: dm_env.Environment, action_writer: IActionSequenceWriter):
+    def __init__(self, env: dm_env.Environment, action_writer: IActionSequenceWriter, action_sequence_manager: IActionSequenceManager):
        super().__init__(env)
-       self.steps: list[Action] = []
+       self.actions: list[Action] = []
        self.action_writer: IActionSequenceWriter = action_writer
+       self.action_sequence_manager = action_sequence_manager
 
     def step(self, action) -> TimeStep:
-        self.steps.append(action)
+        self.actions.append(action)
         return super().step(action)
 
     def __del__(self):
-        self.action_writer.write_episode(self.steps)
+        self.action_sequence_manager.set_actions(self.actions)
+        self.action_writer.write_episode(self.actions)

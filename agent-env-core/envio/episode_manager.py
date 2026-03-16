@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from agent.agent import ReplayAgent
+from core.interfaces import Agent
 from core.types import Action
 
 
@@ -23,6 +25,11 @@ class IActionSequenceManager(ABC):
     def clear_actions(self):
         pass
 
+    @abstractmethod
+    def create_replay_agent(self) -> Agent:
+        pass
+        
+
 class ActionSequenceManager(IActionSequenceManager):
     
     def __init__(self):
@@ -40,3 +47,7 @@ class ActionSequenceManager(IActionSequenceManager):
 
     def clear_actions(self):
         self.actions.clear()
+
+    def create_replay_agent(self) -> Agent:
+        return ReplayAgent(self.actions)
+        

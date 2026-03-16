@@ -11,12 +11,14 @@ from envio.writing import IActionSequenceWriter
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: IObserver, body: IBody):
-
+    def __init__(self, observer: IObserver, body: IBody, max_steps: int | None = None):
         self.observer: IObserver = observer
         self.body: IBody = body
+        self.max_steps = max_steps
+        self.current_step_count: int = 0
 
     def reset(self) -> TimeStep:
+        self.current_step_count = 0
         observation = self.observer.get_observation()
         return dm_env.restart(
             observation=observation,
@@ -30,6 +32,13 @@ class Environment(dm_env.Environment):
 
     def step(self, action: Action) -> TimeStep:
         observation = self.observer.get_observation()
+        
+        print("ENV STEP: ", self.current_step_count)
+        if self.max_steps and self.current_step_count == (self.max_steps - 1):
+            return dm_env.termination(observation=observation, reward=None)
+
+        self.current_step_count += 1
+
         self.body.affect_world(
             action
         )  # SETTING after GETTING improves performance by a lot for the 280PI for some reason

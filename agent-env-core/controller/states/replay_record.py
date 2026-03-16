@@ -20,13 +20,23 @@ class ReplayRecordingState(State):
   
     def __init__(self, context: ANCController, verbose_mode: bool = True):
         super().__init__(context, state_name="ReplayRecording")
-        assert self.context.live_body is not None
         
-        self.environment: dm_env.Environment = Environment(self.context.observer, self.context.live_body)
-        self.agent: Agent = RotatingAgent()
+        self.environment: dm_env.Environment | None = None
+        self.agent: Agent = RotatingAgent() # ???
         self.verbose_mode = verbose_mode
 
     def on_state_enter(self):
+
+        # We can only replay actions present in memory...
+        if not self.context.action_sequence_manager.is_episode_recorded():
+            print("Could not find recorded actions in memory, exiting ReplayRecordingState...")
+            self.context.set_state(reset.ResettingState(self.context))
+        else:
+            self.agent = self.context.action_sequence_manager.create_replay_agent()
+        
+        assert self.context.live_body is not None
+        max_steps = len(self.context.action_sequence_manager.get_actions())
+        self.environment = Environment(self.context.observer, self.context.live_body, max_steps)
         self.timestep = self.environment.reset()
 
     def on_state_exit(self):
@@ -34,11 +44,15 @@ class ReplayRecordingState(State):
 
     def execute(self):
         assert self.timestep is not None
+        assert self.environment is not None
 
         action = self.agent.get_action(self.timestep.observation)
         if self.verbose_mode: print("Action: ", action.arm)
-        self.observation = self.environment.step(action)
-        if self.verbose_mode: print("Obs: ", self.observation.observation)
+        self.timestep = self.environment.step(action)
+        if self.verbose_mode: print("Obs: ", self.timestep.observation)
+
+        if self.timestep.last():
+            self.context.set_state(reset.ResettingState(self.context))
 
     def open_gripper(self):
         pass

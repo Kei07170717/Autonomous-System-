@@ -45,6 +45,20 @@ class RotatingAgent(Agent):
         # Apply the safe rotation to the specified joint
         target_angles[self.joint_index] = current_angle
         
-        # Return the joint angles and a closed/neutral gripper state (0)
         return Action(target_angles, 0)
+
+
+class ReplayAgent(Agent):
+    """
+    Simple agent that iterates over given actions.
+    Usefull for replaying recordings.
+    """
+    def __init__(self, actions: list[Action]):
+        self.actions: list[Action] = actions
+        self.action_iter = iter(self.actions)
+
+    def get_action(self, obs: dict) -> Action:
+        return next(self.action_iter)
+        
+
 

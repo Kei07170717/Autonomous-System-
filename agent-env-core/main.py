@@ -27,6 +27,13 @@ if __name__ == "__main__":
             "--live",
             action="store_true"
             )
+    
+    parser.add_argument(
+        "--hz", 
+        type=int,
+        default=20,
+        help="Hz that the controller will operate on; 10hz is 10 send_angles a second."
+    )
 
     parser.add_argument(
         "--camera-id", 
@@ -78,6 +85,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("Couldn't init camera, most likely wrong path: ", args.camera_id)
 
-    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable, live_body=live_body)
+    controller: ANCController = ANCController(drag_body=drag_body, observer=observer, arm_actuator=arm_actuator, resettable=resettable, live_body=live_body, hz=args.hz)
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

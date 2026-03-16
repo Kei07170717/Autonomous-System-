@@ -30,8 +30,8 @@ class Environment(dm_env.Environment):
         pass
 
     def step(self, action: Action) -> TimeStep:
-        self.body.affect_world(action)
         observation = self.observer.get_observation()
+        self.body.affect_world(action) # SETTING after GETTING improves performance by a lot for the 280PI for some reason
         return dm_env.transition(
                 observation=observation,
                 reward=None

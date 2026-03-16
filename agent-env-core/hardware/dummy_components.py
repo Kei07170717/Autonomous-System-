@@ -3,7 +3,7 @@ import time
 
 class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable):
 
-    def __init__(self, time_to_reset: int=2) -> None:
+    def __init__(self, time_to_reset: int=1) -> None:
         # self.is_resetting: bool = False
         self.time_to_reset = time_to_reset
         self.reset_timestamp = float('inf')

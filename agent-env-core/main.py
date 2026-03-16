@@ -50,10 +50,6 @@ if __name__ == "__main__":
         arm_actuator = cobot_adapter
         resettable = cobot_adapter
 
-    # if args.camera_id:
-    #     print(args.camera_id)
-
-
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
         arm_actuator=dummy_component,

@@ -32,7 +32,7 @@ class DragRecordingState(State):
 
         # Decorate the current environment with a recorder
         writer: IActionSequenceWriter = NumpyActionSequenceWriter(write_path="a.txt", metadata=None)
-        self.environment: dm_env.Environment = ActionRecordedEnvironment(self.environment, writer, ActionSequenceManager())
+        self.environment: dm_env.Environment = ActionRecordedEnvironment(self.environment, writer, self.context.action_sequence_manager)
         self.agent: Agent = KinestheticAgent()
         self.verbose_mode = verbose_mode
         

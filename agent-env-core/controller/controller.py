@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import time
 from core.interfaces import IObserver, IResettable, IArmActuator
+from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from .states import ResettingState
 from .base_state import State
@@ -84,6 +85,7 @@ class ANCController(IANCController):
         self.state.on_state_enter()
         self.terminating: bool = False
         self.loop_period = 1.0 / hz
+        self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root
 
     def set_state(self, state: State) -> None:
         # 1. Clean up the current state before leaving

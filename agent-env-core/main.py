@@ -56,6 +56,7 @@ if __name__ == "__main__":
         arm_sensor = cobot_adapter
         arm_actuator = cobot_adapter
         resettable = cobot_adapter
+        gripper_actuator = cobot_adapter
 
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     live_body: IBody = Body(
             arm_sensor=arm_sensor,
             arm_actuator=arm_actuator,
-            gripper_actuator=dummy_component
+            gripper_actuator=gripper_actuator
             )
 
     # sensor_modules: [SensorModule]

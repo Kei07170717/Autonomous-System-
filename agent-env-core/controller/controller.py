@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import threading
 import time
 from core.interfaces import IObserver, IResettable, IArmActuator
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
@@ -80,46 +81,54 @@ class ANCController(IANCController):
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable
         self.arm_actuator: IArmActuator = arm_actuator
+        self._state_lock = threading.RLock()
+        self.loop_period = 1.0 / hz
+        
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.state.on_state_enter()
         self.terminating: bool = False
-        self.loop_period = 1.0 / hz
-        self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root
+        self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
 
     def set_state(self, state: State) -> None:
-        # 1. Clean up the current state before leaving
-        if self.state:
-            self.state.on_state_exit()
+
+        with self._state_lock:
+            if self.state:
+                self.state.on_state_exit()
         
-        # 2. Change the state
-        print("Entering {} state".format(state.get_state_name()))
-        self.state = state
-        
-        self.state.on_state_enter()
+            print("Entering {} state".format(state.get_state_name()))
+            self.state = state
+            
+            self.state.on_state_enter()
 
     def run_loop(self):
-        # period = 1.0 / 20.0  # 0.05s budget
-        next_wake_time = time.perf_counter()
+        # Set the first deadline
+        next_wake_time = time.perf_counter() + self.loop_period
 
         while not self.terminating:
-            next_wake_time += self.loop_period
             exec_start = time.perf_counter()
 
-            self.state.execute()
+            # Safely execute the current state
+            with self._state_lock:
+                self.state.execute()
 
-            exec_duration = time.perf_counter() - exec_start
-            sleep_duration = next_wake_time - time.perf_counter()
+            now = time.perf_counter()
+            exec_duration = now - exec_start
+            sleep_duration = next_wake_time - now
 
             if sleep_duration > 0:
                 time.sleep(sleep_duration)
+                # Step the deadline forward cleanly
+                next_wake_time += self.loop_period 
             else:
+                # OVERRUN handling
                 delay = -sleep_duration
                 print(f"OVERRUN: Delayed by {delay:.4f}s. "
                       f"Execution took {exec_duration:.4f}s (Budget: {self.loop_period:.4f}s)")
                 
-                # Reset clock to prevent the loop from rapid-firing to "catch up"
-                next_wake_time = time.perf_counter()
+                # Reset the deadline to be exactly one period from right NOW, 
+                # dropping the missed frames.
+                next_wake_time = time.perf_counter() + self.loop_period
 
     def open_gripper(self):
         self.state.open_gripper()

@@ -78,5 +78,5 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     def reset(self):
         self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
     
-    def get_gripper_value(self):
+    def get_gripper_value(self) -> int:
         return self.mc.get_gripper_value()

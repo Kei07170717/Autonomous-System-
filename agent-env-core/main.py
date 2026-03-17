@@ -10,6 +10,8 @@ from core.interfaces import (
     IResettable,
     JointAnglesSensorModule,
     SensorModule,
+    GripperSensorModule,
+    IGripperSensor
 )
 from environment import Body, Observer
 from hardware.camera import Camera
@@ -48,7 +50,9 @@ if __name__ == "__main__":
     arm_sensor: IJointAnglesSensor = dummy_component
     arm_actuator: IArmActuator = dummy_component
     gripper_actuator: IGripperActuator = dummy_component
+    gripper_sensor: IGripperSensor = dummy_component
     resettable: IResettable = dummy_component
+
    
     # Override with live components if enabled
     if args.live:
@@ -56,11 +60,14 @@ if __name__ == "__main__":
         arm_sensor = cobot_adapter
         arm_actuator = cobot_adapter
         resettable = cobot_adapter
+        gripper_sensor = cobot_adapter
 
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
         arm_actuator=dummy_component,
         gripper_actuator=dummy_component,
+        
+
     )
 
     live_body: IBody = Body(
@@ -73,7 +80,10 @@ if __name__ == "__main__":
     observer: IObserver = Observer(
         [
             JointAnglesSensorModule(
-                id="arm_angles", joint_angles_sensor=arm_sensor
+                id="arm_angles", joint_angles_sensor = arm_sensor
+            ),
+            GripperSensorModule(
+                id = "gripper_value", gripper_sensor = gripper_sensor
             )
         ]
     )

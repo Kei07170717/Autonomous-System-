@@ -1,7 +1,7 @@
-from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable
+from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor
 import time
 
-class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable):
+class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor):
 
     def __init__(self, time_to_reset: int=1) -> None:
         # self.is_resetting: bool = False
@@ -23,6 +23,8 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
 
     def get_joint_angles(self) -> list[float]:
         return []
+    def get_gripper_value(self):
+        return 0 #returns closed gripper
 
     def reset(self):
         # if self.is_resetting:

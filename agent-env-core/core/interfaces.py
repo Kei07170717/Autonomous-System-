@@ -1,6 +1,7 @@
 from .types import Action
 from abc import ABC, abstractmethod
 from torch import Tensor
+import torch
 
 """Contains the core interfaces that the application depends on."""
 
@@ -114,11 +115,21 @@ class CameraSensorModule(SensorModule):
     def get_data(self) -> Tensor:
         return self.camera_sensor.get_current_frame_as_tensor()
     
+
+
+
 class  IGripperSensor(ABC):
     """
-    define abstract function
     """
     @abstractmethod
     def get_gripper_value() -> float :
         pass
     
+class GripperSensorModule(SensorModule):
+    def __init__(self, id : str, gripper_sensor = IGripperSensor ):
+        """ """
+        super().__init__(id)
+        self.gripper_sensor = gripper_sensor
+    
+    def get_data(self) -> Tensor:
+        return torch.tensor( self.gripper_sensor.get_gripper_value(), dtype = torch.int8)

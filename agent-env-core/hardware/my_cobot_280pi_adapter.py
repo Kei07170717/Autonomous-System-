@@ -3,7 +3,7 @@ import numpy as np
 from numpy._typing import NDArray
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
-from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable
+from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor
 from core.types import Action
 import math
 
@@ -15,7 +15,7 @@ _GRIPPER_CLOSED_VALUE = 100 # Gripper max
 _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE) 
 _RESET_ANGLES: NDArray = np.array([0,0,0,0,0,0]) # We consider these angles to be the idle pos
 
-class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable):
+class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable, IGripperSensor):
     def __init__(
             self,
             pi_port=PI_PORT,
@@ -40,6 +40,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         Therefore, it will simply be converted to 'open' or 'closed' by
         converting it to a bool. Might not be ideal though.
         """
+
         is_closing_value: bool = self._gripper_value_to_is_closed_bool(value)
         if self.is_last_gripper_state_close == is_closing_value:
             return
@@ -76,3 +77,6 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
 
     def reset(self):
         self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+    
+    def get_gripper_value(self):
+        return self.mc.get_gripper_value()

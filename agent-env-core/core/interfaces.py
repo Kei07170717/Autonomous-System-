@@ -113,3 +113,12 @@ class CameraSensorModule(SensorModule):
 
     def get_data(self) -> Tensor:
         return self.camera_sensor.get_current_frame_as_tensor()
+    
+class  IGripperSensor(ABC):
+    """
+    define abstract function
+    """
+    @abstractmethod
+    def get_gripper_value() -> float :
+        pass
+    

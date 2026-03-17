@@ -79,4 +79,5 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
     
     def get_gripper_value(self) -> int:
+        """Gets gripper values  between 0-100 """
         return self.mc.get_gripper_value()

@@ -127,7 +127,10 @@ class  IGripperSensor(ABC):
     
 class GripperSensorModule(SensorModule):
     def __init__(self, id : str, gripper_sensor = IGripperSensor ):
-        """ """
+        """Adapter class 
+         runs the get_data for the Gripper
+         returns the gripper (0-100) as Tensor
+           """
         super().__init__(id)
         self.gripper_sensor = gripper_sensor
     

@@ -26,7 +26,7 @@ class SensorModule(ABC):
 class IBody(ABC):
     """Capable of affecting the world."""
     @abstractmethod
-    def affect_world(self, action: Action) -> None:
+    def affect_world(self, action: dict) -> None:
         # Apply action to the world
         pass
 
@@ -70,7 +70,7 @@ class IResettable(ABC):
 # TODO: should it be an interface or an abstract class?
 class Agent(ABC):
     @abstractmethod
-    def get_action(self, obs: dict) -> Action:
+    def get_action(self, obs: dict) -> dict:
         pass
 
 

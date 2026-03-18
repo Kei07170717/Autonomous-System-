@@ -42,9 +42,9 @@ class NumpyActionSequenceWriter(IActionSequenceWriter):
     def write_metadata(self):
         pass
 
-    def write_episode(self, steps: list[Action]):
+    def write_episode(self, steps: list[dict]):
         print("Writing with steps length: ", len(steps))
         # print("Step 0: ", steps[0])
         # print(type(steps[0][0]), type(steps[0][1])) 
-        actions: list[list[float]] = [step.arm for step in steps] # TODO: add gripper
+        actions: list[list[float]] = [step["arm_angles"] for step in steps] # TODO: add gripper
         np.savetxt(self.write_path, np.asarray(actions), delimiter=",")

@@ -48,7 +48,7 @@ class DragRecordingState(State):
         assert self.timestep is not None
 
         action = self.agent.get_action(self.timestep.observation)
-        if self.verbose_mode: print("Action: ", action.arm)
+        if self.verbose_mode: print("Action: ", action)
         self.timestep = self.environment.step(action)
         if self.verbose_mode: print("Obs: ", self.timestep.observation)
 

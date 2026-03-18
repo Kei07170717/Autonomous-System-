@@ -10,6 +10,7 @@ class Body(IBody):
     
     # Shouldn't we normalize this action actually? If we assume certain dimensions, 
     # we might have trouble switching to different robot arms
-    def affect_world(self, action: Action):
-        self.arm_actuator.set_joint_angles(action.arm)
-        self.gripper_actuator.set_gripper_value(action.gripper)
+    def affect_world(self, action: dict):
+        print(action)
+        self.arm_actuator.set_joint_angles(action["arm_angles"])
+        self.gripper_actuator.set_gripper_value(action["gripper"])

@@ -22,7 +22,7 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
         pass
 
     def get_joint_angles(self) -> list[float]:
-        return []
+        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     def reset(self):
         # if self.is_resetting:

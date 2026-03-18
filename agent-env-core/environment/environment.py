@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
 import dm_env
+# from tensorflow import dtypes
 import numpy as np
 from dm_env import TimeStep, specs
+import tensorflow as tf
 
 from core.interfaces import IBody, IObserver
 from core.types import Action
@@ -24,13 +26,13 @@ class Environment(dm_env.Environment):
             observation=observation,
         )
 
-    def observation_spec(self):
-        pass
+    def observation_spec(self) -> specs.BoundedArray:
+        return specs.BoundedArray(shape=(6,), dtype=np.float64, name="arm_angles", minimum=0, maximum=360)
 
-    def action_spec(self):
-        pass
+    def action_spec(self) -> specs.BoundedArray:
+        return specs.BoundedArray(shape=(6,), dtype=np.float64, name="arm_angles", minimum=0, maximum=360)
 
-    def step(self, action: Action) -> TimeStep:
+    def step(self, action: dict) -> TimeStep:
         observation = self.observer.get_observation()
         
         print("ENV STEP: ", self.current_step_count)

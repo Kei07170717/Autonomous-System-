@@ -13,11 +13,17 @@ from envio.writing import IActionSequenceWriter
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: IObserver, body: IBody, max_steps: int | None = None):
+    def __init__(self, observer: IObserver, body: IBody):
         self.observer: IObserver = observer
         self.body: IBody = body
-        self.max_steps = max_steps
+        self.max_steps = -1 # 'None' on default
         self.current_step_count: int = 0
+
+    def set_max_steps(self, max_steps: int):
+        self.max_steps = max_steps
+
+    def clear_max_steps(self):
+        self.max_steps = -1
 
     def reset(self) -> TimeStep:
         self.current_step_count = 0
@@ -33,7 +39,6 @@ class Environment(dm_env.Environment):
             )
         }
 
-    # TODO: we can optimze by lowering np.int32 to np.uint8 or something surely?
     def action_spec(self):
         return {
             "arm_angles": specs.BoundedArray(

@@ -2,9 +2,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import threading
 import time
+
+import envlogger
 from core.interfaces import IObserver, IResettable, IArmActuator
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
+from environment.environment import Environment
 from .states import ResettingState
 from .base_state import State
 from envlogger.backends.backend_writer import BackendWriter
@@ -89,9 +92,17 @@ class ANCController(IANCController):
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.state.on_state_enter()
-        self.terminating: bool = False
+        self.terminating: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BackendWriter | None = writer
+
+        # print("Max steps")
+        assert self.live_body is not None
+        self.replay_environment = Environment(self.observer, self.live_body)
+
+        # Only record if a writer is provided
+        if self.writer:
+            self.replay_environment = envlogger.EnvLogger(self.replay_environment, backend=self.writer)
 
     def set_state(self, state: State) -> None:
 
@@ -159,6 +170,10 @@ class ANCController(IANCController):
     #
     # def stop_inference(self):
     #     pass
+
+    def __del__(self):
+        assert self.replay_environment is not None
+        self.replay_environment.close()
 
 class ICommand(ABC):
 

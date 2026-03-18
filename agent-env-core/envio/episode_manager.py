@@ -49,5 +49,6 @@ class ActionSequenceManager(IActionSequenceManager):
         self.actions.clear()
 
     def create_replay_agent(self) -> Agent:
+        # print("Created replay agent with actions len: ", len(self.actions))
         return ReplayAgent(self.actions)
         

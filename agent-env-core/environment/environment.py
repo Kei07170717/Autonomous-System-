@@ -26,25 +26,37 @@ class Environment(dm_env.Environment):
             observation=observation,
         )
 
-    def observation_spec(self) -> specs.BoundedArray:
-        return specs.BoundedArray(shape=(6,), dtype=np.float64, name="arm_angles", minimum=0, maximum=360)
+    def observation_spec(self):
+        return {
+            "arm_angles": specs.BoundedArray(
+                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
+            )
+        }
 
-    def action_spec(self) -> specs.BoundedArray:
-        return specs.BoundedArray(shape=(6,), dtype=np.float64, name="arm_angles", minimum=0, maximum=360)
+    # TODO: we can optimze by lowering np.int32 to np.uint8 or something surely?
+    def action_spec(self):
+        return {
+            "arm_angles": specs.BoundedArray(
+                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
+            ),
+            "gripper": specs.BoundedArray(
+                shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
+            )
+        }
 
     def step(self, action: dict) -> TimeStep:
         observation = self.observer.get_observation()
         
         print("ENV STEP: ", self.current_step_count)
         if self.max_steps and self.current_step_count == (self.max_steps - 1):
-            return dm_env.termination(observation=observation, reward=None)
+            return dm_env.termination(observation=observation, reward=np.float32(0.0))
 
         self.current_step_count += 1
 
         self.body.affect_world(
             action
         )  # SETTING after GETTING improves performance by a lot for the 280PI for some reason
-        return dm_env.transition(observation=observation, reward=None)
+        return dm_env.transition(observation=observation, reward=np.float32(0.0))
 
 
 class EnvironmentWrapper(dm_env.Environment):

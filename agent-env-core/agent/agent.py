@@ -1,7 +1,7 @@
 from core.types import Action
 from core.interfaces import Agent
 import math
-
+import numpy as np
 
 class KinestheticAgent(Agent):
     '''This agent is passive. This agent is used for gathering 'drag&record' data,
@@ -10,7 +10,7 @@ class KinestheticAgent(Agent):
 
     def get_action(self, obs: dict) -> dict:
         # TODO: return gripper state
-        return {"arm_angles": obs["arm_angles"], "gripper": 0} # Hardcoding these keys is bad!!!
+        return {"arm_angles": obs["arm_angles"], "gripper": np.uint8(0)} # Hardcoding these keys is bad!!!
 
 
 # Vibe coded agent just for the sake of testing
@@ -40,12 +40,12 @@ class RotatingAgent(Agent):
         self.step += 1
         
         # Initialize all 6 joints to a safe, neutral 0.0 position
-        target_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        target_angles = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
         
         # Apply the safe rotation to the specified joint
         target_angles[self.joint_index] = current_angle
         
-        return {"arm_angles": target_angles, "gripper": 0}
+        return {"arm_angles": target_angles, "gripper": np.uint8(0)}
 
 
 class ReplayAgent(Agent):

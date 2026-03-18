@@ -1,6 +1,9 @@
+from numpy._typing import NDArray
 from .types import Action
 from abc import ABC, abstractmethod
 from torch import Tensor
+import numpy as np
+import torch
 
 """Contains the core interfaces that the application depends on."""
 
@@ -89,7 +92,7 @@ class IObserver(ABC):
 # --- sensor modules ---
 class IJointAnglesSensor(ABC):
     @abstractmethod
-    def get_joint_angles(self) -> list[float]:
+    def get_joint_angles(self) -> NDArray[np.float32]:
         pass
 
 class JointAnglesSensorModule(SensorModule):
@@ -98,7 +101,7 @@ class JointAnglesSensorModule(SensorModule):
         self.joint_angles_sensor = joint_angles_sensor
 
     def get_data(self) -> Tensor:
-        return self.joint_angles_sensor.get_joint_angles()
+        return torch.tensor(self.joint_angles_sensor.get_joint_angles())
 
 class ICameraSensor(ABC):
     # TODO: return tensor

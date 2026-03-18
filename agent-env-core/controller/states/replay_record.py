@@ -50,11 +50,14 @@ class ReplayRecordingState(State):
                 observation_info=tfds.features.FeaturesDict({
                     "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32)}),
                 
-                action_info=tfds.features.Tensor(shape=(6,), dtype=tf.float32),
+                action_info=tfds.features.FeaturesDict({
+            "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
+            "gripper": tfds.features.Tensor(shape=(), dtype=tf.uint8) 
+        }),
                 # RLDS strictly expects reward and discount fields, even for imitation learning.
                 # Your environment can simply return 0.0 for these.
-                reward_info=np.float64,
-                discount_info=np.float64,
+                reward_info=tf.float32,
+                discount_info=tf.float64,
             )
 
         def get_writer(conf):

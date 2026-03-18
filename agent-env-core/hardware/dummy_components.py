@@ -1,3 +1,5 @@
+import numpy as np
+from numpy._typing import NDArray
 from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable
 import time
 
@@ -21,8 +23,8 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
     def set_gripper_value(self, value) -> None:
         pass
 
-    def get_joint_angles(self) -> list[float]:
-        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    def get_joint_angles(self) -> NDArray:
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
     def reset(self):
         # if self.is_resetting:

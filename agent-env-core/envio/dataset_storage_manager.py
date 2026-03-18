@@ -38,6 +38,7 @@ class DatasetStorageManager(IDatasetStorageManager):
         # if not path.
 
     def _generate_new_dataset_directory_path(self) -> str:
-        suffix = "_" + time.strftime("%d%b%Y-%H%M%S")
+        # Format: YYYYMMDD_HHMMSS (e.g., 20260318_165639)
+        suffix = "_" + time.strftime("%Y%m%d_%H%M%S")
         target_directory = path.join(self.dataset_root_dir, "run" + suffix)
         return target_directory

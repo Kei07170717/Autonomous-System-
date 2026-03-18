@@ -29,7 +29,7 @@ class Environment(dm_env.Environment):
     def observation_spec(self):
         return {
             "arm_angles": specs.BoundedArray(
-                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
+                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360 # TODO: Should not be 360!!
             )
         }
 

@@ -7,6 +7,7 @@ from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from .states import ResettingState
 from .base_state import State
+from envlogger.backends.backend_writer import BackendWriter
 
 class IANCController(ABC):
 
@@ -74,7 +75,8 @@ class ANCController(IANCController):
                  arm_actuator: IArmActuator,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
-                 hz: float = 20.0
+                 hz: float = 20.0,
+                 writer: BackendWriter | None = None
                  ):
         self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
@@ -89,6 +91,7 @@ class ANCController(IANCController):
         self.state.on_state_enter()
         self.terminating: bool = False
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
+        self.writer: BackendWriter | None = writer
 
     def set_state(self, state: State) -> None:
 

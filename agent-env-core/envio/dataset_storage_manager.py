@@ -22,7 +22,7 @@ class DatasetStorageManager(IDatasetStorageManager):
         dataset to be build."""
         new_dataset_dir = self._generate_new_dataset_directory_path()
 
-        if path.isdir(new_dataset_dir) or path.isfile(new_dataset_dir):
+        if not path.isdir(new_dataset_dir) and not path.isfile(new_dataset_dir):
             os.mkdir(new_dataset_dir)
             print("Generated new dataset directory at: ", new_dataset_dir)
             return new_dataset_dir
@@ -33,7 +33,7 @@ class DatasetStorageManager(IDatasetStorageManager):
 
     def _validate_root(self):
         if not path.isdir(self.dataset_root_dir):
-            raise FileNotFoundError()
+            raise FileNotFoundError("Could not locate dataset root dir: {}".format(self.dataset_root_dir))
 
         # if not path.
 

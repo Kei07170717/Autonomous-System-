@@ -7,17 +7,26 @@ from envlogger.backends import tfds_backend_writer
 
 from controller import ANCController
 from controller.controller import IANCController
-from core.interfaces import (CameraSensorModule, IArmActuator, IBody,
-                             IGripperActuator, IJointAnglesSensor, IObserver,
-                             IResettable, JointAnglesSensorModule,
-                             SensorModule)
+from core.interfaces import (
+    CameraSensorModule,
+    IArmActuator,
+    IBody,
+    IGripperActuator,
+    IJointAnglesSensor,
+    IObserver,
+    IResettable,
+    JointAnglesSensorModule,
+    SensorModule,
+)
+from envio import dataset_storage_manager
+from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
 from environment import Body, Observer
 from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 from ui import ANCConsoleUI
 
-
+# def setup_and_parse_arguments()
 
 if __name__ == "__main__":
     print("Starting agent-env-core")
@@ -81,6 +90,31 @@ if __name__ == "__main__":
     except Exception as e:
         print("Couldn't init camera, most likely wrong path: ", args.camera_id)
 
+    ### WRITING BACKEND
+    dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
+    dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
+    dataset_config = tfds.rlds.rlds_base.DatasetConfig(
+        name="my_imitation_dataset",
+        observation_info=tfds.features.FeaturesDict(
+            {"arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32)}
+        ),
+        action_info=tfds.features.FeaturesDict(
+            {
+                "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
+                "gripper": tfds.features.Tensor(shape=(), dtype=tf.uint8),
+            }
+        ),
+        # RLDS strictly expects reward and discount fields, even for imitation learning.
+        reward_info=tf.float32,
+        discount_info=tf.float64,  # Forced to use 64bits for some reason, TODO: lower this?
+    )
+    dataset_writer = tfds_backend_writer.TFDSBackendWriter(
+        data_directory=dataset_destination_path,
+        split_name="train",
+        max_episodes_per_file=20, # TODO: justify this number
+        ds_config=dataset_config,
+    )
+
     controller: ANCController = ANCController(
         drag_body=drag_body,
         observer=observer,
@@ -88,8 +122,7 @@ if __name__ == "__main__":
         resettable=resettable,
         live_body=live_body,
         hz=args.hz,
+        writer=dataset_writer
     )
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()
-
-

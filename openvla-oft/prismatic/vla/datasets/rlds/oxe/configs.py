@@ -706,4 +706,12 @@ OXE_DATASET_CONFIGS = {
         "state_encoding": StateEncoding.JOINT_BIMANUAL,
         "action_encoding": ActionEncoding.JOINT_POS_BIMANUAL,
     },
+    "my_cobot_280_pi": {
+	"image_obs_keys": {"primary": "cam1", "secondary": None, "wrist": "image_wrist"}, #RGB (H,W,3) uint8 (placeholder wrist)
+	"depth_obs_keys": {"primary": None, "secondary": None, "wrist": None}, #RBG (H,W,3) uint8
+	"state_obs_keys": ["arm_angles", "gripper"],
+	"state_encoding": StateEncoding.JOINT,
+	"action_encoding": ActionEncoding.JOINT_POS
+    }
+
 }

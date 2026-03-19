@@ -10,9 +10,13 @@ from prompt_toolkit.patch_stdout import patch_stdout
 class ANCConsoleUI:
     def __init__(self, anc_controller: IANCController) -> None:
         self.anc_controller: IANCController = anc_controller
+        self.terminate_event: threading.Event = threading.Event()
+        # Spawn a separate thread for the ANCController (because the 
+        # 'input()' method is a blocking call, it would block the entire program)
+        self.controller_thread = threading.Thread(target=self.anc_controller.run_loop, args=(self.terminate_event,), daemon=True)
         
         self.command_mapping: dict[str, ICommand] = {
-            "exit": ExitCommand(),
+            "exit": ExitCommand(self.controller_thread, self.terminate_event),
             "stop": StopCommand(anc_controller),
             "drag": StartDragRecordCommand(anc_controller),
             "replay": ReplayRecordCommand(anc_controller)
@@ -22,31 +26,32 @@ class ANCConsoleUI:
 
 
     def start(self):
-        # Spawn a separate thread for the ANCController (because the 
-        # 'input()' method is a blocking call, it would block the entire program)
-        self.controller_thread = threading.Thread(target=self.anc_controller.run_loop, daemon=True)
         self.controller_thread.start()
 
-        with patch_stdout():
-            while True:
-                prompt_input = prompt("agent-env-core> ").strip().lower()
-                
-                command: ICommand | None = self.command_mapping.get(prompt_input)
+        try:
+            with patch_stdout():
+                while True:
+                    prompt_input = prompt("agent-env-core> ").strip().lower()
+                    
+                    command: ICommand | None = self.command_mapping.get(prompt_input)
 
-                # Don't run the command if it's not valid
-                if command:
-                    command.execute()
-                else:
-                    self.help_command.execute()
+                    # Don't run the command if it's not valid
+                    if command:
+                        command.execute()
+                    else:
+                        self.help_command.execute()
 
 
-                # if cmd == "help":
-                #     print("Possible commands: ")
-                # elif cmd == "reset":
-                #     self.anc_controller.set_state(ResettingState(self.anc_controller))
-                # elif cmd == "idle":
-                #     self.anc_controller.set_state(IdlingState(self.anc_controller))
-
+                    # if cmd == "help":
+                    #     print("Possible commands: ")
+                    # elif cmd == "reset":
+                    #     self.anc_controller.set_state(ResettingState(self.anc_controller))
+                    # elif cmd == "idle":
+                    #     self.anc_controller.set_state(IdlingState(self.anc_controller))
+        except KeyboardInterrupt:
+            self.terminate_event.set()
+            self.controller_thread.join()
+            exit(0)
 
         
 

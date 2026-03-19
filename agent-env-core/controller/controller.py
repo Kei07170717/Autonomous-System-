@@ -19,7 +19,7 @@ class IANCController(ABC):
         pass
 
     @abstractmethod
-    def run_loop(self):
+    def run_loop(self, terminate_event: threading.Event):
         pass
 
     @abstractmethod
@@ -92,7 +92,7 @@ class ANCController(IANCController):
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.state.on_state_enter()
-        self.terminating: bool = False # Terminates loop (but doesn't get set anywhere..)
+        self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BackendWriter | None = writer
 
@@ -115,11 +115,11 @@ class ANCController(IANCController):
             
             self.state.on_state_enter()
 
-    def run_loop(self):
+    def run_loop(self, terminate_event: threading.Event):
         # Set the first deadline
         next_wake_time = time.perf_counter() + self.loop_period
 
-        while not self.terminating:
+        while not terminate_event.is_set():
             exec_start = time.perf_counter()
 
             # Safely execute the current state
@@ -143,6 +143,14 @@ class ANCController(IANCController):
                 # Reset the deadline to be exactly one period from right NOW, 
                 # dropping the missed frames.
                 next_wake_time = time.perf_counter() + self.loop_period
+
+        # Clean up...
+        if self.replay_environment is not None:
+            print("Flushing to disk...")
+            self.replay_environment.close()
+
+
+        
 
     def open_gripper(self):
         self.state.open_gripper()
@@ -170,10 +178,6 @@ class ANCController(IANCController):
     #
     # def stop_inference(self):
     #     pass
-
-    def __del__(self):
-        assert self.replay_environment is not None
-        self.replay_environment.close()
 
 class ICommand(ABC):
 

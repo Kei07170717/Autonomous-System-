@@ -11,10 +11,17 @@ class IDatasetStorageManager(ABC):
         pass
 
 
+_DEFAULT_PATH = r"../local-datasets"
 class DatasetStorageManager(IDatasetStorageManager):
-    def __init__(self, dataset_root_dir: str = "/tmp/a") -> None:
+    def __init__(self, dataset_root_dir: str = _DEFAULT_PATH) -> None:
         self.dataset_root_dir: str = dataset_root_dir
+
+        if dataset_root_dir == _DEFAULT_PATH and not path.isdir(_DEFAULT_PATH):
+            print("Creating new default dataset root directory at: ", path.abspath(_DEFAULT_PATH))
+            os.mkdir(_DEFAULT_PATH)
+
         self._validate_root()
+
         # self.path_for_new_dataset
 
     def create_new_dataset_directory(self) -> str:
@@ -24,7 +31,7 @@ class DatasetStorageManager(IDatasetStorageManager):
 
         if not path.isdir(new_dataset_dir) and not path.isfile(new_dataset_dir):
             os.mkdir(new_dataset_dir)
-            print("Generated new dataset directory at: ", new_dataset_dir)
+            print("Generated new dataset directory at: ", path.abspath(new_dataset_dir))
             return new_dataset_dir
         else:
             raise ValueError(

@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
 import dm_env
+# from tensorflow import dtypes
 import numpy as np
 from dm_env import TimeStep, specs
+import tensorflow as tf
 
 from core.interfaces import IBody, IObserver
 from core.types import Action
@@ -11,11 +13,17 @@ from envio.writing import IActionSequenceWriter
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: IObserver, body: IBody, max_steps: int | None = None):
+    def __init__(self, observer: IObserver, body: IBody):
         self.observer: IObserver = observer
         self.body: IBody = body
-        self.max_steps = max_steps
+        self.max_steps = -1 # 'None' on default
         self.current_step_count: int = 0
+
+    def set_max_steps(self, max_steps: int):
+        self.max_steps = max_steps
+
+    def clear_max_steps(self):
+        self.max_steps = -1
 
     def reset(self) -> TimeStep:
         self.current_step_count = 0
@@ -25,24 +33,38 @@ class Environment(dm_env.Environment):
         )
 
     def observation_spec(self):
-        pass
+        return {
+            "arm_angles": specs.BoundedArray(
+                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360 # TODO: Should not be 360!!
+                ),
+            "gripper": specs.BoundedArray(
+                shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
+            )
+        }
 
     def action_spec(self):
-        pass
+        return {
+            "arm_angles": specs.BoundedArray(
+                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
+            ),
+            "gripper": specs.BoundedArray(
+                shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
+            )
+        }
 
-    def step(self, action: Action) -> TimeStep:
+    def step(self, action: dict) -> TimeStep:
         observation = self.observer.get_observation()
         
         print("ENV STEP: ", self.current_step_count)
         if self.max_steps and self.current_step_count == (self.max_steps - 1):
-            return dm_env.termination(observation=observation, reward=None)
+            return dm_env.termination(observation=observation, reward=np.float32(0.0))
 
         self.current_step_count += 1
 
         self.body.affect_world(
             action
         )  # SETTING after GETTING improves performance by a lot for the 280PI for some reason
-        return dm_env.transition(observation=observation, reward=None)
+        return dm_env.transition(observation=observation, reward=np.float32(0.0))
 
 
 class EnvironmentWrapper(dm_env.Environment):

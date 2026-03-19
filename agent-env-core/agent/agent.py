@@ -1,16 +1,16 @@
 from core.types import Action
 from core.interfaces import Agent
 import math
-
+import numpy as np
 
 class KinestheticAgent(Agent):
     '''This agent is passive. This agent is used for gathering 'drag&record' data,
     which can later be replayed through another agent. The environment should
     not execute actions using this agent.'''
 
-    def get_action(self, obs: dict) -> Action:
+    def get_action(self, obs: dict) -> dict:
         # TODO: return gripper state
-        return Action(obs["sensor_states"]["arm_angles"], 0) # Hardcoding these keys is bad!!!
+        return {"arm_angles": obs["arm_angles"], "gripper": np.uint8(0)} # Hardcoding these keys is bad!!!
 
 
 # Vibe coded agent just for the sake of testing
@@ -32,7 +32,7 @@ class RotatingAgent(Agent):
         self.speed = speed
         self.step = 0
 
-    def get_action(self, obs: dict) -> Action:
+    def get_action(self, obs: dict) -> dict:
         # Calculate a smooth, bounded angle using $A \cdot \sin(\omega \cdot t)$
         current_angle = self.amplitude * math.sin(self.speed * self.step)
         
@@ -40,12 +40,12 @@ class RotatingAgent(Agent):
         self.step += 1
         
         # Initialize all 6 joints to a safe, neutral 0.0 position
-        target_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        target_angles = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
         
         # Apply the safe rotation to the specified joint
         target_angles[self.joint_index] = current_angle
         
-        return Action(target_angles, 0)
+        return {"arm_angles": target_angles, "gripper": np.uint8(0)}
 
 
 class ReplayAgent(Agent):
@@ -53,11 +53,11 @@ class ReplayAgent(Agent):
     Simple agent that iterates over given actions.
     Usefull for replaying recordings.
     """
-    def __init__(self, actions: list[Action]):
-        self.actions: list[Action] = actions
+    def __init__(self, actions: list[dict]):
+        self.actions: list[dict] = actions
         self.action_iter = iter(self.actions)
 
-    def get_action(self, obs: dict) -> Action:
+    def get_action(self, obs: dict) -> dict:
         return next(self.action_iter)
         
 

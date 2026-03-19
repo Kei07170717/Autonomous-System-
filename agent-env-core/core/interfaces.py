@@ -1,6 +1,8 @@
+from numpy._typing import NDArray
 from .types import Action
 from abc import ABC, abstractmethod
 from torch import Tensor
+import numpy as np
 import torch
 
 """Contains the core interfaces that the application depends on."""
@@ -27,7 +29,7 @@ class SensorModule(ABC):
 class IBody(ABC):
     """Capable of affecting the world."""
     @abstractmethod
-    def affect_world(self, action: Action) -> None:
+    def affect_world(self, action: dict) -> None:
         # Apply action to the world
         pass
 
@@ -71,7 +73,7 @@ class IResettable(ABC):
 # TODO: should it be an interface or an abstract class?
 class Agent(ABC):
     @abstractmethod
-    def get_action(self, obs: dict) -> Action:
+    def get_action(self, obs: dict) -> dict:
         pass
 
 
@@ -90,7 +92,7 @@ class IObserver(ABC):
 # --- sensor modules ---
 class IJointAnglesSensor(ABC):
     @abstractmethod
-    def get_joint_angles(self) -> list[float]:
+    def get_joint_angles(self) -> NDArray[np.float32]:
         pass
 
 class JointAnglesSensorModule(SensorModule):
@@ -99,7 +101,7 @@ class JointAnglesSensorModule(SensorModule):
         self.joint_angles_sensor = joint_angles_sensor
 
     def get_data(self) -> Tensor:
-        return self.joint_angles_sensor.get_joint_angles()
+        return torch.tensor(self.joint_angles_sensor.get_joint_angles())
 
 class ICameraSensor(ABC):
     # TODO: return tensor
@@ -122,11 +124,11 @@ class  IGripperSensor(ABC):
     """
     """
     @abstractmethod
-    def get_gripper_value() -> float :
+    def get_gripper_value(self) -> float :
         pass
     
 class GripperSensorModule(SensorModule):
-    def __init__(self, id : str, gripper_sensor = IGripperSensor ):
+    def __init__(self, id : str, gripper_sensor:  IGripperSensor ):
         """Adapter class 
          runs the get_data for the Gripper
          returns the gripper (0-100) as Tensor

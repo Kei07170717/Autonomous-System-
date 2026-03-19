@@ -2,11 +2,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import threading
 import time
+
+import envlogger
 from core.interfaces import IObserver, IResettable, IArmActuator
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
+from environment.environment import Environment
 from .states import ResettingState
 from .base_state import State
+from envlogger.backends.backend_writer import BackendWriter
 
 class IANCController(ABC):
 
@@ -15,7 +19,7 @@ class IANCController(ABC):
         pass
 
     @abstractmethod
-    def run_loop(self):
+    def run_loop(self, terminate_event: threading.Event):
         pass
 
     @abstractmethod
@@ -74,7 +78,8 @@ class ANCController(IANCController):
                  arm_actuator: IArmActuator,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
-                 hz: float = 20.0
+                 hz: float = 20.0,
+                 writer: BackendWriter | None = None
                  ):
         self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
@@ -87,8 +92,17 @@ class ANCController(IANCController):
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
         self.state.on_state_enter()
-        self.terminating: bool = False
+        self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
+        self.writer: BackendWriter | None = writer
+
+        # print("Max steps")
+        assert self.live_body is not None
+        self.replay_environment = Environment(self.observer, self.live_body)
+
+        # Only record if a writer is provided
+        if self.writer:
+            self.replay_environment = envlogger.EnvLogger(self.replay_environment, backend=self.writer)
 
     def set_state(self, state: State) -> None:
 
@@ -101,11 +115,11 @@ class ANCController(IANCController):
             
             self.state.on_state_enter()
 
-    def run_loop(self):
+    def run_loop(self, terminate_event: threading.Event):
         # Set the first deadline
         next_wake_time = time.perf_counter() + self.loop_period
 
-        while not self.terminating:
+        while not terminate_event.is_set():
             exec_start = time.perf_counter()
 
             # Safely execute the current state
@@ -129,6 +143,14 @@ class ANCController(IANCController):
                 # Reset the deadline to be exactly one period from right NOW, 
                 # dropping the missed frames.
                 next_wake_time = time.perf_counter() + self.loop_period
+
+        # Clean up...
+        if self.replay_environment is not None:
+            print("Flushing to disk...")
+            self.replay_environment.close()
+
+
+        
 
     def open_gripper(self):
         self.state.open_gripper()

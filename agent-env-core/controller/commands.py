@@ -1,5 +1,5 @@
 from .controller import ICommand, IANCController
-
+from threading import Thread, Event
 """
 Command pattern: https://refactoring.guru/design-patterns/command .
 Point of the pattern is encapsulation, nothing crazy.
@@ -10,8 +10,14 @@ Not sure if it is implemented properly though.
 """
 
 class ExitCommand(ICommand):
+    def __init__(self, controller_thread: Thread, terminate_event: Event) -> None:
+        self.controller_thread = controller_thread
+        self.terminate_event = terminate_event
+        
     def execute(self) -> None:
-        exit(1) # Or should gracefully be 0?
+        self.terminate_event.set()
+        self.controller_thread.join()
+        exit(0) 
 
 class ListCommandsCommand(ICommand):
     def __init__(self, command_mapping: dict[str, ICommand]) -> None:

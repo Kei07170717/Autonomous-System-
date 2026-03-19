@@ -12,9 +12,7 @@ class Observer(IObserver):
                 self.sensors)
         )
 
-        return {
-            "sensor_states": sensor_states,
-        }
+        return sensor_states
 
     def attach_sensor_module(self, module: SensorModule):
         self.sensors.append(module)

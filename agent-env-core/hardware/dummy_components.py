@@ -1,9 +1,9 @@
 import numpy as np
 from numpy._typing import NDArray
-from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor
+from core.interfaces import IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor,IColorChanger
 import time
 
-class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor):
+class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor, IColorChanger):
 
     def __init__(self, time_to_reset: int=1) -> None:
         # self.is_resetting: bool = False
@@ -43,4 +43,7 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
         return reset_done
 
     def release_joints(self):
+        pass
+    
+    def set_color(self, color):
         pass

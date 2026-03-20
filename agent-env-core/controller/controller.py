@@ -4,7 +4,7 @@ import threading
 import time
 
 import envlogger
-from core.interfaces import IObserver, IResettable, IArmActuator
+from core.interfaces import IObserver, IResettable, IArmActuator, IColorChanger
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from environment.environment import Environment
@@ -78,15 +78,19 @@ class ANCController(IANCController):
                  arm_actuator: IArmActuator,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
+                 color_changer: IColorChanger | None = None,
                  hz: float = 20.0,
                  writer: BackendWriter | None = None
                  ):
+        
         self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable
         self.arm_actuator: IArmActuator = arm_actuator
         self._state_lock = threading.RLock()
+        self.color_changer: IColorChanger | None = color_changer
+        #self.color = IColorChanger
         self.loop_period = 1.0 / hz
         
         print("Entering Resetting state")
@@ -104,6 +108,8 @@ class ANCController(IANCController):
         if self.writer:
             self.replay_environment = envlogger.EnvLogger(self.replay_environment, backend=self.writer)
 
+    
+    
     def set_state(self, state: State) -> None:
 
         with self._state_lock:
@@ -114,6 +120,8 @@ class ANCController(IANCController):
             self.state = state
             
             self.state.on_state_enter()
+
+            
 
     def run_loop(self, terminate_event: threading.Event):
         # Set the first deadline

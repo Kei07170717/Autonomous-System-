@@ -13,9 +13,10 @@ from ..base_state import State
 class IdlingState(State):
   
     def __init__(self, context: ANCController):
-        super().__init__(context, state_name="Idling")
+        super().__init__(context, state_name="Idling", color=(213,232, 212))# color = green
 
     def on_state_enter(self):
+        super().on_state_enter()
         pass
 
     def on_state_exit(self):

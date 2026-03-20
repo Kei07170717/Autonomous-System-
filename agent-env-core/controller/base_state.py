@@ -7,9 +7,10 @@ if TYPE_CHECKING:
     from .controller import ANCController
 
 class State(ABC):
-    def __init__(self, context: ANCController, state_name: str = "Undefined"):
+    def __init__(self, context: ANCController, state_name: str = "Undefined" , color: tuple = (255,255,255)):
         self.state_name: str = state_name
         self.context: ANCController = context
+        self.led_color: tuple = color # Set to white as default
 
     def get_state_name(self) -> str:
         return self.state_name
@@ -20,7 +21,10 @@ class State(ABC):
         Similar to init, but more safe since this can
         be ran after the previous state has exit.
         """
-        pass
+        if self.context.color_changer:
+            self.context.color_changer.set_color(self.led_color)
+
+        
 
     @abstractmethod
     def on_state_exit(self):
@@ -28,7 +32,7 @@ class State(ABC):
         Similar to destructor of current state.
         """
         pass
-
+    
     @abstractmethod
     def execute(self):
         pass

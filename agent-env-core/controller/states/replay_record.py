@@ -24,13 +24,14 @@ class ReplayRecordingState(State):
     """
   
     def __init__(self, context: ANCController, verbose_mode: bool = True):
-        super().__init__(context, state_name="ReplayRecording")
+        super().__init__(context, state_name="ReplayRecording", color=(225, 213,231 )) #color = purple
         
         # self.context.replay_environment: dm_env.Environment | None = None
         self.agent: Agent = RotatingAgent() # ???
         self.verbose_mode = verbose_mode
 
     def on_state_enter(self):
+        super().on_state_enter()
 
         # We can only replay actions present in memory...
         if not self.context.action_sequence_manager.is_episode_recorded():

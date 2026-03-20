@@ -3,7 +3,7 @@ import numpy as np
 from numpy._typing import NDArray
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
-from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor
+from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor, IColorChanger
 from core.types import Action
 import math
 
@@ -15,7 +15,7 @@ _GRIPPER_CLOSED_VALUE = 100 # Gripper max
 _GRIPPER_CLOSED_THRESHOLD = int(0.05 * _GRIPPER_CLOSED_VALUE) 
 _RESET_ANGLES: NDArray = np.array([0,0,0,0,0,0]) # We consider these angles to be the idle pos
 
-class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable, IGripperSensor):
+class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable, IGripperSensor, IColorChanger):
     def __init__(
             self,
             pi_port=PI_PORT,
@@ -80,4 +80,9 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     
     def get_gripper_value(self) -> int:
         """Gets gripper values  between 0-100 """
-        return self.mc.get_gripper_value()
+        return self.mc.get_gripper_value() 
+    
+    def set_color(self, color: tuple[int, int, int]):
+        return self.mc.set_color(color)
+
+        pass

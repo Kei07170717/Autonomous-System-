@@ -22,10 +22,11 @@ class DragRecordingState(State):
     This makes it so that the interactions are recorded automatically. 
     This state is meant to be spawned from the IdlingState and transition to
     the ResettingState when done or terminated.
+   
     """
   
     def __init__(self, context: ANCController, verbose_mode=True):
-        super().__init__(context, state_name="DragRecording")
+        super().__init__(context, state_name="DragRecording", color = (218, 232, 252))# color = red 
         assert self.context.drag_body is not None
 
         self.environment: dm_env.Environment = Environment(self.context.observer, self.context.drag_body)
@@ -38,8 +39,11 @@ class DragRecordingState(State):
         
     
     def on_state_enter(self):
+        super().on_state_enter()
         self.timestep = self.environment.reset()
         self.context.arm_actuator.release_joints()
+        
+
 
     def on_state_exit(self):
         pass

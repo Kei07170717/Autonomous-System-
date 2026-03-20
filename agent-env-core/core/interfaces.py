@@ -138,3 +138,13 @@ class GripperSensorModule(SensorModule):
     
     def get_data(self) -> Tensor:
         return torch.tensor( self.gripper_sensor.get_gripper_value(), dtype = torch.int8)
+
+
+class IColorChanger(ABC):
+    @abstractmethod
+    def set_color(self, color: tuple[int, int, int]) -> None:
+        
+        pass
+
+
+    

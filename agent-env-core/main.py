@@ -18,7 +18,8 @@ from core.interfaces import (
     JointAnglesSensorModule,
     SensorModule,
     GripperSensorModule,
-    IGripperSensor
+    IGripperSensor,
+    IColorChanger
 )
 from envio import dataset_storage_manager
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
@@ -58,6 +59,7 @@ if __name__ == "__main__":
     gripper_actuator: IGripperActuator = dummy_component
     gripper_sensor: IGripperSensor = dummy_component
     resettable: IResettable = dummy_component
+    color_changer: IColorChanger = dummy_component
     
     # Override with live components if enabled
     if args.live:
@@ -67,6 +69,7 @@ if __name__ == "__main__":
         resettable = cobot_adapter
         gripper_sensor = cobot_adapter
         gripper_actuator = cobot_adapter
+        color_changer = cobot_adapter
 
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
@@ -134,7 +137,8 @@ if __name__ == "__main__":
         resettable=resettable,
         live_body=live_body,
         hz=args.hz,
-        writer=dataset_writer
+        writer=dataset_writer,
+        color_changer = color_changer
     )
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

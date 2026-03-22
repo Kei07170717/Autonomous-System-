@@ -1,11 +1,12 @@
 from __future__ import annotations
+
+from environment.environment import WrittenEnvironment
 from ..base_state import State
 from . import reset
-import dm_env
-import envlogger
-from envlogger.backends import tfds_backend_writer
-import tensorflow_datasets as tfds
-import tensorflow as tf
+# import envlogger
+# from envlogger.backends import tfds_backend_writer
+# import tensorflow_datasets as tfds
+# import tensorflow as tf
 from agent import RotatingAgent
 from core.interfaces import Agent
 from environment import Environment
@@ -29,6 +30,7 @@ class ReplayRecordingState(State):
         # self.context.replay_environment: dm_env.Environment | None = None
         self.agent: Agent = RotatingAgent() # ???
         self.verbose_mode = verbose_mode
+        
 
     def on_state_enter(self):
 
@@ -41,8 +43,14 @@ class ReplayRecordingState(State):
 
         # Replay is infinite, hence we need to have the environment return terminal on last step
         max_steps = len(self.context.action_sequence_manager.get_actions())
-        self.context.replay_environment.set_max_steps(max_steps)  
-        self.timestep = self.context.replay_environment.reset()
+
+        assert self.context.live_body is not None
+        self.replay_environment = Environment(self.context.observer, self.context.live_body, max_steps)
+        
+        # Only record if a writer is provided
+        if self.context.writer:
+            self.replay_environment = WrittenEnvironment(self.replay_environment, self.context.writer)
+        self.timestep = self.replay_environment.reset()
         
 
 
@@ -51,11 +59,11 @@ class ReplayRecordingState(State):
 
     def execute(self):
         assert self.timestep is not None
-        assert self.context.replay_environment is not None
+        assert self.replay_environment is not None
 
         action = self.agent.get_action(self.timestep.observation)
         if self.verbose_mode: print("Action: ", action)
-        self.timestep = self.context.replay_environment.step(action)
+        self.timestep = self.replay_environment.step(action)
         if self.verbose_mode: print("Obs: ", self.timestep.observation)
 
         if self.timestep.last():

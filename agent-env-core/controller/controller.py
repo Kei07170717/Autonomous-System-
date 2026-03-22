@@ -3,14 +3,12 @@ from abc import ABC, abstractmethod
 import threading
 import time
 
-import envlogger
-from core.interfaces import IObserver, IResettable, IArmActuator
+from core.interfaces import BaseWriter, IObserver, IResettable, IArmActuator
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
-from environment.environment import Environment
+from environment.environment import Environment, WrittenEnvironment
 from .states import ResettingState
 from .base_state import State
-from envlogger.backends.backend_writer import BackendWriter
 
 class IANCController(ABC):
 
@@ -79,7 +77,7 @@ class ANCController(IANCController):
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
                  hz: float = 20.0,
-                 writer: BackendWriter | None = None
+                 writer: BaseWriter | None = None
                  ):
         self.observer: IObserver = observer
         self.drag_body: IBody | None = drag_body
@@ -94,15 +92,10 @@ class ANCController(IANCController):
         self.state.on_state_enter()
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
-        self.writer: BackendWriter | None = writer
+        self.writer: BaseWriter | None = writer
 
         # print("Max steps")
-        assert self.live_body is not None
-        self.replay_environment = Environment(self.observer, self.live_body)
 
-        # Only record if a writer is provided
-        if self.writer:
-            self.replay_environment = envlogger.EnvLogger(self.replay_environment, backend=self.writer)
 
     def set_state(self, state: State) -> None:
 

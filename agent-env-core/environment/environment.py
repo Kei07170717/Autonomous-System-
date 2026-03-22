@@ -1,29 +1,27 @@
 from abc import ABC, abstractmethod
 
 import dm_env
-# from tensorflow import dtypes
 import numpy as np
 from dm_env import TimeStep, specs
-import tensorflow as tf
 
-from core.interfaces import IBody, IObserver
+from core.interfaces import BaseWriter, IBody, IObserver
 from core.types import Action
 from envio.episode_manager import IActionSequenceManager
 from envio.writing import IActionSequenceWriter
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: IObserver, body: IBody):
+    def __init__(self, observer: IObserver, body: IBody, max_steps: int =-1):
         self.observer: IObserver = observer
         self.body: IBody = body
-        self.max_steps = -1 # 'None' on default
+        self.max_steps = max_steps # 'None' on default
         self.current_step_count: int = 0
 
-    def set_max_steps(self, max_steps: int):
-        self.max_steps = max_steps
-
-    def clear_max_steps(self):
-        self.max_steps = -1
+    # def set_max_steps(self, max_steps: int):
+    #     self.max_steps = max_steps
+    #
+    # def clear_max_steps(self):
+    #     self.max_steps = -1
 
     def reset(self) -> TimeStep:
         self.current_step_count = 0
@@ -117,6 +115,13 @@ class ActionRecordedEnvironment(EnvironmentWrapper):
         self.actions.append(action)
         return super().step(action)
 
-    def __del__(self):
+    def __del__(self): # Maybe a bit unsafe?
         self.action_sequence_manager.set_actions(self.actions)
         self.action_writer.write_episode(self.actions)
+
+
+class WrittenEnvironment(EnvironmentWrapper):
+    def __init__(self, env: dm_env.Environment, writer: BaseWriter):
+        super().__init__(env)
+        self.writer = writer
+        

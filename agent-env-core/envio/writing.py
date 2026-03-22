@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Tuple
 import numpy as np
 
+from core.interfaces import BaseWriter
 from core.types import Action
 
 class IActionSequenceWriter(ABC):
@@ -48,3 +49,9 @@ class NumpyActionSequenceWriter(IActionSequenceWriter):
         # print(type(steps[0][0]), type(steps[0][1])) 
         actions: list[list[float]] = [step["arm_angles"] for step in steps] # TODO: add gripper
         np.savetxt(self.write_path, np.asarray(actions), delimiter=",")
+
+
+# class RLDSWriterAdapter(BaseWriter):
+#     def __init__(self, obs_spec, action_spec, metadata=None) -> None:
+#         super().__init__(obs_spec, action_spec, metadata)
+

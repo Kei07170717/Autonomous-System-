@@ -138,3 +138,14 @@ class GripperSensorModule(SensorModule):
     
     def get_data(self) -> Tensor:
         return torch.tensor( self.gripper_sensor.get_gripper_value(), dtype = torch.int8)
+
+
+class BaseWriter(ABC):
+    def __init__(self, obs_spec, action_spec, metadata = None) -> None:
+        pass
+
+    @abstractmethod
+    def write_step(self):
+        pass
+
+

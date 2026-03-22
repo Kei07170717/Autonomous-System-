@@ -1,13 +1,9 @@
 import argparse
 
-import envlogger
-import tensorflow as tf
-import tensorflow_datasets as tfds
-from envlogger.backends import tfds_backend_writer
-
 from controller import ANCController
 from controller.controller import IANCController
 from core.interfaces import (
+    BaseWriter,
     CameraSensorModule,
     IArmActuator,
     IBody,
@@ -20,7 +16,6 @@ from core.interfaces import (
     GripperSensorModule,
     IGripperSensor
 )
-from envio import dataset_storage_manager
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
 from environment import Body, Observer
 from hardware.camera import Camera
@@ -29,6 +24,43 @@ from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 from ui import ANCConsoleUI
 
 # def setup_and_parse_arguments()
+def create_writer(path: str, writer_type: str) -> BaseWriter | None:
+    if writer_type == "hdf5":
+        # TODO: return hdf5
+        pass
+    # elif writer_type == "rlds":
+    #     try:
+    #         import tensorflow as tf
+    #         import tensorflow_datasets as tfds
+    #         from envlogger.backends import tfds_backend_writer
+
+    # dataset_config = tfds.rlds.rlds_base.DatasetConfig(
+    #     name="my_imitation_dataset",
+    #     observation_info=tfds.features.FeaturesDict(
+    #         {"arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
+    #          "gripper": tf.uint8}
+    #     ),
+    #     action_info=tfds.features.FeaturesDict(
+    #         {
+    #             "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
+    #             "gripper": tfds.features.Tensor(shape=(), dtype=tf.uint8),
+    #         }
+    #     ),
+    #     # RLDS strictly expects reward and discount fields, even for imitation learning.
+    #     reward_info=tf.float32,
+    #     discount_info=tf.float64,  # Forced to use 64bits for some reason, TODO: lower this?
+    # )
+    # dataset_writer = tfds_backend_writer.TFDSBackendWriter(
+    #     data_directory=dataset_destination_path,
+    #     split_name="train",
+    #     max_episodes_per_file=20, # TODO: justify this number
+    #     ds_config=dataset_config,
+    # )
+    #     except ImportError as e:
+    #         print("")
+    #         raise e
+    return None
+
 
 if __name__ == "__main__":
     print("Starting agent-env-core")
@@ -49,6 +81,14 @@ if __name__ == "__main__":
         default="USB 2.0 Camera: USB Camera",
         help="The name of the camera to use.",
     )
+
+    # TODO: add options..
+    parser.add_argument(
+            "--writer",
+            type=str,
+            default="hdf5",
+            help="Type of writer for the recording replay."
+            )
 
     args = parser.parse_args()
 
@@ -104,28 +144,7 @@ if __name__ == "__main__":
     ### WRITING BACKEND
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
     dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
-    dataset_config = tfds.rlds.rlds_base.DatasetConfig(
-        name="my_imitation_dataset",
-        observation_info=tfds.features.FeaturesDict(
-            {"arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
-             "gripper": tf.uint8}
-        ),
-        action_info=tfds.features.FeaturesDict(
-            {
-                "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
-                "gripper": tfds.features.Tensor(shape=(), dtype=tf.uint8),
-            }
-        ),
-        # RLDS strictly expects reward and discount fields, even for imitation learning.
-        reward_info=tf.float32,
-        discount_info=tf.float64,  # Forced to use 64bits for some reason, TODO: lower this?
-    )
-    dataset_writer = tfds_backend_writer.TFDSBackendWriter(
-        data_directory=dataset_destination_path,
-        split_name="train",
-        max_episodes_per_file=20, # TODO: justify this number
-        ds_config=dataset_config,
-    )
+    dataset_writer: BaseWriter | None = create_writer(dataset_destination_path, args.writer)
 
     controller: ANCController = ANCController(
         drag_body=drag_body,

@@ -1,5 +1,6 @@
-from typing import Optional, Sequence #maybe sequence
+from typing import Tuple, Optional, Sequence #maybe sequence
 from dataclasses import dataclass
+import numpy as np
 
 @dataclass(frozen=True) #dataclass instances remain immutable
 class Action:
@@ -10,3 +11,7 @@ class Action:
     # gripper: Optional[int] = None 
     gripper: int
 
+@dataclass(frozen=True)
+class TensorSpec:
+    shape: Tuple[int, ...]
+    dtype: np.dtype

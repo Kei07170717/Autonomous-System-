@@ -55,7 +55,10 @@ class ReplayRecordingState(State):
 
 
     def on_state_exit(self):
-        pass
+        # Clean up...
+        if self.replay_environment is not None:
+            print("Flushing to disk...") # TODO: this print only makes sense if writing
+            self.replay_environment.close()
 
     def execute(self):
         assert self.timestep is not None

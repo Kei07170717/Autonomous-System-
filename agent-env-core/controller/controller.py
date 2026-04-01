@@ -137,11 +137,8 @@ class ANCController(IANCController):
                 # dropping the missed frames.
                 next_wake_time = time.perf_counter() + self.loop_period
 
-        # Clean up...
-        if self.replay_environment is not None:
-            print("Flushing to disk...")
-            self.replay_environment.close()
-
+        # Gracefully exit the current state
+        self.state.on_state_exit()
 
         
 

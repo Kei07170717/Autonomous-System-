@@ -16,6 +16,7 @@ from core.interfaces import (
     GripperSensorModule,
     IGripperSensor
 )
+from core.types import SpecTree, TensorSpec
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
 from envio.writing import DummyWriter
 from environment import Body, Observer
@@ -23,12 +24,25 @@ from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 from ui import ANCConsoleUI
+import numpy as np
+
+def get_simple_obs_spec() -> SpecTree:
+    return {
+            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32)
+            }
+
+def get_simple_action_spec() -> SpecTree:
+    return {
+            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32)
+            }
 
 # def setup_and_parse_arguments()
 def create_writer(path: str, writer_type: str) -> BaseWriter | None:
+    obs_spec = get_simple_obs_spec()
+    action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
         # TODO: return hdf5
-        return DummyWriter({}, {}) # TODO: temporary debugging..
+        return DummyWriter(obs_spec, action_spec) # TODO: temporary debugging..
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf

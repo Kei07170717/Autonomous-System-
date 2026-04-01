@@ -168,7 +168,9 @@ if __name__ == "__main__":
         resettable=resettable,
         live_body=live_body,
         hz=args.hz,
-        writer=dataset_writer
+        writer=dataset_writer,
+        obs_spec=get_simple_obs_spec(),
+        action_spec=get_simple_action_spec()
     )
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

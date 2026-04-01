@@ -4,6 +4,7 @@ import threading
 import time
 
 from core.interfaces import BaseWriter, IObserver, IResettable, IArmActuator
+from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from environment.environment import Environment, WrittenEnvironment
@@ -74,12 +75,16 @@ class ANCController(IANCController):
                  drag_body: IBody,
                  observer: IObserver,
                  arm_actuator: IArmActuator,
+                 obs_spec: SpecTree,
+                 action_spec: SpecTree,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
                  hz: float = 20.0,
-                 writer: BaseWriter | None = None
+                 writer: BaseWriter | None = None,
                  ):
         self.observer: IObserver = observer
+        self.obs_spec: SpecTree = obs_spec
+        self.action_spec: SpecTree = action_spec
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable

@@ -11,9 +11,11 @@ from envio.writing import IActionSequenceWriter
 
 
 class Environment(dm_env.Environment):
-    def __init__(self, observer: IObserver, body: IBody, max_steps: int =-1):
+    def __init__(self, observer: IObserver, body: IBody, obs_spec, action_spec, max_steps: int =-1):
         self.observer: IObserver = observer
         self.body: IBody = body
+        self.obs_spec = obs_spec
+        self.action_spec = action_spec
         self.max_steps = max_steps # 'None' on default
         self.current_step_count: int = 0
 
@@ -31,24 +33,26 @@ class Environment(dm_env.Environment):
         )
 
     def observation_spec(self):
-        return {
-            "arm_angles": specs.BoundedArray(
-                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360 # TODO: Should not be 360!!
-                ),
-            "gripper": specs.BoundedArray(
-                shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
-            )
-        }
+        # return {
+        #     "arm_angles": specs.BoundedArray(
+        #         shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360 # TODO: Should not be 360!!
+        #         ),
+        #     "gripper": specs.BoundedArray(
+        #         shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
+        #     )
+        # }
+        return self.obs_spec
 
     def action_spec(self):
-        return {
-            "arm_angles": specs.BoundedArray(
-                shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
-            ),
-            "gripper": specs.BoundedArray(
-                shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
-            )
-        }
+        # return {
+        #     "arm_angles": specs.BoundedArray(
+        #         shape=(6,), dtype=np.float32, name="arm_angles", minimum=0, maximum=360
+        #     ),
+        #     "gripper": specs.BoundedArray(
+        #         shape=(), dtype=np.uint8, name="gripper", minimum=0, maximum=100 
+        #     )
+        # }
+        return self.action_spec
 
     def step(self, action: dict) -> TimeStep:
         observation = self.observer.get_observation()

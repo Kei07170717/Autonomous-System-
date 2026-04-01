@@ -45,7 +45,7 @@ class ReplayRecordingState(State):
         max_steps = len(self.context.action_sequence_manager.get_actions())
 
         assert self.context.live_body is not None
-        self.replay_environment = Environment(self.context.observer, self.context.live_body, max_steps)
+        self.replay_environment = Environment(self.context.observer, self.context.live_body, obs_spec=self.context.obs_spec, action_spec=self.context.action_spec, max_steps=max_steps)
         
         # Only record if a writer is provided
         if self.context.writer:

@@ -28,7 +28,7 @@ class DragRecordingState(State):
         super().__init__(context, state_name="DragRecording")
         assert self.context.drag_body is not None
 
-        self.environment: dm_env.Environment = Environment(self.context.observer, self.context.drag_body)
+        self.environment: dm_env.Environment = Environment(self.context.observer, self.context.drag_body, obs_spec=self.context.obs_spec, action_spec=self.context.action_spec)
 
         # Decorate the current environment with a recorder
         writer: IActionSequenceWriter = NumpyActionSequenceWriter(write_path="a.txt", metadata=None)

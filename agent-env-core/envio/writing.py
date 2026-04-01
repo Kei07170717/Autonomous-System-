@@ -56,6 +56,10 @@ class NumpyActionSequenceWriter(IActionSequenceWriter):
 #         super().__init__(obs_spec, action_spec, metadata)
 
 class DummyWriter(BaseWriter):
+    def __init__(self, obs_spec, action_spec, metadata=None) -> None:
+        super().__init__(obs_spec, action_spec, metadata)
+        print("Init writer with OBS SPEC: ", obs_spec)
+        print("Init writer with ACTION SPEC: ", action_spec)
 
     def write_step(self):
         print("Writing dummy step..")

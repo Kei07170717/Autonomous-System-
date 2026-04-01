@@ -1,3 +1,4 @@
+from dm_env import TimeStep
 from numpy._typing import NDArray
 from .types import Action
 from abc import ABC, abstractmethod
@@ -142,10 +143,21 @@ class GripperSensorModule(SensorModule):
 
 class BaseWriter(ABC):
     def __init__(self, obs_spec, action_spec, metadata = None) -> None:
+        self.obs_spec = obs_spec
+        self.action_spec = action_spec
+        # self.dataset_dir = dataset_dir
+        self.metadata = metadata or {}
+
+    @abstractmethod
+    def prepare_new_episode(self, initial_timestep: TimeStep):
         pass
 
     @abstractmethod
-    def write_step(self):
+    def write_step(self, action, timestep: TimeStep):
+        pass
+
+    @abstractmethod
+    def close(self):
         pass
 
 

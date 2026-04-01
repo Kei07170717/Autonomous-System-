@@ -6,6 +6,7 @@ from dm_env import TimeStep, specs
 
 from core.interfaces import BaseWriter, IBody, IObserver
 from core.types import Action
+from envio.dataset_storage_manager import IDatasetStorageManager
 from envio.episode_manager import IActionSequenceManager
 from envio.writing import IActionSequenceWriter
 
@@ -125,16 +126,18 @@ class ActionRecordedEnvironment(EnvironmentWrapper):
 
 
 class WrittenEnvironment(EnvironmentWrapper):
+    # def __init__(self, env: dm_env.Environment, writer: BaseWriter, dataset_storage_manager: IDatasetStorageManager):
     def __init__(self, env: dm_env.Environment, writer: BaseWriter):
-        super().__init__(env)
+        self._env = env
         self.writer = writer
 
     def step(self, action) -> TimeStep:
-        # self.writer.write_step()
-        print("Writing steppp")
-        return super().step(action)
+        timestep = self._env.step(action)
+        self.writer.write_step(action, timestep)
+        return timestep
 
     def reset(self) -> TimeStep:
-        print("Writing reset..")
-        return super().reset()
+        timestep = self._env.reset()
+        self.writer.prepare_new_episode(timestep)
+        return timestep
         

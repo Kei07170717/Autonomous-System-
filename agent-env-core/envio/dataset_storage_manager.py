@@ -49,3 +49,8 @@ class DatasetStorageManager(IDatasetStorageManager):
         suffix = "_" + time.strftime("%Y%m%d_%H%M%S")
         target_directory = path.join(self.dataset_root_dir, "run" + suffix)
         return target_directory
+
+    def get_new_episode_path(self, dataset_dir: str, episode_index: int) -> str:
+        """Returns a path like: ../local-datasets/run_20260401_161230/episode_0000.hdf5"""
+        return path.join(dataset_dir, f"episode_{episode_index:04d}.hdf5")
+

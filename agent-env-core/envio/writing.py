@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Tuple
+from dm_env import TimeStep
 import numpy as np
 
 from core.interfaces import BaseWriter
@@ -61,5 +62,11 @@ class DummyWriter(BaseWriter):
         print("Init writer with OBS SPEC: ", obs_spec)
         print("Init writer with ACTION SPEC: ", action_spec)
 
-    def write_step(self):
+    def write_step(self, action, timestep ):
         print("Writing dummy step..")
+
+    def prepare_new_episode(self, initial_timestep: TimeStep):
+        print("Preparing dummy episode...")
+
+    def close(self):
+        print("Closing dummy writer...")

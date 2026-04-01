@@ -17,6 +17,7 @@ from core.interfaces import (
     IGripperSensor
 )
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
+from envio.writing import DummyWriter
 from environment import Body, Observer
 from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
@@ -27,7 +28,7 @@ from ui import ANCConsoleUI
 def create_writer(path: str, writer_type: str) -> BaseWriter | None:
     if writer_type == "hdf5":
         # TODO: return hdf5
-        pass
+        return DummyWriter({}, {}) # TODO: temporary debugging..
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf

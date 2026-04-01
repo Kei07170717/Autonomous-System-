@@ -124,4 +124,13 @@ class WrittenEnvironment(EnvironmentWrapper):
     def __init__(self, env: dm_env.Environment, writer: BaseWriter):
         super().__init__(env)
         self.writer = writer
+
+    def step(self, action) -> TimeStep:
+        # self.writer.write_step()
+        print("Writing steppp")
+        return super().step(action)
+
+    def reset(self) -> TimeStep:
+        print("Writing reset..")
+        return super().reset()
         

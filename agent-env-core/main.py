@@ -4,7 +4,7 @@ from typing import cast
 from numpy._core.numeric import dtype
 from numpy._typing import DTypeLike
 
-from config import SemiDummyObserverBuilder
+from config import SemiDummyObserverBuilder, MyCobot280PIObserverBuilder
 from controller import ANCController
 from controller.controller import IANCController
 from core.interfaces import (
@@ -120,6 +120,7 @@ if __name__ == "__main__":
     # Override with live components if enabled
     if args.live:
         cobot_adapter = MyCobot280PiAdapter()
+        observer_builder = MyCobot280PIObserverBuilder(cobot_adapter)
         arm_sensor = cobot_adapter
         arm_actuator = cobot_adapter
         resettable = cobot_adapter

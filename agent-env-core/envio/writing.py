@@ -72,7 +72,7 @@ class DummyWriter(BaseWriter):
         print("Closing dummy writer...")
 
 
-
+"""Vibecoded this one (-> sin)"""
 from envio.dataset_storage_manager import IDatasetStorageManager
 import h5py
 import os.path as path

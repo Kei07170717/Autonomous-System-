@@ -1,7 +1,10 @@
 import argparse
+from typing import cast
 
 from numpy._core.numeric import dtype
+from numpy._typing import DTypeLike
 
+from config import SemiDummyObserverBuilder
 from controller import ANCController
 from controller.controller import IANCController
 from core.interfaces import (
@@ -28,12 +31,6 @@ from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 from ui import ANCConsoleUI
 import numpy as np
 
-def get_simple_obs_spec() -> SpecTree:
-    return {
-            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
-            "gripper": TensorSpec(shape=(), dtype=np.uint8)
-            }
-
 def get_simple_action_spec() -> SpecTree:
     return {
             "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
@@ -41,8 +38,8 @@ def get_simple_action_spec() -> SpecTree:
             }
 
 # def setup_and_parse_arguments()
-def create_writer(writer_type: str, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
-    obs_spec = get_simple_obs_spec()
+def create_writer(writer_type: str, obs_spec: SpecTree, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
+    obs_spec = obs_spec
     action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
         # TODO: return hdf5
@@ -117,6 +114,8 @@ if __name__ == "__main__":
     gripper_actuator: IGripperActuator = dummy_component
     gripper_sensor: IGripperSensor = dummy_component
     resettable: IResettable = dummy_component
+
+    observer_builder = SemiDummyObserverBuilder()
     
     # Override with live components if enabled
     if args.live:
@@ -126,6 +125,11 @@ if __name__ == "__main__":
         resettable = cobot_adapter
         gripper_sensor = cobot_adapter
         gripper_actuator = cobot_adapter
+
+    observer_builder.register_joint_angles_sensor()
+    observer_builder.register_gripper_sensor_module()
+    observer = observer_builder.get_observer()
+    obs_spec = observer_builder.get_observation_spec()
 
     drag_body: IBody = Body(
         arm_sensor=arm_sensor,
@@ -139,31 +143,11 @@ if __name__ == "__main__":
         gripper_actuator=gripper_actuator,
     )
 
-    # sensor_modules: [SensorModule]
-    observer: IObserver = Observer(
-        [
-            JointAnglesSensorModule(
-                id="arm_angles", joint_angles_sensor = arm_sensor
-            ),
-            GripperSensorModule(
-                id = "gripper", gripper_sensor = gripper_sensor
-            )
-        ]
-    )
-    # conf = get_dataset_config()
-    # writer = get_writer(conf)
-
-    # Quick and dirty
-    try:
-        cam1 = Camera(camera_name=args.camera_id)
-        observer.attach_sensor_module(CameraSensorModule(id="cam1", camera_sensor=cam1))
-    except Exception as e:
-        print("Couldn't init camera, most likely wrong path: ", args.camera_id)
 
     ### WRITING BACKEND
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
     # dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
-    dataset_writer: BaseWriter | None = create_writer(args.writer, dataset_storage_manager)
+    dataset_writer: BaseWriter | None = create_writer(args.writer, obs_spec, dataset_storage_manager)
 
     controller: ANCController = ANCController(
         drag_body=drag_body,
@@ -173,7 +157,7 @@ if __name__ == "__main__":
         live_body=live_body,
         hz=args.hz,
         writer=dataset_writer,
-        obs_spec=get_simple_obs_spec(),
+        obs_spec=obs_spec,
         action_spec=get_simple_action_spec()
     )
     ui: ANCConsoleUI = ANCConsoleUI(controller)

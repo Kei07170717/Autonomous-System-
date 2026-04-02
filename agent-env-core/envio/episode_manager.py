@@ -14,11 +14,11 @@ class IActionSequenceManager(ABC):
         pass
 
     @abstractmethod
-    def get_actions(self) -> list[Action]:
+    def get_actions(self) -> list[dict]:
         pass
 
     @abstractmethod
-    def set_actions(self, actions: list[Action]) -> None:
+    def set_actions(self, actions: list[dict]) -> None:
         pass
 
     @abstractmethod
@@ -33,16 +33,16 @@ class IActionSequenceManager(ABC):
 class ActionSequenceManager(IActionSequenceManager):
     
     def __init__(self):
-        self.actions: list[Action] = []
+        self.actions: list[dict] = []
         # self.is_episode_recorded = 
 
     def is_episode_recorded(self) -> bool:
         return len(self.actions) > 0
 
-    def get_actions(self) -> list[Action]:
+    def get_actions(self) -> list[dict]:
         return self.actions
 
-    def set_actions(self, actions: list[Action]) -> None:
+    def set_actions(self, actions: list[dict]) -> None:
         self.actions = actions # Or clear and append self list?
 
     def clear_actions(self):

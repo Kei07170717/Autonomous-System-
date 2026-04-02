@@ -43,7 +43,7 @@ class IBody(ABC):
 
 class IArmActuator(ABC):
     @abstractmethod
-    def set_joint_angles(self, arm_pos: list[float]):
+    def set_joint_angles(self, arm_pos: NDArray[np.float32]):
         pass
 
     @abstractmethod

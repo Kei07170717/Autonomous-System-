@@ -62,8 +62,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
 
 
     # actually this might cause issue, needs to be list[float]
-    def set_joint_angles(self, arm_pos: list[float]) -> None:
-        self.mc.send_angles(arm_pos, self.speed_gripper)
+    def set_joint_angles(self, arm_pos: NDArray[np.float32]) -> None:
+        self.mc.send_angles(arm_pos.tolist(), self.speed_gripper)
 
     def release_joints(self) -> None:
         self.mc.release_all_servos()

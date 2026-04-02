@@ -156,7 +156,7 @@ class GripperSensorModule(SensorModule):
         self.gripper_sensor = gripper_sensor
 
     def get_data(self) -> Tensor:
-        return torch.tensor(self.gripper_sensor.get_gripper_value(), dtype=torch.int8)
+        return torch.tensor(self.gripper_sensor.get_gripper_value(), dtype=torch.uint8)
 
 
 class BaseWriter(ABC):

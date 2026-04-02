@@ -56,9 +56,10 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         self.mc.set_gripper_value(_GRIPPER_OPEN_VALUE, self.speed_gripper)
 
     # BLOCKING CALL!!! Will take long time, carefull
-    def get_joint_angles(self) -> list[float]:
+    def get_joint_angles(self) -> NDArray[np.float32]:
         # return self.mc.get_angles()
-        return self.mc.get_angles()
+        return np.array(self.mc.get_angles())
+
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: list[float]) -> None:

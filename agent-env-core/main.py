@@ -1,5 +1,7 @@
 import argparse
 
+from numpy._core.numeric import dtype
+
 from controller import ANCController
 from controller.controller import IANCController
 from core.interfaces import (
@@ -18,7 +20,7 @@ from core.interfaces import (
 )
 from core.types import SpecTree, TensorSpec
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
-from envio.writing import DummyWriter
+from envio.writing import DummyWriter, HDF5Writer
 from environment import Body, Observer
 from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
@@ -28,21 +30,23 @@ import numpy as np
 
 def get_simple_obs_spec() -> SpecTree:
     return {
-            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32)
+            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
+            "gripper": TensorSpec(shape=(), dtype=np.uint8)
             }
 
 def get_simple_action_spec() -> SpecTree:
     return {
-            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32)
+            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
+            "gripper": TensorSpec(shape=(), dtype=np.uint8)
             }
 
 # def setup_and_parse_arguments()
-def create_writer(path: str, writer_type: str) -> BaseWriter | None:
+def create_writer(writer_type: str, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
     obs_spec = get_simple_obs_spec()
     action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
         # TODO: return hdf5
-        return DummyWriter(obs_spec, action_spec) # TODO: temporary debugging..
+        return HDF5Writer(obs_spec, action_spec, dataset_storage_manager) # TODO: temporary debugging..
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf
@@ -158,8 +162,8 @@ if __name__ == "__main__":
 
     ### WRITING BACKEND
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
-    dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
-    dataset_writer: BaseWriter | None = create_writer(dataset_destination_path, args.writer)
+    # dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
+    dataset_writer: BaseWriter | None = create_writer(args.writer, dataset_storage_manager)
 
     controller: ANCController = ANCController(
         drag_body=drag_body,

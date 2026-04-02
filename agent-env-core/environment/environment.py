@@ -140,4 +140,7 @@ class WrittenEnvironment(EnvironmentWrapper):
         timestep = self._env.reset()
         self.writer.prepare_new_episode(timestep)
         return timestep
+
+    def close(self):
+        self.writer.close()
         

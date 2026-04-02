@@ -4,7 +4,7 @@ from dm_env import TimeStep
 import numpy as np
 
 from core.interfaces import BaseWriter
-from core.types import Action
+from core.types import Action, TensorSpec
 
 class IActionSequenceWriter(ABC):
     def __init__(self, metadata: Optional[dict[str, Any]] = None) -> None:
@@ -70,3 +70,143 @@ class DummyWriter(BaseWriter):
 
     def close(self):
         print("Closing dummy writer...")
+
+
+
+from envio.dataset_storage_manager import IDatasetStorageManager
+import h5py
+import os.path as path
+import numpy as np
+from abc import ABC, abstractmethod
+import dm_env
+
+# Assuming TensorSpec and SpecTree are defined as before
+
+class HDF5Writer(BaseWriter):
+    def __init__(self, obs_spec, action_spec, storage_manager: IDatasetStorageManager, chunk_size=120, metadata=None) -> None:
+        super().__init__(obs_spec, action_spec, metadata)
+        self.storage_manager = storage_manager
+        self.chunk_size = chunk_size
+        self.episode_index = 0
+        self.current_file = None
+        self.storage_manager = storage_manager
+        self.dataset_dir = self.storage_manager.create_new_dataset_directory()
+        self.SUFFIX = ".hdf5"
+        
+        # 1. Flatten the SpecTrees into HDF5 paths dynamically
+        self.flat_specs = self._flatten_specs("observations", self.obs_spec)
+        self.flat_specs.update(self._flatten_specs("actions", self.action_spec))
+        
+        # Add standard RLDS fields
+        self.flat_specs.update({
+            "rewards": TensorSpec(shape=(), dtype=np.float32),
+            "discounts": TensorSpec(shape=(), dtype=np.float32),
+            "is_first": TensorSpec(shape=(), dtype=bool),
+            "is_last": TensorSpec(shape=(), dtype=bool),
+            "is_terminal": TensorSpec(shape=(), dtype=bool),
+        })
+        
+        self._clear_buffer()
+
+    def _flatten_specs(self, prefix: str, spec) -> dict:
+        """Recursively parses a SpecTree into a flat dict of {hdf5_path: TensorSpec}"""
+        paths = {}
+        if isinstance(spec, dict):
+            for k, v in spec.items():
+                paths.update(self._flatten_specs(f"{prefix}/{k}", v))
+        else:
+            paths[prefix] = spec
+        return paths
+
+    def _clear_buffer(self):
+        """Initializes empty lists for every dynamic path."""
+        self.buffer = {path: [] for path in self.flat_specs.keys()}
+
+    def prepare_new_episode(self, initial_timestep: dm_env.TimeStep):
+        # Close previous episode if one was open
+        self.close() 
+
+        # Open new HDF5 file
+        filepath = self.storage_manager.get_new_episode_path(self.dataset_dir, self.episode_index, self.SUFFIX)
+        self.current_file = h5py.File(filepath, 'w')
+        
+        # Dynamically create resizable chunked datasets
+        for h5_path, spec in self.flat_specs.items():
+            self.current_file.create_dataset(
+                name=h5_path,
+                shape=(0, *spec.shape),        # Start empty
+                maxshape=(None, *spec.shape),  # Allow infinite resizing on axis 0
+                dtype=spec.dtype,
+                chunks=(self.chunk_size, *spec.shape) # HDF5 Chunking!
+            )
+            
+        self._clear_buffer()
+        
+        # Handle the initial step (generate dummy zeros for the action)
+        dummy_action = self._generate_dummy_data(self.action_spec)
+        self.write_step(dummy_action, initial_timestep)
+
+    def write_step(self, action, timestep: dm_env.TimeStep):
+        # Extract observations and actions dynamically
+        self._extract_to_buffer("observations", timestep.observation)
+        self._extract_to_buffer("actions", action)
+        
+        # Extract RLDS standard fields
+        self.buffer["rewards"].append(0.0 if timestep.reward is None else timestep.reward)
+        self.buffer["discounts"].append(1.0 if timestep.discount is None else timestep.discount)
+        self.buffer["is_first"].append(timestep.first())
+        self.buffer["is_last"].append(timestep.last())
+        self.buffer["is_terminal"].append(timestep.last() and timestep.discount == 0.0)
+
+        # Flush if buffer reaches chunk limit
+        if len(self.buffer["is_first"]) >= self.chunk_size:
+            self._flush_buffer()
+
+    def _extract_to_buffer(self, prefix: str, data):
+        """Recursively pulls data from nested dicts and appends to flat buffer."""
+        if isinstance(data, dict):
+            for k, v in data.items():
+                self._extract_to_buffer(f"{prefix}/{k}", v)
+        else:
+            self.buffer[prefix].append(data)
+
+    def _generate_dummy_data(self, spec):
+        """Recursively generates zeros for the initial step's dummy action."""
+        if isinstance(spec, dict):
+            return {k: self._generate_dummy_data(v) for k, v in spec.items()}
+        else:
+            return np.zeros(spec.shape, dtype=spec.dtype)
+
+    def _flush_buffer(self):
+        """Resizes HDF5 datasets and writes the RAM buffer to disk."""
+        current_batch_size = len(self.buffer["is_first"])
+        if current_batch_size == 0 or self.current_file is None:
+            return
+
+        for path, data_list in self.buffer.items():
+            dataset = self.current_file[path]
+            current_len = dataset.shape[0]
+            
+            # Resize dataset to make room for new chunk
+            dataset.resize(current_len + current_batch_size, axis=0)
+            
+            # Write stacked chunk to disk
+            dataset[current_len:] = np.stack(data_list)
+            
+        self._clear_buffer()
+
+    def close(self):
+        """Flushes remaining buffer and cleanly closes the file."""
+        if self.current_file is not None:
+            self._flush_buffer()
+            
+            # Update file-level attributes right before closing
+            rewards_dataset = self.current_file["rewards"]
+            self.current_file.attrs["episode_id"] = self.episode_index
+            self.current_file.attrs["length"] = rewards_dataset.shape[0]
+            self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))
+            
+            self.current_file.close()
+            print(f"Closed episode {self.episode_index}")
+            self.episode_index += 1
+            self.current_file = None

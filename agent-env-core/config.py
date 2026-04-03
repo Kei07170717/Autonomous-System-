@@ -38,7 +38,7 @@ class SemiDummyObserverBuilder():
         # get a sample tensor so we can infer the shape and type
         while True:
             try:
-                sample_tensor = cam.get_current_frame_as_tensor()
+                sample_tensor = cam.get_current_frame()
                 shape = sample_tensor.shape
                 tensor_dtype = sample_tensor.dtype
                 tensor_spec = TensorSpec(shape, cast(DTypeLike, tensor_dtype))
@@ -51,6 +51,7 @@ class SemiDummyObserverBuilder():
                 time.sleep(0.1)
 
         print("\nDone initializing", label, flush=True)
+        return True
 
     def register_gripper_sensor_module(self):
         self.sensor_modules.append(GripperSensorModule(

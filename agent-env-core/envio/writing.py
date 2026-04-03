@@ -83,10 +83,10 @@ import dm_env
 # Assuming TensorSpec and SpecTree are defined as before
 
 class HDF5Writer(BaseWriter):
-    def __init__(self, obs_spec, action_spec, storage_manager: IDatasetStorageManager, chunk_size=120, metadata=None) -> None:
+    def __init__(self, obs_spec, action_spec, storage_manager: IDatasetStorageManager, chunk_size=8, metadata=None) -> None:
         super().__init__(obs_spec, action_spec, metadata)
         self.storage_manager = storage_manager
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size # TODO: chunk sizes should be kept under the h5 chunk cache (default 1mb)
         self.episode_index = 0
         self.current_file = None
         self.storage_manager = storage_manager
@@ -138,7 +138,7 @@ class HDF5Writer(BaseWriter):
                 maxshape=(None, *spec.shape),  # Allow infinite resizing on axis 0
                 dtype=spec.dtype,
                 chunks=(self.chunk_size, *spec.shape) # HDF5 Chunking!
-            )
+                ) # TODO: Consider if compression is justified
             
         self._clear_buffer()
         
@@ -185,6 +185,8 @@ class HDF5Writer(BaseWriter):
 
         for path, data_list in self.buffer.items():
             dataset = self.current_file[path]
+            assert isinstance(dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
+
             current_len = dataset.shape[0]
             
             # Resize dataset to make room for new chunk
@@ -202,6 +204,8 @@ class HDF5Writer(BaseWriter):
             
             # Update file-level attributes right before closing
             rewards_dataset = self.current_file["rewards"]
+            
+            assert isinstance(rewards_dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
             self.current_file.attrs["episode_id"] = self.episode_index
             self.current_file.attrs["length"] = rewards_dataset.shape[0]
             self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))

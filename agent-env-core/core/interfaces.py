@@ -28,7 +28,7 @@ class SensorModule(ABC):
         return self.return_spec
 
     @abstractmethod
-    def get_data(self) -> Tensor:
+    def get_data(self) -> NDArray:
         pass
 
 
@@ -114,14 +114,14 @@ class JointAnglesSensorModule(SensorModule):
         super().__init__(id, return_spec)
         self.joint_angles_sensor = joint_angles_sensor
 
-    def get_data(self) -> Tensor:
-        return torch.tensor(self.joint_angles_sensor.get_joint_angles())
+    def get_data(self) -> NDArray:
+        return self.joint_angles_sensor.get_joint_angles()
 
 
 class ICameraSensor(ABC):
     # TODO: return tensor
     @abstractmethod
-    def get_current_frame_as_tensor(self) -> Tensor:
+    def get_current_frame(self) -> NDArray:
         pass
 
 
@@ -132,8 +132,8 @@ class CameraSensorModule(SensorModule):
         super().__init__(id, return_spec)
         self.camera_sensor = camera_sensor
 
-    def get_data(self) -> Tensor:
-        return self.camera_sensor.get_current_frame_as_tensor()
+    def get_data(self) -> NDArray:
+        return self.camera_sensor.get_current_frame()
 
 
 class IGripperSensor(ABC):
@@ -155,8 +155,8 @@ class GripperSensorModule(SensorModule):
         super().__init__(id, return_spec)
         self.gripper_sensor = gripper_sensor
 
-    def get_data(self) -> Tensor:
-        return torch.tensor(self.gripper_sensor.get_gripper_value(), dtype=torch.uint8)
+    def get_data(self) -> NDArray:
+        return np.asarray(self.gripper_sensor.get_gripper_value(), dtype=np.uint8)
 
 
 class BaseWriter(ABC):

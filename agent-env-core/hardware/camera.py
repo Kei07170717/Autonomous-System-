@@ -1,5 +1,6 @@
 import cv2 
 from cv2_enumerate_cameras import enumerate_cameras
+from numpy._typing import NDArray
 import torch
 import platform
 import threading
@@ -64,13 +65,15 @@ class Camera(ICameraSensor):
             with self.lock:
                 self.latest_frame = frame
     
-    def get_current_frame(self):
+    def get_current_frame(self) -> NDArray:
         """Return the latest frame read by the background thread.
         returns the actual frame and not the tensor so might not be needed in the future
         """
         with self.lock:
+                
             if self.latest_frame is None:
-                return None
+                raise RuntimeError("Frame doesn't exist")
+
             return self.latest_frame.copy()
 
     
@@ -82,12 +85,9 @@ class Camera(ICameraSensor):
         def convert_to_tensor(frame) -> Tensor:
             """This function converts each frame to a tensor"""
             return torch.from_numpy(frame)
+
+        return convert_to_tensor(frame)
         
-        if frame is not None:
-            tensorized_frame: Tensor = convert_to_tensor(frame)
-            return tensorized_frame
-        else:
-            raise RuntimeError("Frame doesn't exist")
     
     def stop(self):
         """Stop the camera thread and release the camera."""
@@ -96,9 +96,10 @@ class Camera(ICameraSensor):
             self.thread.join()
 
         # Explicitly release the OpenCV resource
-        if hasattr(self, 'capture') and self.capture.isOpened():
+        if self.capture.isOpened():
             self.capture.release()
 
+    # TODO: Apparently shouldn't rely on destructor, likely causing the core dump
     def __del__(self):
         """Making sure the camera resources are released properly."""
         try:

@@ -82,6 +82,7 @@ class SemiDummyObserverBuilder():
 
 class MyCobot280PIObserverBuilder(SemiDummyObserverBuilder):
     def __init__(self, cobot: MyCobot280PiAdapter):
+        super().__init__()
         self.cobot = cobot
 
     def register_gripper_sensor_module(self, label: str = "gripper"):

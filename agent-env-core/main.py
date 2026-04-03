@@ -5,6 +5,7 @@ from numpy._core.numeric import dtype
 from numpy._typing import DTypeLike
 
 from config import MyCobot280PIObserverBuilder, SemiDummyObserverBuilder
+
 from controller import ANCController
 from controller.controller import IANCController
 from core.interfaces import (

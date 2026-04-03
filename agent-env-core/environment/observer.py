@@ -6,11 +6,13 @@ class Observer(IObserver):
         self.sensors: list[SensorModule] = sensors
 
     def get_observation(self):
+        print(f"-- obs-start: {__import__('datetime').datetime.now().microsecond // 1000} ms")
         sensor_states = dict(
             map(lambda sensor:
                 (sensor.get_id(), sensor.get_data()),
                 self.sensors)
         )
+        print(f"-- obs-end: {__import__('datetime').datetime.now().microsecond // 1000} ms")
 
         return sensor_states
 

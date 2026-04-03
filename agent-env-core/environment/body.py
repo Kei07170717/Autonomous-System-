@@ -1,5 +1,6 @@
 from core.interfaces import IBody, IJointAnglesSensor, IArmActuator, IGripperActuator
 from core.types import Action
+import time
 
 class Body(IBody):
     def __init__(self, arm_sensor: IJointAnglesSensor, arm_actuator: IArmActuator, gripper_actuator: IGripperActuator):
@@ -12,5 +13,8 @@ class Body(IBody):
     # we might have trouble switching to different robot arms
     def affect_world(self, action: dict):
         # print(action)
+        # print(f"-- affect-start: {__import__('datetime').datetime.now().microsecond // 1000} ms")
         self.arm_actuator.set_joint_angles(action["arm_angles"])
         self.gripper_actuator.set_gripper_value(action["gripper"])
+
+        # print(f"-- affect-end: {__import__('datetime').datetime.now().microsecond // 1000} ms")

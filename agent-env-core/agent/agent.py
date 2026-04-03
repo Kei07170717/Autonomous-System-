@@ -10,7 +10,7 @@ class KinestheticAgent(Agent):
 
     def get_action(self, obs: dict) -> dict:
         # TODO: return gripper state
-        return {"arm_angles": obs["arm_angles"], "gripper": np.uint8(0)} # Hardcoding these keys is bad!!!
+        return {"arm_angles": obs["arm_angles"], "gripper": obs["gripper"]} # Hardcoding these keys is bad!!!
 
 
 # Vibe coded agent just for the sake of testing

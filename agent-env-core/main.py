@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--hz",
         type=int,
-        default=20,
+        default=10, # Can definitely get this higher if we spend time optimizing the controlloop
         help="Hz that the controller will operate on; 10hz is 10 send_angles a second.",
     )
 

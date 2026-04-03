@@ -15,6 +15,7 @@ from environment.observer import Observer
 from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
+import time
 
 """'Quick' and dirty code"""
 class SemiDummyObserverBuilder():
@@ -23,20 +24,33 @@ class SemiDummyObserverBuilder():
         self.dummy_component: DummyComponent = DummyComponent()
 
     def build_and_register_camera_module(self, label: str, device_name: str) -> bool:
+        cam: Camera | None = None
         try:
             cam = Camera(camera_name=device_name)
-            # get a sample tensor so we can infer the shape and type
-            sample_tensor = cam.get_current_frame_as_tensor()
-            shape = sample_tensor.shape
-            tensor_dtype = sample_tensor.dtype
-            tensor_spec = TensorSpec(shape, cast(DTypeLike, tensor_dtype))
-            self.sensor_modules.append(
-                CameraSensorModule(label, tensor_spec, camera_sensor=cam)
-            )
-            return True
         except Exception as e:
             print("Couldn't init camera, most likely wrong path: ", device_name)
             return False
+
+        assert cam is not None
+        # time.sleep(1)
+        inference_attempt_count: int = 0
+        print("Inferring TensorSpec from", label, end="", flush=True)
+        # get a sample tensor so we can infer the shape and type
+        while True:
+            try:
+                sample_tensor = cam.get_current_frame_as_tensor()
+                shape = sample_tensor.shape
+                tensor_dtype = sample_tensor.dtype
+                tensor_spec = TensorSpec(shape, cast(DTypeLike, tensor_dtype))
+                self.sensor_modules.append(
+                    CameraSensorModule(label, tensor_spec, camera_sensor=cam)
+                )
+                break
+            except Exception as e:
+                print(".", end="", flush=True)
+                time.sleep(0.1)
+
+        print("\nDone initializing", label, flush=True)
 
     def register_gripper_sensor_module(self):
         self.sensor_modules.append(GripperSensorModule(

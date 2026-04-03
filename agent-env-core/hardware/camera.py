@@ -94,10 +94,17 @@ class Camera(ICameraSensor):
         self.stop_event.set()
         if self.thread.is_alive():
             self.thread.join()
-    
+
+        # Explicitly release the OpenCV resource
+        if hasattr(self, 'capture') and self.capture.isOpened():
+            self.capture.release()
+
     def __del__(self):
         """Making sure the camera resources are released properly."""
-        self.stop()
+        try:
+            self.stop()
+        except Exception as e:
+            pass
 
 
 

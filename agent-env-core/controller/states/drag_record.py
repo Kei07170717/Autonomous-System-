@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from controller.utils import print_action, print_observation
 from core.interfaces import Agent
 from agent import KinestheticAgent
 from envio.episode_manager import ActionSequenceManager
@@ -48,9 +49,9 @@ class DragRecordingState(State):
         assert self.timestep is not None
 
         action = self.agent.get_action(self.timestep.observation)
-        if self.verbose_mode: print("Action: ", action)
+        if self.verbose_mode: print_action(action)
         self.timestep = self.environment.step(action)
-        if self.verbose_mode: print("Obs: ", self.timestep.observation)
+        if self.verbose_mode: print_observation(self.timestep.observation)
 
     def open_gripper(self):
         pass

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from controller.utils import print_action, print_observation
 from environment.environment import WrittenEnvironment
 from ..base_state import State
 from . import reset
@@ -65,9 +66,9 @@ class ReplayRecordingState(State):
         assert self.replay_environment is not None
 
         action = self.agent.get_action(self.timestep.observation)
-        if self.verbose_mode: print("Action: ", action)
+        if self.verbose_mode: print_action(action)
         self.timestep = self.replay_environment.step(action)
-        if self.verbose_mode: print("Obs: ", self.timestep.observation)
+        if self.verbose_mode: print_observation(self.timestep.observation)
 
         if self.timestep.last():
             self.context.set_state(reset.ResettingState(self.context))

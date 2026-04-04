@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import threading
 import time
 
-from core.interfaces import BaseWriter, IObserver, IResettable, IArmActuator
+from core.interfaces import BaseWriter, IAnnotator, IObserver, IResettable, IArmActuator
 from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
@@ -19,6 +19,10 @@ class IANCController(ABC):
 
     @abstractmethod
     def run_loop(self, terminate_event: threading.Event):
+        pass
+    
+    @abstractmethod
+    def set_annotator(self, annotator: IAnnotator):
         pass
 
     @abstractmethod
@@ -81,6 +85,7 @@ class ANCController(IANCController):
                  resettable: IResettable | None = None,
                  hz: float = 20.0,
                  writer: BaseWriter | None = None,
+                 annotator: IAnnotator | None = None
                  ):
         self.observer: IObserver = observer
         self.obs_spec: SpecTree = obs_spec
@@ -98,6 +103,7 @@ class ANCController(IANCController):
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BaseWriter | None = writer
+        self.annotator = annotator
 
         # print("Max steps")
 
@@ -145,7 +151,10 @@ class ANCController(IANCController):
         # Gracefully exit the current state
         self.state.on_state_exit()
 
-        
+    def set_annotator(self, annotator: IAnnotator):
+        self.annotator = annotator
+        if self.writer and self.annotator:
+            self.writer.set_episode_end_callback(self.annotator.get_annotation)
 
     def open_gripper(self):
         self.state.open_gripper()

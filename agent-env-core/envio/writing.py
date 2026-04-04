@@ -197,20 +197,33 @@ class HDF5Writer(BaseWriter):
             
         self._clear_buffer()
 
+    # def set_episode_end_callback(self, func):
+    #     self.end_of_episode_callback = func
+
+    def set_annotation(self, annotation: dict):
+        """Write (task) annotation for last episode"""
+        self.is_annotation_needed = False
+        pass
+
     def close(self):
         """Flushes remaining buffer and cleanly closes the file."""
-        if self.current_file is not None:
-            self._flush_buffer()
-            
-            # Update file-level attributes right before closing
-            rewards_dataset = self.current_file["rewards"]
-            
-            assert isinstance(rewards_dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
-            self.current_file.attrs["episode_id"] = self.episode_index
-            self.current_file.attrs["length"] = rewards_dataset.shape[0]
-            self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))
-            
-            self.current_file.close()
-            print(f"Closed episode {self.episode_index}")
-            self.episode_index += 1
-            self.current_file = None
+
+        if self.current_file is None:
+            return
+
+        if self.end_of_episode_callback:
+            self.end_of_episode_callback()
+        self._flush_buffer()
+        
+        # Update file-level attributes right before closing
+        rewards_dataset = self.current_file["rewards"]
+        
+        assert isinstance(rewards_dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
+        self.current_file.attrs["episode_id"] = self.episode_index
+        self.current_file.attrs["length"] = rewards_dataset.shape[0]
+        self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))
+        
+        self.current_file.close()
+        print(f"Closed episode {self.episode_index}")
+        self.episode_index += 1
+        self.current_file = None

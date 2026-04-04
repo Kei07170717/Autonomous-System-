@@ -1,18 +1,19 @@
 import threading
+import asyncio
 
 from controller.commands import *
 from controller.controller import IANCController, ICommand
-# from controller import ANCController
-from controller.states import IdlingState, ResettingState  # SHOULDN't BE HERE
-from prompt_toolkit import prompt
+from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
+from core.interfaces import IAnnotator
 
-class ANCConsoleUI:
+
+class ANCConsoleUI(IAnnotator):
     def __init__(self, anc_controller: IANCController) -> None:
         self.anc_controller: IANCController = anc_controller
+        self.anc_controller.set_annotator(self)
         self.terminate_event: threading.Event = threading.Event()
-        # Spawn a separate thread for the ANCController (because the 
-        # 'input()' method is a blocking call, it would block the entire program)
+        
         self.controller_thread = threading.Thread(target=self.anc_controller.run_loop, args=(self.terminate_event,), daemon=True)
         
         self.command_mapping: dict[str, ICommand] = {
@@ -24,35 +25,95 @@ class ANCConsoleUI:
         self.help_command = ListCommandsCommand(self.command_mapping)
         self.command_mapping["help"] = self.help_command
 
+        # For async cross-thread communication
+        self.main_loop: asyncio.AbstractEventLoop | None = None
+        self.prompt_task: asyncio.Task | None = None
+        self.annotation_complete_event = threading.Event()
+        self.annotation_result = {}
+        self.session = PromptSession()
 
     def start(self):
         self.controller_thread.start()
-
+        
         try:
-            with patch_stdout():
-                while True:
-                    prompt_input = prompt("agent-env-core> ").strip().lower()
-                    
-                    command: ICommand | None = self.command_mapping.get(prompt_input)
-
-                    # Don't run the command if it's not valid
-                    if command:
-                        command.execute()
-                    else:
-                        self.help_command.execute()
-
-
-                    # if cmd == "help":
-                    #     print("Possible commands: ")
-                    # elif cmd == "reset":
-                    #     self.anc_controller.set_state(ResettingState(self.anc_controller))
-                    # elif cmd == "idle":
-                    #     self.anc_controller.set_state(IdlingState(self.anc_controller))
+            asyncio.run(self._async_start())
         except KeyboardInterrupt:
             self.terminate_event.set()
             self.controller_thread.join()
             exit(0)
 
+    async def _async_start(self):
+        self.main_loop = asyncio.get_running_loop()
         
+        with patch_stdout():
+            while True:
+                try:
+                    self.prompt_task = asyncio.create_task(self.session.prompt_async("agent-env-core> "))
+                    prompt_input = await self.prompt_task
+                    
+                    if not prompt_input:
+                        continue
+                        
+                    prompt_input = prompt_input.strip().lower()
+                    command: ICommand | None = self.command_mapping.get(prompt_input)
+                    if command:
+                        command.execute()
+                    else:
+                        self.help_command.execute()
+                        
+                except asyncio.CancelledError:
+                    # Triggers when main prompting is cancelled, assumes annotation is required... 
+                    await self._run_annotation_prompts()
 
+    async def _run_annotation_prompts(self):
+        """Runs the annotation UI, awaited in the main loop."""
+        print("\n[Annotation Hijack] Controller requires input.")
+        
+        while True:
+            while True:
+                success_input = await self.session.prompt_async("1. Is the recording successful? (y/n): ")
+                success_input = success_input.strip().lower()
+                if success_input in ('y', 'n'):
+                    is_valid = (success_input == 'y')
+                    break
+                print("Error: Input must be 'y' or 'n'.")
+
+            task = await self.session.prompt_async("2. Annotate task: ")
+            task = task.strip()
+
+            print("\n--- Summary ---")
+            print(f"is_valid : {is_valid}")
+            print(f"task     : {task}")
+
+            while True:
+                verify_input = await self.session.prompt_async("Are these answers correct? (y/n): ")
+                verify_input = verify_input.strip().lower()
+                if verify_input in ('y', 'n'):
+                    break
+                print("Error: Input must be 'y' or 'n'.")
+
+            if verify_input == 'y':
+                self.annotation_result = {"is_valid": is_valid, "task": task}
+                break
+
+            print("\nRestarting annotation...\n")
+        
+        # Signal the controller thread that annotation is done
+        self.annotation_complete_event.set()
+
+    def get_annotation(self) -> dict:
+        """Called by the background controller thread."""
+        self.annotation_complete_event.clear()
+        print("Annotate cleared") 
+        # Tell the main thread's event loop to cancel the waiting prompt task
+        if self.main_loop and self.prompt_task:
+            self.main_loop.call_soon_threadsafe(self.prompt_task.cancel)
+            print("Main loop prompot canceled") 
+        
+        # Block the background thread until main thread completes annotation
+        self.annotation_complete_event.wait()
+
+        print("Complete event wait") 
+        
+        return self.annotation_result
 

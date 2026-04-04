@@ -90,7 +90,7 @@ class HDF5Writer(BaseWriter):
         self.episode_index = 0
         self.current_file = None
         self.storage_manager = storage_manager
-        self.dataset_dir = self.storage_manager.create_new_dataset_directory()
+        self.dataset_dir: str | None = None
         self.SUFFIX = ".hdf5"
         
         # 1. Flatten the SpecTrees into HDF5 paths dynamically
@@ -125,6 +125,10 @@ class HDF5Writer(BaseWriter):
     def prepare_new_episode(self, initial_timestep: dm_env.TimeStep):
         # Close previous episode if one was open
         self.close() 
+
+        # Create dir if we didn't already
+        if self.dataset_dir is None:
+            self.dataset_dir = self.storage_manager.create_new_dataset_directory()
 
         # Open new HDF5 file
         filepath = self.storage_manager.get_new_episode_path(self.dataset_dir, self.episode_index, self.SUFFIX)
@@ -222,7 +226,6 @@ class HDF5Writer(BaseWriter):
             self._write_episode_metadata(annotation)
 
         self._flush_buffer()
-        
         # Update file-level attributes right before closing
         rewards_dataset = self.current_file["rewards"]
         
@@ -230,8 +233,9 @@ class HDF5Writer(BaseWriter):
         self.current_file.attrs["episode_id"] = self.episode_index
         self.current_file.attrs["length"] = rewards_dataset.shape[0]
         self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))
-        
+        ep_path = self.current_file.filename
+
         self.current_file.close()
-        print(f"Closed episode {self.episode_index}")
+        print(f"Episode {self.episode_index} stored in: {ep_path}")
         self.episode_index += 1
         self.current_file = None

@@ -96,14 +96,14 @@ if __name__ == "__main__":
         "--external-cam-id",
         type=str,
         default="USB 2.0 Camera: USB Camera",
-        help="The name of the camera to use.",
+        help="The name of the external camera to use.",
     )
     
     parser.add_argument(
         "--wrist-cam-id",
         type=str,
         default="USB 2.0 Camera: USB 2.0 Camera",
-        help="The name of the camera to use.",
+        help="The name of the wrist camera to use.",
     )
 
     # TODO: add options..
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     observer_builder.register_joint_angles_sensor()
     observer_builder.register_gripper_sensor_module()
     observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id)
-    # observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id)
+    observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id)
     observer = observer_builder.get_observer()
     obs_spec = observer_builder.get_observation_spec()
 

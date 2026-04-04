@@ -24,25 +24,17 @@ class Camera(ICameraSensor):
     """
     def __init__(self, camera_name: str):
         self.camera_name: str = camera_name
+        self.os: int = self._get_os()
         self.path: int = self.get_camera_path()
-        self.capture = cv2.VideoCapture(self.path)
+        self.capture = cv2.VideoCapture(self.path, self.os)
         self.latest_frame = None
         self.capture_failed = False
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.update_frames, daemon=True)
         self.thread.start()
-    
-    def get_camera_path(self) -> int:
-        """
-        Finding the correct camera to start the thread in the correct index
-        Corrrect Camera names:
-        USB 2.0 Camera ~ wrist camera from robot arm
-        USB Camera ~ Bartinos camera
-        FaceTime HD Camera ~ any macbook face camera
-        """
         
-        def get_os():
+    def _get_os(self):
             """
             Autodetect which OS is being used  -> important for the detection of the camera name / index.
             Different os have different backend values to access for camera 
@@ -54,12 +46,35 @@ class Camera(ICameraSensor):
             else:
                 backend = cv2.CAP_V4L2 #linux
             return backend
+    
+    def get_camera_path(self) -> int:
+        """
+        Finding the correct camera to start the thread in the correct index
+        Corrrect Camera names:
+        USB 2.0 Camera ~ wrist camera from robot arm
+        USB Camera ~ Bartinos camera
+        FaceTime HD Camera ~ any macbook face camera
+        """
+        
 
-        cams: list = enumerate_cameras(get_os()) 
+        cams: list = enumerate_cameras(self.os) 
         for cam in cams:
-            if cam.name.lower() == self.camera_name.lower():
-                return cam.index
-        raise ValueError("Camera could not be found for use")
+            if self.camera_name.lower() == cam.name.lower():
+                
+                # Test the index before returning it
+                test_cap = cv2.VideoCapture(cam.index, self.os)
+                if test_cap.isOpened():
+                    success, _ = test_cap.read()
+                    test_cap.release()
+                    
+                    if success:
+                        return cam.index
+                    else:
+                        print(f"Warning: Index {cam.index} matched name but failed to read a frame. Trying next...")
+                else:
+                    print(f"Warning: Index {cam.index} matched but failed to open.")
+
+        raise ValueError(f"Camera '{self.camera_name}' could not be found or opened for use.")
     
     def update_frames(self):
         """Continuously grab frames for the thread"""

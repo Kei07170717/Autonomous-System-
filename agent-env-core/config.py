@@ -28,7 +28,7 @@ class SemiDummyObserverBuilder():
         try:
             cam = Camera(camera_name=device_name)
         except Exception as e:
-            print("Couldn't init camera, most likely wrong path: ", device_name)
+            print(f"Couldn't init {label}, most likely wrong path/name: {device_name}")
             return False
 
         assert cam is not None
@@ -45,10 +45,11 @@ class SemiDummyObserverBuilder():
                 self.sensor_modules.append(
                     CameraSensorModule(label, tensor_spec, camera_sensor=cam)
                 )
+                print(f"\nSet up {label} with name: \"{device_name}\" ~ and dimensions: {shape}")
                 break
 
             except NullFrameReturnedError:
-                print(f"\nCam: {device_name} returned an invalid frame, skipping {device_name} setup.")
+                print(f"\nCam: {label} returned an invalid frame, skipping {device_name} setup.")
                 return False
 
             except FrameNotReadyError:

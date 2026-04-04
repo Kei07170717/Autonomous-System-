@@ -154,7 +154,7 @@ class ANCController(IANCController):
     def set_annotator(self, annotator: IAnnotator):
         self.annotator = annotator
         if self.writer and self.annotator:
-            self.writer.set_episode_end_callback(self.annotator.get_annotation)
+            self.writer.set_episode_end_annotation_callback(self.annotator.get_annotation)
 
     def open_gripper(self):
         self.state.open_gripper()

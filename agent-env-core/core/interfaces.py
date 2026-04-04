@@ -166,7 +166,7 @@ class BaseWriter(ABC):
         # self.dataset_dir = dataset_dir
         self.metadata = metadata or {}
         self.is_annotation_needed: bool = False
-        self.end_of_episode_callback = None
+        self.end_of_episode_annotation_callback = None
 
     @abstractmethod
     def prepare_new_episode(self, initial_timestep: TimeStep):
@@ -180,11 +180,11 @@ class BaseWriter(ABC):
     def set_annotation(self, annotation: dict):
         pass
 
-    def set_episode_end_callback(self, func):
-        self.end_of_episode_callback = func
+    def set_episode_end_annotation_callback(self, func):
+        self.end_of_episode_annotation_callback = func
 
-    def get_is_annotation_needed(self) -> bool:
-        return self.is_annotation_needed
+    # def get_is_annotation_needed(self) -> bool:
+    #     return self.is_annotation_needed
 
     @abstractmethod
     def close(self):

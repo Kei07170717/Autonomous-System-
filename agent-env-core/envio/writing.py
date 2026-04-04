@@ -146,6 +146,12 @@ class HDF5Writer(BaseWriter):
         dummy_action = self._generate_dummy_data(self.action_spec)
         self.write_step(dummy_action, initial_timestep)
 
+    def _write_episode_metadata(self, metadata: dict):
+        assert self.current_file is not None
+        
+        for key, value in metadata.items():
+            self.current_file.attrs[key] = value
+
     def write_step(self, action, timestep: dm_env.TimeStep):
         # Extract observations and actions dynamically
         self._extract_to_buffer("observations", timestep.observation)
@@ -211,8 +217,9 @@ class HDF5Writer(BaseWriter):
         if self.current_file is None:
             return
 
-        if self.end_of_episode_callback:
-            self.end_of_episode_callback()
+        if self.end_of_episode_annotation_callback:
+            annotation: dict = self.end_of_episode_annotation_callback()
+            self._write_episode_metadata(annotation)
         self._flush_buffer()
         
         # Update file-level attributes right before closing

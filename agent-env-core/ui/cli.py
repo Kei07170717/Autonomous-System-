@@ -67,7 +67,8 @@ class ANCConsoleUI(IAnnotator):
 
     async def _run_annotation_prompts(self):
         """Runs the annotation UI, awaited in the main loop."""
-        print("\n[Annotation Hijack] Controller requires input.")
+
+        print("Initiated annotation")
         
         while True:
             while True:

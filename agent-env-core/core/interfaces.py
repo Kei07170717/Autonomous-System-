@@ -160,13 +160,14 @@ class GripperSensorModule(SensorModule):
 
 
 class BaseWriter(ABC):
-    def __init__(self, obs_spec, action_spec, metadata=None) -> None:
+    def __init__(self, obs_spec, action_spec, is_annotation_enabled: bool, metadata=None) -> None:
         self.obs_spec = obs_spec
         self.action_spec = action_spec
         # self.dataset_dir = dataset_dir
         self.metadata = metadata or {}
         self.is_annotation_needed: bool = False
         self.end_of_episode_annotation_callback = None
+        self.is_annotation_enabled = is_annotation_enabled
 
     @abstractmethod
     def prepare_new_episode(self, initial_timestep: TimeStep):

@@ -39,12 +39,12 @@ def get_simple_action_spec() -> SpecTree:
             }
 
 # def setup_and_parse_arguments()
-def create_writer(writer_type: str, obs_spec: SpecTree, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
+def create_writer(writer_type: str, obs_spec: SpecTree, is_annotation_enabled: bool, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
     obs_spec = obs_spec
     action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
         # TODO: return hdf5
-        return HDF5Writer(obs_spec, action_spec, dataset_storage_manager) # TODO: temporary debugging..
+        return HDF5Writer(obs_spec, action_spec, is_annotation_enabled, dataset_storage_manager) # TODO: temporary debugging..
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf
@@ -114,8 +114,15 @@ if __name__ == "__main__":
             help="Type of writer for the recording replay."
             )
 
+    parser.add_argument(
+            "--annotate",
+            action="store_true",
+            help="If set, will not prompt for annotation after replay"
+            )
+
     args = parser.parse_args()
 
+    # Initialize dummy components to pretend we have an arm
     dummy_component: DummyComponent = DummyComponent()
     arm_sensor: IJointAnglesSensor = dummy_component
     arm_actuator: IArmActuator = dummy_component
@@ -155,11 +162,11 @@ if __name__ == "__main__":
     )
 
 
-    ### WRITING BACKEND
+    # File IO to save recordings
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
-    # dataset_destination_path: str = dataset_storage_manager.create_new_dataset_directory()
-    dataset_writer: BaseWriter | None = create_writer(args.writer, obs_spec, dataset_storage_manager)
+    dataset_writer: BaseWriter | None = create_writer(args.writer, obs_spec, args.annotate, dataset_storage_manager)
 
+    # Build the controller 
     controller: ANCController = ANCController(
         drag_body=drag_body,
         observer=observer,
@@ -171,5 +178,7 @@ if __name__ == "__main__":
         obs_spec=obs_spec,
         action_spec=get_simple_action_spec()
     )
+
+    # We wrap the controller with a simple CLI as UI
     ui: ANCConsoleUI = ANCConsoleUI(controller)
     ui.start()

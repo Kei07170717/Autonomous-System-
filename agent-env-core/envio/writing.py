@@ -83,8 +83,8 @@ import dm_env
 # Assuming TensorSpec and SpecTree are defined as before
 
 class HDF5Writer(BaseWriter):
-    def __init__(self, obs_spec, action_spec, storage_manager: IDatasetStorageManager, chunk_size=8, metadata=None) -> None:
-        super().__init__(obs_spec, action_spec, metadata)
+    def __init__(self, obs_spec, action_spec, is_annotation_enabled: bool, storage_manager: IDatasetStorageManager, chunk_size=8, metadata=None) -> None:
+        super().__init__(obs_spec, action_spec, is_annotation_enabled, metadata)
         self.storage_manager = storage_manager
         self.chunk_size = chunk_size # TODO: chunk sizes should be kept under the h5 chunk cache (default 1mb)
         self.episode_index = 0
@@ -217,9 +217,10 @@ class HDF5Writer(BaseWriter):
         if self.current_file is None:
             return
 
-        if self.end_of_episode_annotation_callback:
+        if self.is_annotation_enabled and self.end_of_episode_annotation_callback:
             annotation: dict = self.end_of_episode_annotation_callback()
             self._write_episode_metadata(annotation)
+
         self._flush_buffer()
         
         # Update file-level attributes right before closing

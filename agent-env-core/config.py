@@ -12,7 +12,7 @@ from core.interfaces import (
 )
 from core.types import SpecTree, TensorSpec
 from environment.observer import Observer
-from hardware.camera import Camera
+from hardware.camera import Camera, FrameNotReadyError, NullFrameReturnedError
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 import time
@@ -46,9 +46,15 @@ class SemiDummyObserverBuilder():
                     CameraSensorModule(label, tensor_spec, camera_sensor=cam)
                 )
                 break
-            except Exception as e:
+
+            except NullFrameReturnedError:
+                print(f"\nCam: {device_name} returned an invalid frame, skipping {device_name} setup.")
+                return False
+
+            except FrameNotReadyError:
                 print(".", end="", flush=True)
                 time.sleep(0.1)
+
 
         print("\nDone initializing", label, flush=True)
         return True

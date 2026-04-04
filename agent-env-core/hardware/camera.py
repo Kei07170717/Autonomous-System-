@@ -9,6 +9,13 @@ from torch import Tensor
 from core.interfaces import ICameraSensor
 
 
+class FrameNotReadyError(Exception):
+    """Raised when a frame is requested before it exists."""
+    pass
+
+class NullFrameReturnedError(Exception):
+    """Raised when an empty/null frame is read."""
+    pass
 
 class Camera(ICameraSensor):
     """
@@ -20,6 +27,7 @@ class Camera(ICameraSensor):
         self.path: int = self.get_camera_path()
         self.capture = cv2.VideoCapture(self.path)
         self.latest_frame = None
+        self.capture_failed = False
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.update_frames, daemon=True)
@@ -60,19 +68,22 @@ class Camera(ICameraSensor):
             
             if not does_frame_exist:
                 self.running = False
-                print("Frame does not exist exiting update_frames")
+                self.capture_failed = True
+                # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
             with self.lock:
                 self.latest_frame = frame
     
     def get_current_frame(self) -> NDArray:
-        """Return the latest frame read by the background thread.
-        returns the actual frame and not the tensor so might not be needed in the future
-        """
+        """Return the latest frame read by the camera thread."""
         with self.lock:
+            # Check for permanent failure first
+            if self.capture_failed:
+                raise NullFrameReturnedError("Frame does not exist, background capture failed")
                 
+            # Then check if we are just waiting for the first frame
             if self.latest_frame is None:
-                raise RuntimeError("Frame doesn't exist")
+                raise FrameNotReadyError("Frame doesn't exist yet")
 
             return self.latest_frame.copy()
 

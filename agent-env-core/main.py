@@ -1,26 +1,15 @@
 import argparse
-from typing import cast
-
-from numpy._core.numeric import dtype
-from numpy._typing import DTypeLike
-
 from config import MyCobot280PIObserverBuilder, SemiDummyObserverBuilder
 
 from controller import ANCController
-from controller.controller import IANCController
 from core.interfaces import (
     BaseWriter,
-    CameraSensorModule,
     IArmActuator,
     IBody,
     IGripperActuator,
     IJointAnglesSensor,
-    IObserver,
     IResettable,
-    JointAnglesSensorModule,
-    SensorModule,
-    GripperSensorModule,
-    IGripperSensor
+    IGripperSensor,
 )
 from core.types import SpecTree, TensorSpec
 from envio.dataset_storage_manager import DatasetStorageManager, IDatasetStorageManager
@@ -32,19 +21,28 @@ from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
 from ui import ANCConsoleUI
 import numpy as np
 
+
 def get_simple_action_spec() -> SpecTree:
     return {
-            "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
-            "gripper": TensorSpec(shape=(), dtype=np.uint8)
-            }
+        "arm_angles": TensorSpec(shape=(6,), dtype=np.float32),
+        "gripper": TensorSpec(shape=(), dtype=np.uint8),
+    }
+
 
 # def setup_and_parse_arguments()
-def create_writer(writer_type: str, obs_spec: SpecTree, is_annotation_enabled: bool, dataset_storage_manager: IDatasetStorageManager) -> BaseWriter | None:
+def create_writer(
+    writer_type: str,
+    obs_spec: SpecTree,
+    is_annotation_enabled: bool,
+    dataset_storage_manager: IDatasetStorageManager,
+) -> BaseWriter | None:
     obs_spec = obs_spec
     action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
         # TODO: return hdf5
-        return HDF5Writer(obs_spec, action_spec, is_annotation_enabled, dataset_storage_manager) # TODO: temporary debugging..
+        return HDF5Writer(
+            obs_spec, action_spec, is_annotation_enabled, dataset_storage_manager
+        )  # TODO: temporary debugging..
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf
@@ -83,12 +81,16 @@ if __name__ == "__main__":
     print("Starting agent-env-core")
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--live", action="store_true")
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="If set, will try to connect to the arm, will crash if not connected.",
+    )
 
     parser.add_argument(
         "--hz",
         type=int,
-        default=10, # Can definitely get this higher if we spend time optimizing the controlloop
+        default=10,  # Can definitely get this higher if we spend time optimizing the controlloop
         help="Hz that the controller will operate on; 10hz is 10 send_angles a second.",
     )
 
@@ -98,7 +100,7 @@ if __name__ == "__main__":
         default="USB 2.0 Camera: USB Camera",
         help="The name of the external camera to use.",
     )
-    
+
     parser.add_argument(
         "--wrist-cam-id",
         type=str,
@@ -108,17 +110,17 @@ if __name__ == "__main__":
 
     # TODO: add options..
     parser.add_argument(
-            "--writer",
-            type=str,
-            default="hdf5",
-            help="Type of writer for the recording replay."
-            )
+        "--writer",
+        type=str,
+        default="hdf5",
+        help="Type of writer for the recording replay.",
+    )
 
     parser.add_argument(
-            "--annotate",
-            action="store_true",
-            help="If set, will not prompt for annotation after replay"
-            )
+        "--annotate",
+        action="store_true",
+        help="If set, will not prompt for annotation after replay",
+    )
 
     args = parser.parse_args()
 
@@ -131,7 +133,7 @@ if __name__ == "__main__":
     resettable: IResettable = dummy_component
 
     observer_builder = SemiDummyObserverBuilder()
-    
+
     # Override with live components if enabled
     if args.live:
         cobot_adapter = MyCobot280PiAdapter()
@@ -161,12 +163,13 @@ if __name__ == "__main__":
         gripper_actuator=gripper_actuator,
     )
 
-
     # File IO to save recordings
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
-    dataset_writer: BaseWriter | None = create_writer(args.writer, obs_spec, args.annotate, dataset_storage_manager)
+    dataset_writer: BaseWriter | None = create_writer(
+        args.writer, obs_spec, args.annotate, dataset_storage_manager
+    )
 
-    # Build the controller 
+    # Build the controller
     controller: ANCController = ANCController(
         drag_body=drag_body,
         observer=observer,
@@ -176,7 +179,7 @@ if __name__ == "__main__":
         hz=args.hz,
         writer=dataset_writer,
         obs_spec=obs_spec,
-        action_spec=get_simple_action_spec()
+        action_spec=get_simple_action_spec(),
     )
 
     # We wrap the controller with a simple CLI as UI

@@ -6,6 +6,13 @@ import numpy as np
 from core.interfaces import BaseWriter
 from core.types import Action, TensorSpec
 
+from envio.dataset_storage_manager import IDatasetStorageManager
+import h5py
+import os.path as path
+import numpy as np
+from abc import ABC, abstractmethod
+import dm_env
+
 class IActionSequenceWriter(ABC):
     def __init__(self, metadata: Optional[dict[str, Any]] = None) -> None:
         self.metadata = metadata
@@ -72,21 +79,15 @@ class DummyWriter(BaseWriter):
         print("Closing dummy writer...")
 
 
-"""Vibecoded this one (-> sin)"""
-from envio.dataset_storage_manager import IDatasetStorageManager
-import h5py
-import os.path as path
-import numpy as np
-from abc import ABC, abstractmethod
-import dm_env
 
 # Assuming TensorSpec and SpecTree are defined as before
 
 class HDF5Writer(BaseWriter):
-    def __init__(self, obs_spec, action_spec, is_annotation_enabled: bool, storage_manager: IDatasetStorageManager, chunk_size=8, metadata=None) -> None:
+    def __init__(self, obs_spec, action_spec, is_annotation_enabled: bool, storage_manager: IDatasetStorageManager, buffer_size=8, compression: bool = False, metadata=None) -> None:
         super().__init__(obs_spec, action_spec, is_annotation_enabled, metadata)
         self.storage_manager = storage_manager
-        self.chunk_size = chunk_size # TODO: chunk sizes should be kept under the h5 chunk cache (default 1mb)
+        self.buffer_size = buffer_size # TODO: chunk sizes should be kept under the h5 chunk cache (default 1mb)
+        self.compression = compression # Performance impact needs to be researched/justified
         self.episode_index = 0
         self.current_file = None
         self.storage_manager = storage_manager
@@ -122,6 +123,29 @@ class HDF5Writer(BaseWriter):
         """Initializes empty lists for every dynamic path."""
         self.buffer = {path: [] for path in self.flat_specs.keys()}
 
+    def _calculate_optimal_chunk_shape(self, spec: TensorSpec, target_bytes=1_000_000):
+        """
+        Calculates a temporal chunk size for given spec.
+        """
+        np_dtype = np.dtype(spec.dtype)
+        elements_per_step = int(np.prod(spec.shape)) if spec.shape else 1
+        bytes_per_step = elements_per_step * np_dtype.itemsize
+        
+        if bytes_per_step == 0: 
+            return (2, *spec.shape) # Fallback to minimal even chunk
+
+        # Calculate raw steps to hit target bytes (default 1MB limit for Pi)
+        raw_steps = int(target_bytes / bytes_per_step)
+        
+        # Force the temporal chunk to be at least 2, and cleanly divisible by 2
+        temporal_chunk = max(2, raw_steps - (raw_steps % 2))
+        
+        # Cap to 256. This is less than your min episode length (300).
+        # It prevents HDF5 from allocating massive empty chunks on disk for short episodes.
+        temporal_chunk = min(temporal_chunk, 256) 
+        
+        return (temporal_chunk, *spec.shape)
+
     def prepare_new_episode(self, initial_timestep: dm_env.TimeStep):
         # Close previous episode if one was open
         self.close() 
@@ -133,15 +157,19 @@ class HDF5Writer(BaseWriter):
         # Open new HDF5 file
         filepath = self.storage_manager.get_new_episode_path(self.dataset_dir, self.episode_index, self.SUFFIX)
         self.current_file = h5py.File(filepath, 'w')
-        
+       
         # Dynamically create resizable chunked datasets
         for h5_path, spec in self.flat_specs.items():
+            # dynamically calculate the chunk shape based on data size
+            optimal_chunk_shape = self._calculate_optimal_chunk_shape(spec)
+
             self.current_file.create_dataset(
                 name=h5_path,
                 shape=(0, *spec.shape),        # Start empty
                 maxshape=(None, *spec.shape),  # Allow infinite resizing on axis 0
                 dtype=spec.dtype,
-                chunks=(self.chunk_size, *spec.shape) # HDF5 Chunking!
+                # chunks=(self.chunk_size, *spec.shape) # Implicitly turned on when using compression
+                chunks=optimal_chunk_shape
                 ) # TODO: Consider if compression is justified
             
         self._clear_buffer()
@@ -169,7 +197,7 @@ class HDF5Writer(BaseWriter):
         self.buffer["is_terminal"].append(timestep.last() and timestep.discount == 0.0)
 
         # Flush if buffer reaches chunk limit
-        if len(self.buffer["is_first"]) >= self.chunk_size:
+        if len(self.buffer["is_first"]) >= self.buffer_size:
             self._flush_buffer()
 
     def _extract_to_buffer(self, prefix: str, data):
@@ -199,7 +227,7 @@ class HDF5Writer(BaseWriter):
 
             current_len = dataset.shape[0]
             
-            # Resize dataset to make room for new chunk
+            # Resize dataset to make room for new chunk # TODO: too much overhead?
             dataset.resize(current_len + current_batch_size, axis=0)
             
             # Write stacked chunk to disk

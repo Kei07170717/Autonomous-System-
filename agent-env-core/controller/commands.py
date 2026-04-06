@@ -48,4 +48,18 @@ class ReplayRecordCommand(ICommand):
     def execute(self) -> None:
         self.anc_controller.start_replay_record()
 
+class GripperOpenCommand(ICommand):
+    def __init__(self, anc_controller: IANCController):
+        self.anc_controller = anc_controller
+    
+    def execute(self):
+        self.anc_controller.open_gripper()
+
+class GripperClosedCommand(ICommand):
+    def __init__(self, anc_controller: IANCController):
+        self.anc_controller = anc_controller
+    
+    def execute(self):
+        self.anc_controller.close_gripper()
+
 

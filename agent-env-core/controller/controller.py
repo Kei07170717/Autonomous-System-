@@ -37,6 +37,7 @@ class IANCController(ABC):
     def start_replay_record(self):
         pass
 
+    
     # @abstractmethod
     # def stop_replay_record(self):
     #     pass
@@ -182,6 +183,9 @@ class ANCController(IANCController):
     #
     # def stop_inference(self):
     #     pass
+
+    
+
 
 class ICommand(ABC):
 

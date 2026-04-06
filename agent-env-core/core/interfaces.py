@@ -39,7 +39,14 @@ class IBody(ABC):
     def affect_world(self, action: dict) -> None:
         # Apply action to the world
         pass
+    
+    @abstractmethod
+    def set_gripper_open(self):
+        pass
 
+    @abstractmethod
+    def set_gripper_closed(self):
+        pass
 
 class IArmActuator(ABC):
     @abstractmethod

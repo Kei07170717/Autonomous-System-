@@ -13,6 +13,10 @@ import numpy as np
 from abc import ABC, abstractmethod
 import dm_env
 
+#from dataset_storage_manager import DatasetStorageManager
+import queue
+import threading
+
 class IActionSequenceWriter(ABC):
     def __init__(self, metadata: Optional[dict[str, Any]] = None) -> None:
         self.metadata = metadata
@@ -90,12 +94,11 @@ class HDF5Writer(BaseWriter):
         self.compression = compression # Performance impact needs to be researched/justified
         self.episode_index = 0
         self.current_file = None
-        self.storage_manager = storage_manager
         self.dataset_dir: str | None = None
         self.SUFFIX = ".hdf5"
         
         # 1. Flatten the SpecTrees into HDF5 paths dynamically
-        self.flat_specs = self._flatten_specs("observations", self.obs_spec)
+        self.flat_specs: dict = self._flatten_specs("observations", self.obs_spec)
         self.flat_specs.update(self._flatten_specs("actions", self.action_spec))
         
         # Add standard RLDS fields
@@ -108,10 +111,14 @@ class HDF5Writer(BaseWriter):
         })
         
         self._clear_buffer()
+        # Background writer state
+        self._write_queue = queue.Queue(maxsize=8)#!
+        self._stop_token = object()
+        self._writer_thread = None
 
     def _flatten_specs(self, prefix: str, spec) -> dict:
         """Recursively parses a SpecTree into a flat dict of {hdf5_path: TensorSpec}"""
-        paths = {}
+        paths: dict = {}
         if isinstance(spec, dict):
             for k, v in spec.items():
                 paths.update(self._flatten_specs(f"{prefix}/{k}", v))
@@ -123,13 +130,13 @@ class HDF5Writer(BaseWriter):
         """Initializes empty lists for every dynamic path."""
         self.buffer = {path: [] for path in self.flat_specs.keys()}
 
-    def _calculate_optimal_chunk_shape(self, spec: TensorSpec, target_bytes=1_000_000):
+    def _calculate_optimal_chunk_shape(self, spec: TensorSpec, target_bytes=1_000_000) -> Tuple[int, int]:
         """
         Calculates a temporal chunk size for given spec.
         """
         np_dtype = np.dtype(spec.dtype)
-        elements_per_step = int(np.prod(spec.shape)) if spec.shape else 1
-        bytes_per_step = elements_per_step * np_dtype.itemsize
+        elements_per_step: int = int(np.prod(spec.shape)) if spec.shape else 1
+        bytes_per_step: int = elements_per_step * np_dtype.itemsize
         
         if bytes_per_step == 0: 
             return (2, *spec.shape) # Fallback to minimal even chunk
@@ -138,14 +145,24 @@ class HDF5Writer(BaseWriter):
         raw_steps = int(target_bytes / bytes_per_step)
         
         # Force the temporal chunk to be at least 2, and cleanly divisible by 2
-        temporal_chunk = max(2, raw_steps - (raw_steps % 2))
+        temporal_chunk: int = max(2, raw_steps - (raw_steps % 2))
         
         # Cap to 256. This is less than your min episode length (300).
         # It prevents HDF5 from allocating massive empty chunks on disk for short episodes.
-        temporal_chunk = min(temporal_chunk, 256) 
+        temporal_chunk: int = min(temporal_chunk, 256) 
         
         return (temporal_chunk, *spec.shape)
 
+    def _writer_loop(self):
+        while True:
+            item = self._write_queue.get()
+            try:
+                if item is self._stop_token:
+                    return
+                self._flush_batch(item)
+            finally:
+                self._write_queue.task_done()
+    
     def prepare_new_episode(self, initial_timestep: dm_env.TimeStep):
         # Close previous episode if one was open
         self.close() 
@@ -164,19 +181,25 @@ class HDF5Writer(BaseWriter):
             optimal_chunk_shape = self._calculate_optimal_chunk_shape(spec)
 
             self.current_file.create_dataset(
-                name=h5_path,
-                shape=(0, *spec.shape),        # Start empty
-                maxshape=(None, *spec.shape),  # Allow infinite resizing on axis 0
-                dtype=spec.dtype,
+                name = h5_path,
+                shape = (0, *spec.shape),        # Start empty
+                maxshape = (None, *spec.shape),  # Allow infinite resizing on axis 0
+                dtype = spec.dtype,
                 # chunks=(self.chunk_size, *spec.shape) # Implicitly turned on when using compression
-                chunks=optimal_chunk_shape
+                chunks = optimal_chunk_shape
                 ) # TODO: Consider if compression is justified
             
         self._clear_buffer()
         
+        # Start writer thread for this episode
+        self._writer_thread = threading.Thread(target=self._writer_loop, daemon=True)
+        self._writer_thread.start()
+
         # Handle the initial step (generate dummy zeros for the action)
         dummy_action = self._generate_dummy_data(self.action_spec)
         self.write_step(dummy_action, initial_timestep)
+        
+        
 
     def _write_episode_metadata(self, metadata: dict):
         assert self.current_file is not None
@@ -198,7 +221,7 @@ class HDF5Writer(BaseWriter):
 
         # Flush if buffer reaches chunk limit
         if len(self.buffer["is_first"]) >= self.buffer_size:
-            self._flush_buffer()
+            self._send_batch_to_queue()
 
     def _extract_to_buffer(self, prefix: str, data):
         """Recursively pulls data from nested dicts and appends to flat buffer."""
@@ -214,14 +237,25 @@ class HDF5Writer(BaseWriter):
             return {k: self._generate_dummy_data(v) for k, v in spec.items()}
         else:
             return np.zeros(spec.shape, dtype=spec.dtype)
-
-    def _flush_buffer(self):
-        """Resizes HDF5 datasets and writes the RAM buffer to disk."""
+    
+    def _send_batch_to_queue(self):
+        """Moves current RAM buffer into the write queue."""
         current_batch_size = len(self.buffer["is_first"])
         if current_batch_size == 0 or self.current_file is None:
             return
 
-        for path, data_list in self.buffer.items():
+        batch = self.buffer
+        self._clear_buffer()
+        self._write_queue.put(batch)
+    
+    
+    def _flush_batch(self, batch):
+        """Resizes HDF5 datasets and writes the RAM buffer to disk."""
+        current_batch_size = len(batch["is_first"])
+        if current_batch_size == 0 or self.current_file is None:
+            return
+
+        for path, data_list in batch.items():
             dataset = self.current_file[path]
             assert isinstance(dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
 
@@ -233,7 +267,7 @@ class HDF5Writer(BaseWriter):
             # Write stacked chunk to disk
             dataset[current_len:] = np.stack(data_list)
             
-        self._clear_buffer()
+   
 
     # def set_episode_end_callback(self, func):
     #     self.end_of_episode_callback = func
@@ -253,11 +287,20 @@ class HDF5Writer(BaseWriter):
             annotation: dict = self.end_of_episode_annotation_callback()
             self._write_episode_metadata(annotation)
 
-        self._flush_buffer()
+        self._send_batch_to_queue()
+        # Wait until all queued writes are finished
+        self._write_queue.join()
+
+        # Stop writer thread
+        if self._writer_thread is not None:
+            self._write_queue.put(self._stop_token)
+            self._write_queue.join()
+            self._writer_thread.join()
+            self._writer_thread = None
         # Update file-level attributes right before closing
         rewards_dataset = self.current_file["rewards"]
         
-        assert isinstance(rewards_dataset, h5py.Dataset), f"Expected {path} to be a Dataset"
+        assert isinstance(rewards_dataset, h5py.Dataset), "Expected rewards to be a Dataset"
         self.current_file.attrs["episode_id"] = self.episode_index
         self.current_file.attrs["length"] = rewards_dataset.shape[0]
         self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))

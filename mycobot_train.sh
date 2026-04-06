@@ -12,12 +12,22 @@ else
     export PATH="/usr/local/anaconda3/bin:$PATH"
 fi
 
+
+# Assign the first argument to a variable for better readability
+DATASET_PATh=$1
+
+# Check if the user actually provided an argument
+if [ -z "$DATASET_PATH" ]; then
+    echo "Usage: $0 <path_to_directory_or_file>"
+    exit 1
+fi
+
 source activate torchgpu
 cd /path/to/openvla-oft
 
 torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
-  --data_root_dir /home/u818797/my_cobot_280_VLA/openvla-oft/prismatic/vla/datasets/rlds \
-  --dataset_name MyCobot280_pi_training_dataset \
+  --data_root_dir "$DATASET_PATH" \
+  --dataset_name my_cobot_280_pi \
   --run_root_dir /home/u818797/my_cobot_280_VLA/runs \
   --use_l1_regression True \
   --use_diffusion False \

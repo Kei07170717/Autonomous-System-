@@ -845,6 +845,20 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     # Don't need to do anything because dataset is already in the correct format
     return trajectory
 
+def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
+    abs_angles = trajectory["observation"]["arm_angles"]  # shape (Ts, 6)
+    # delta[t] = angle[t+1] - angle[t]; if we want to drop last timestep
+    deltas = abs_angles[1:] - abs_angles[:-1]
+    gripper = trajectory["observation"]["gripper"][:-1]   # align length
+    
+    trajectory["action"] = tf.concat([deltas, gripper[:, None]], axis=-1)
+    trajectory["observation"] = {
+        "arm_angles": abs_angles[:-1],
+        "cam_external": trajectory["observation"]["cam_external"][:-1],
+        "cam_wrist": trajectory["observation"]["cam_wrist"][:-1],
+        "gripper": gripper
+    }
+    return trajectory
 
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
@@ -930,4 +944,6 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     "aloha1_fold_shirt_30_demos": aloha_dataset_transform,
     "aloha1_scoop_X_into_bowl_45_demos": aloha_dataset_transform,
     "aloha1_put_X_into_pot_300_demos": aloha_dataset_transform,
+    #MyCobot280pi
+    "my_cobot_280_pi": my_cobot_280_pi_dataset_transform
 }

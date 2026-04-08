@@ -20,7 +20,8 @@ if [ -z "$DATASET_PATH" ]; then
 fi
 
 conda activate torchgpu
-cd "/home/u818797/Project_git copy/openvla-oft" || exit 1
+cd "/home/u818797/Project_git_2/openvla-oft" || exit 1
+export PYTHONPATH="/home/u818797/Project_git_2/openvla-oft:$PYTHONPATH"
 
 mkdir -p /home/u818797/my_cobot_280_VLA/runs
 

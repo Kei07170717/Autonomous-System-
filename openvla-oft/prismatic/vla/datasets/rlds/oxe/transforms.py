@@ -851,17 +851,17 @@ def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, A
     # delta[t] = angle[t+1] - angle[t]
     deltas = abs_angles[1:] - abs_angles[:-1]
 
-    # raw gripper observation can be integer, but cast for concatenation into action
-    gripper = trajectory["observation"]["gripper"][:-1]
-    gripper_float = tf.cast(gripper, tf.float32)
+    gripper = trajectory["observation"]["gripper"][:-1]              # (T-1,)
+    gripper_float = tf.cast(gripper, tf.float32)                     # (T-1,)
+    gripper_obs = gripper[:, None]                                   # (T-1, 1)
 
     trajectory["action"] = tf.concat([deltas, gripper_float[:, None]], axis=-1)
 
     trajectory["observation"] = {
-        "arm_angles": abs_angles[:-1],
+        "arm_angles": abs_angles[:-1],                               # (T-1, 6)
         "cam_external": trajectory["observation"]["cam_external"][:-1],
         "cam_wrist": trajectory["observation"]["cam_wrist"][:-1],
-        "gripper": gripper,  # can stay integer in observation
+        "gripper": gripper_obs,                                      # (T-1, 1)
     }
     return trajectory
 

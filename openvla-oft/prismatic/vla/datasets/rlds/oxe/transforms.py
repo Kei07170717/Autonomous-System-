@@ -846,17 +846,22 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     return trajectory
 
 def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
-    abs_angles = trajectory["observation"]["arm_angles"]  # shape (Ts, 6)
-    # delta[t] = angle[t+1] - angle[t]; if we want to drop last timestep
+    abs_angles = tf.cast(trajectory["observation"]["arm_angles"], tf.float32)  # (T, 6)
+
+    # delta[t] = angle[t+1] - angle[t]
     deltas = abs_angles[1:] - abs_angles[:-1]
-    gripper = trajectory["observation"]["gripper"][:-1]   # align length
-    
-    trajectory["action"] = tf.concat([deltas, gripper[:, None]], axis=-1)
+
+    # raw gripper observation can be integer, but cast for concatenation into action
+    gripper = trajectory["observation"]["gripper"][:-1]
+    gripper_float = tf.cast(gripper, tf.float32)
+
+    trajectory["action"] = tf.concat([deltas, gripper_float[:, None]], axis=-1)
+
     trajectory["observation"] = {
         "arm_angles": abs_angles[:-1],
         "cam_external": trajectory["observation"]["cam_external"][:-1],
         "cam_wrist": trajectory["observation"]["cam_wrist"][:-1],
-        "gripper": gripper
+        "gripper": gripper,  # can stay integer in observation
     }
     return trajectory
 

@@ -12,18 +12,17 @@ else
     export PATH="/usr/local/anaconda3/bin:$PATH"
 fi
 
+DATASET_PATH="$1"
 
-# Assign the first argument to a variable for better readability
-DATASET_PATh=$1
-
-# Check if the user actually provided an argument
 if [ -z "$DATASET_PATH" ]; then
-    echo "Usage: $0 <path_to_directory_or_file>"
+    echo "Usage: $0 <path_to_dataset_root>"
     exit 1
 fi
 
-source activate torchgpu
-cd /path/to/openvla-oft
+conda activate torchgpu
+cd "/home/u818797/Project_git copy/openvla-oft" || exit 1
+
+mkdir -p /home/u818797/my_cobot_280_VLA/runs
 
 torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
   --data_root_dir "$DATASET_PATH" \
@@ -33,12 +32,12 @@ torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
   --use_diffusion False \
   --use_film False \
   --num_images_in_input 1 \
-  --use_proprio True \ 
+  --use_proprio True \
   --batch_size 1 \
   --learning_rate 5e-4 \
   --num_steps_before_decay 25000 \
   --max_steps 50000 \
-  --use_val_set True \ 
+  --use_val_set True \
   --val_freq 5000 \
   --save_freq 5000 \
   --save_latest_checkpoint_only False \
@@ -46,4 +45,4 @@ torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
   --use_lora True \
   --lora_rank 32 \
   --wandb_entity "ishikurakei0717-tilburg-university" \
-  --wandb_project "mycobot_openvla" \
+  --wandb_project "mycobot_openvla"

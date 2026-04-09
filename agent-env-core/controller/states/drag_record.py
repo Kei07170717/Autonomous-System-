@@ -27,7 +27,7 @@ class DragRecordingState(State):
     """
   
     def __init__(self, context: ANCController, verbose_mode=True):
-        super().__init__(context, state_name="DragRecording", color = (218, 232, 252))# color = red 
+        super().__init__(context, state_name="DragRecording", color = ("red", 218, 232, 252))
         assert self.context.drag_body is not None
 
         self.environment: dm_env.Environment = Environment(self.context.observer, self.context.drag_body, obs_spec=self.context.obs_spec, action_spec=self.context.action_spec)

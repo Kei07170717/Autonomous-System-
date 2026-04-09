@@ -7,10 +7,10 @@ if TYPE_CHECKING:
     from .controller import ANCController
 
 class State(ABC):
-    def __init__(self, context: ANCController, state_name: str = "Undefined" , color: tuple = (255,255,255)):
+    def __init__(self, context: ANCController, state_name: str = "Undefined" , color: tuple = ("White", 255,255,255)):
         self.state_name: str = state_name
         self.context: ANCController = context
-        self.led_color: tuple = color # Set to white as default
+        self.led_color: tuple = color 
 
     def get_state_name(self) -> str:
         return self.state_name

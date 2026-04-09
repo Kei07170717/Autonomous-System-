@@ -20,7 +20,7 @@ from ..base_state import State
 class ResettingState(State):
   
     def __init__(self, context: ANCController):
-        super().__init__(context, state_name= "Resetting", color = ("Orange", 255, 230, 204))
+        super().__init__(context, state_name= "Resetting", color = ("Orange", 255, 165, 0))
 
     def execute(self):
         assert self.context.resettable is not None

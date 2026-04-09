@@ -26,7 +26,7 @@ class ReplayRecordingState(State):
     """
   
     def __init__(self, context: ANCController, verbose_mode: bool = True):
-        super().__init__(context, state_name="ReplayRecording", color = ("Purple", 225, 213,231 )) 
+        super().__init__(context, state_name="ReplayRecording", color = ("Purple", 128, 0,128 )) 
         
         # self.context.replay_environment: dm_env.Environment | None = None
         self.agent: Agent = RotatingAgent() # ???

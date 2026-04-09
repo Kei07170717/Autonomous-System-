@@ -93,6 +93,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
      
     
     def set_color(self, color: tuple[int, int, int]):
-        return self.mc.set_color(color)
+        
+        return self.mc.set_color(color[0], color[1], color[2])
 
-        pass
+        

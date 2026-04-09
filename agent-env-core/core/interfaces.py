@@ -208,7 +208,6 @@ class IAnnotator(ABC):
 class IColorChanger(ABC):
     @abstractmethod
     def set_color(self, color: tuple[int, int, int]) -> None:
-        
         pass
 
 

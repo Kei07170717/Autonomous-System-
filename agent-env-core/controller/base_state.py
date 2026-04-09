@@ -36,13 +36,13 @@ class State(ABC):
     @abstractmethod
     def execute(self):
         pass
-    @abstractmethod
+    
     def open_gripper(self):
-        pass
+        self.context.live_body.set_gripper_open()
 
-    @abstractmethod
+    
     def close_gripper(self):
-        pass
+        self.context.live_body.set_gripper_closed()
 
     @abstractmethod
     def start_replay_record(self):

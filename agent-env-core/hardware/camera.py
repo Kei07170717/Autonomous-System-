@@ -1,5 +1,6 @@
 import cv2 
 from cv2_enumerate_cameras import enumerate_cameras
+from numpy._typing import NDArray
 import torch
 import platform
 import threading
@@ -8,32 +9,53 @@ from torch import Tensor
 from core.interfaces import ICameraSensor
 
 
+class FrameNotReadyError(Exception):
+    """Raised when a frame is requested before it exists."""
+    pass
 
+class NullFrameReturnedError(Exception):
+    """Raised when an empty/null frame is read."""
+    pass
+
+# Globals because setting them as params is too tricky; 
+# if someone changes these, it must be communicated with the team!
+# Having this changed between demonstrations in the dataset can cause problems
+_RES_WIDTH = 352 
+_RES_HEIGHT = 288
+_TARGET_FPS = 30
 class Camera(ICameraSensor):
     """
     This class gets as input the camera name(example names are in get_camera_path docstring) 
-    and returns either the actual frame or a tensorized version of the frame
+    and returns either the actual frame or a tensorized version of the frame.
+    Camera class should be modified with care as transformation of the frames should be 
+    the same during gathering demonstrations and inference. 
     """
     def __init__(self, camera_name: str):
         self.camera_name: str = camera_name
+        self.os: int = self._get_os()
         self.path: int = self.get_camera_path()
-        self.capture = cv2.VideoCapture(self.path)
+        self.capture = cv2.VideoCapture(self.path, self.os)
+                
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, _RES_WIDTH)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, _RES_HEIGHT)
+        self.capture.set(cv2.CAP_PROP_FPS, _TARGET_FPS)
+
+        try:
+            self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Makes sure only the latest frame can be read (probably not necessary)
+        except Exception:
+            print(f"Warning: couldn't set camera buffer to 1 frame for cam: {camera_name}")
+
+        if not self._verify_set_res_and_fps():
+            print(f"Warning: actual camera resolution or FPS do not match set target for cam: {self.camera_name}")
+
         self.latest_frame = None
+        self.capture_failed = False
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.update_frames, daemon=True)
         self.thread.start()
-    
-    def get_camera_path(self) -> int:
-        """
-        Finding the correct camera to start the thread in the correct index
-        Corrrect Camera names:
-        USB 2.0 Camera ~ wrist camera from robot arm
-        USB Camera ~ Bartinos camera
-        FaceTime HD Camera ~ any macbook face camera
-        """
         
-        def get_os():
+    def _get_os(self):
             """
             Autodetect which OS is being used  -> important for the detection of the camera name / index.
             Different os have different backend values to access for camera 
@@ -45,13 +67,45 @@ class Camera(ICameraSensor):
             else:
                 backend = cv2.CAP_V4L2 #linux
             return backend
-
-        cams: list = enumerate_cameras(get_os()) 
-        for cam in cams:
-            if cam.name.lower() == self.camera_name.lower():
-                return cam.index
-        raise ValueError("Camera could not be found for use")
     
+    def get_camera_path(self) -> int:
+        """
+        Finding the correct camera to start the thread in the correct index
+        Corrrect Camera names:
+        USB 2.0 Camera ~ wrist camera from robot arm
+        USB Camera ~ Bartinos camera
+        FaceTime HD Camera ~ any macbook face camera
+        """
+        
+
+        cams: list = enumerate_cameras(self.os) 
+        for cam in cams:
+            if self.camera_name.lower() == cam.name.lower():
+                
+                # Test the index before returning it
+                test_cap = cv2.VideoCapture(cam.index, self.os)
+                if test_cap.isOpened():
+                    success, _ = test_cap.read()
+                    test_cap.release()
+                    
+                    if success:
+                        return cam.index
+                    else:
+                        print(f"Warning: Index {cam.index} matched name but failed to read a frame. Trying next...")
+                else:
+                    print(f"Warning: Index {cam.index} matched but failed to open.")
+
+        raise ValueError(f"Camera '{self.camera_name}' could not be found or opened for use.")
+   
+    def _verify_set_res_and_fps(self):
+        actual_w = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_h = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        actual_fps = self.capture.get(cv2.CAP_PROP_FPS)
+
+        if actual_h != _RES_HEIGHT or actual_w != _RES_WIDTH or actual_fps != _TARGET_FPS:
+            return False
+        return True
+
     def update_frames(self):
         """Continuously grab frames for the thread"""
         while not self.stop_event.is_set(): 
@@ -59,18 +113,23 @@ class Camera(ICameraSensor):
             
             if not does_frame_exist:
                 self.running = False
-                print("Frame does not exist exiting update_frames")
+                self.capture_failed = True
+                # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
             with self.lock:
                 self.latest_frame = frame
     
-    def get_current_frame(self):
-        """Return the latest frame read by the background thread.
-        returns the actual frame and not the tensor so might not be needed in the future
-        """
+    def get_current_frame(self) -> NDArray:
+        """Return the latest frame read by the camera thread."""
         with self.lock:
+            # Check for permanent failure first
+            if self.capture_failed:
+                raise NullFrameReturnedError("Frame does not exist, background capture failed")
+                
+            # Then check if we are just waiting for the first frame
             if self.latest_frame is None:
-                return None
+                raise FrameNotReadyError("Frame doesn't exist yet")
+
             return self.latest_frame.copy()
 
     
@@ -82,22 +141,27 @@ class Camera(ICameraSensor):
         def convert_to_tensor(frame) -> Tensor:
             """This function converts each frame to a tensor"""
             return torch.from_numpy(frame)
+
+        return convert_to_tensor(frame)
         
-        if frame is not None:
-            tensorized_frame: Tensor = convert_to_tensor(frame)
-            return tensorized_frame
-        else:
-            raise RuntimeError("Frame doesn't exist")
     
     def stop(self):
         """Stop the camera thread and release the camera."""
         self.stop_event.set()
         if self.thread.is_alive():
             self.thread.join()
-    
+
+        # Explicitly release the OpenCV resource
+        if self.capture.isOpened():
+            self.capture.release()
+
+    # TODO: Apparently shouldn't rely on destructor, likely causing the core dump
     def __del__(self):
         """Making sure the camera resources are released properly."""
-        self.stop()
+        try:
+            self.stop()
+        except Exception as e:
+            pass
 
 
 

@@ -845,6 +845,25 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     # Don't need to do anything because dataset is already in the correct format
     return trajectory
 
+def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
+    abs_angles = tf.cast(trajectory["observation"]["arm_angles"], tf.float32)  # (T, 6)
+
+    # delta[t] = angle[t+1] - angle[t]
+    deltas = abs_angles[1:] - abs_angles[:-1]
+
+    gripper = trajectory["observation"]["gripper"][:-1]              # (T-1,)
+    gripper_float = tf.cast(gripper, tf.float32)                     # (T-1,)
+    gripper_obs = gripper[:, None]                                   # (T-1, 1)
+
+    trajectory["action"] = tf.concat([deltas, gripper_float[:, None]], axis=-1)
+
+    trajectory["observation"] = {
+        "arm_angles": abs_angles[:-1],                               # (T-1, 6)
+        "cam_external": trajectory["observation"]["cam_external"][:-1],
+        "cam_wrist": trajectory["observation"]["cam_wrist"][:-1],
+        "gripper": gripper_obs,                                      # (T-1, 1)
+    }
+    return trajectory
 
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
@@ -930,4 +949,6 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     "aloha1_fold_shirt_30_demos": aloha_dataset_transform,
     "aloha1_scoop_X_into_bowl_45_demos": aloha_dataset_transform,
     "aloha1_put_X_into_pot_300_demos": aloha_dataset_transform,
+    #MyCobot280pi
+    "my_cobot_280_pi": my_cobot_280_pi_dataset_transform
 }

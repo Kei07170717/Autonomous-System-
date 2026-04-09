@@ -3,14 +3,13 @@ from abc import ABC, abstractmethod
 import threading
 import time
 
-import envlogger
-from core.interfaces import IObserver, IResettable, IArmActuator, IColorChanger
+from core.interfaces import BaseWriter, IAnnotator, IObserver, IResettable, IArmActuator, IColorChanger
+from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
-from environment.environment import Environment
+from environment.environment import Environment, WrittenEnvironment
 from .states import ResettingState
 from .base_state import State
-from envlogger.backends.backend_writer import BackendWriter
 
 class IANCController(ABC):
 
@@ -20,6 +19,10 @@ class IANCController(ABC):
 
     @abstractmethod
     def run_loop(self, terminate_event: threading.Event):
+        pass
+    
+    @abstractmethod
+    def set_annotator(self, annotator: IAnnotator):
         pass
 
     @abstractmethod
@@ -34,6 +37,7 @@ class IANCController(ABC):
     def start_replay_record(self):
         pass
 
+    
     # @abstractmethod
     # def stop_replay_record(self):
     #     pass
@@ -76,14 +80,19 @@ class ANCController(IANCController):
                  drag_body: IBody,
                  observer: IObserver,
                  arm_actuator: IArmActuator,
+                 obs_spec: SpecTree,
+                 action_spec: SpecTree,
                  live_body: IBody | None = None,
                  resettable: IResettable | None = None,
                  color_changer: IColorChanger | None = None,
                  hz: float = 20.0,
-                 writer: BackendWriter | None = None
+                 writer: BaseWriter | None = None,
+                 annotator: IAnnotator | None = None
                  ):
         
         self.observer: IObserver = observer
+        self.obs_spec: SpecTree = obs_spec
+        self.action_spec: SpecTree = action_spec
         self.drag_body: IBody | None = drag_body
         self.live_body: IBody | None = live_body
         self.resettable: IResettable | None = resettable
@@ -98,15 +107,11 @@ class ANCController(IANCController):
         self.state.on_state_enter()
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
-        self.writer: BackendWriter | None = writer
+        self.writer: BaseWriter | None = writer
+        self.annotator = annotator
 
         # print("Max steps")
-        assert self.live_body is not None
-        self.replay_environment = Environment(self.observer, self.live_body)
 
-        # Only record if a writer is provided
-        if self.writer:
-            self.replay_environment = envlogger.EnvLogger(self.replay_environment, backend=self.writer)
 
     
     
@@ -152,13 +157,13 @@ class ANCController(IANCController):
                 # dropping the missed frames.
                 next_wake_time = time.perf_counter() + self.loop_period
 
-        # Clean up...
-        if self.replay_environment is not None:
-            print("Flushing to disk...")
-            self.replay_environment.close()
+        # Gracefully exit the current state
+        self.state.on_state_exit()
 
-
-        
+    def set_annotator(self, annotator: IAnnotator):
+        self.annotator = annotator
+        if self.writer and self.annotator:
+            self.writer.set_episode_end_annotation_callback(self.annotator.get_annotation)
 
     def open_gripper(self):
         self.state.open_gripper()
@@ -186,6 +191,9 @@ class ANCController(IANCController):
     #
     # def stop_inference(self):
     #     pass
+
+    
+
 
 class ICommand(ABC):
 

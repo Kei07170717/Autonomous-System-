@@ -12,23 +12,33 @@ else
     export PATH="/usr/local/anaconda3/bin:$PATH"
 fi
 
-source activate torchgpu
-cd /path/to/openvla-oft
+DATASET_PATH="$1"
+
+if [ -z "$DATASET_PATH" ]; then
+    echo "Usage: $0 <path_to_dataset_root>"
+    exit 1
+fi
+
+conda activate torchgpu
+cd "/home/u818797/Project_git_2/openvla-oft" || exit 1
+export PYTHONPATH="/home/u818797/Project_git_2/openvla-oft:$PYTHONPATH"
+
+mkdir -p /home/u818797/my_cobot_280_VLA/runs
 
 torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
-  --data_root_dir /home/u818797/my_cobot_280_VLA/openvla-oft/prismatic/vla/datasets/rlds \
-  --dataset_name MyCobot280_pi_training_dataset \
+  --data_root_dir "$DATASET_PATH" \
+  --dataset_name my_cobot_280_pi \
   --run_root_dir /home/u818797/my_cobot_280_VLA/runs \
   --use_l1_regression True \
   --use_diffusion False \
   --use_film False \
   --num_images_in_input 1 \
-  --use_proprio True \ 
+  --use_proprio True \
   --batch_size 1 \
   --learning_rate 5e-4 \
   --num_steps_before_decay 25000 \
   --max_steps 50000 \
-  --use_val_set True \ 
+  --use_val_set True \
   --val_freq 5000 \
   --save_freq 5000 \
   --save_latest_checkpoint_only False \
@@ -36,4 +46,4 @@ torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
   --use_lora True \
   --lora_rank 32 \
   --wandb_entity "ishikurakei0717-tilburg-university" \
-  --wandb_project "mycobot_openvla" \
+  --wandb_project "mycobot_openvla"

@@ -24,11 +24,11 @@ class IdlingState(State):
     def execute(self):
         pass
 
-    def open_gripper(self):
-        pass
+    #def open_gripper(self):
+     #   pass
 
-    def close_gripper(self):
-        pass
+    #def close_gripper(self):
+     #   pass
 
     def start_replay_record(self):
         self.context.set_state(replay_record.ReplayRecordingState(self.context))

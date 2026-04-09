@@ -53,11 +53,11 @@ class DragRecordingState(State):
         self.timestep = self.environment.step(action)
         if self.verbose_mode: print_observation(self.timestep.observation)
 
-    def open_gripper(self):
-        pass
+    #def open_gripper(self):
+     #   pass
 
-    def close_gripper(self):
-        pass
+   # def close_gripper(self):
+    #    pass
 
     def start_replay_record(self):
         pass

@@ -71,10 +71,10 @@ class ReplayRecordingState(State):
 
         if self.timestep.last():
             self.context.set_state(reset.ResettingState(self.context))
-
+    #add decorator @disabled
     def open_gripper(self):
         pass
-
+    #add decorator @disabled
     def close_gripper(self):
         pass
 

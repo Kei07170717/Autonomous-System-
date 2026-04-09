@@ -8,19 +8,22 @@ from prompt_toolkit.patch_stdout import patch_stdout
 from core.interfaces import IAnnotator
 
 
+
 class ANCConsoleUI(IAnnotator):
     def __init__(self, anc_controller: IANCController) -> None:
         self.anc_controller: IANCController = anc_controller
         self.anc_controller.set_annotator(self)
         self.terminate_event: threading.Event = threading.Event()
         
-        self.controller_thread = threading.Thread(target=self.anc_controller.run_loop, args=(self.terminate_event,), daemon=True)
+        self.controller_thread = threading.Thread(target = self.anc_controller.run_loop, args = (self.terminate_event,), daemon=True)
         
         self.command_mapping: dict[str, ICommand] = {
             "exit": ExitCommand(self.controller_thread, self.terminate_event),
             "stop": StopCommand(anc_controller),
             "drag": StartDragRecordCommand(anc_controller),
-            "replay": ReplayRecordCommand(anc_controller)
+            "replay": ReplayRecordCommand(anc_controller),
+            "go": GripperOpenCommand(anc_controller),
+            "gc": GripperClosedCommand(anc_controller)
         }
         self.help_command = ListCommandsCommand(self.command_mapping)
         self.command_mapping["help"] = self.help_command

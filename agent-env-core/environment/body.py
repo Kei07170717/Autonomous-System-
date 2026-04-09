@@ -18,3 +18,11 @@ class Body(IBody):
         self.gripper_actuator.set_gripper_value(action["gripper"])
 
         # print(f"-- affect-end: {__import__('datetime').datetime.now().microsecond // 1000} ms")
+
+    def set_gripper_open(self):
+        print("Opening gripper")
+        return self.gripper_actuator.set_gripper_open()
+    
+    def set_gripper_closed(self):
+        print("Closing Gripper")
+        return self.gripper_actuator.set_gripper_closed()

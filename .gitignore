@@ -8,6 +8,6 @@
 **/pyrightconfig.json
 
 **/a.txt
-# **/.DS_Store
+**/.DS_Store
 
 local-datasets

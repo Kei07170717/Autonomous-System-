@@ -11,3 +11,6 @@
 **/.DS_Store
 
 local-datasets
+
+miscellaneous/inference/**.h5
+miscellaneous/inference/**.hdf5

@@ -20,7 +20,7 @@ if [ -z "$DATASET_PATH" ]; then
 fi
 
 conda activate torchgpu
-cd "/home/u818797/Project_git_2/openvla-oft" || exit 1
+cd "/home/u818797/Project_git/openvla-oft" || exit 1
 export PYTHONPATH="/home/u818797/Project_git_2/openvla-oft:$PYTHONPATH"
 
 mkdir -p /home/u818797/my_cobot_280_VLA/runs
@@ -36,9 +36,9 @@ torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
   --use_proprio True \
   --batch_size 1 \
   --learning_rate 5e-4 \
-  --num_steps_before_decay 25000 \
-  --max_steps 50000 \
-  --use_val_set True \
+  --num_steps_before_decay 1000 \
+  --max_steps 2000 \
+  --use_val_set False \
   --val_freq 5000 \
   --save_freq 5000 \
   --save_latest_checkpoint_only False \

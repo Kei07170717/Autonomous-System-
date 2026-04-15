@@ -62,4 +62,9 @@ class GripperClosedCommand(ICommand):
     def execute(self):
         self.anc_controller.close_gripper()
 
+class TakeRefCommand(ICommand):
+    def __init__(self, anc_controller: IANCController):
+        self.anc_controller = anc_controller
 
+    def execute(self):
+        self.anc_controller.take_ref_image()

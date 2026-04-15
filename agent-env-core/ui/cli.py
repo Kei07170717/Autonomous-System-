@@ -23,7 +23,8 @@ class ANCConsoleUI(IAnnotator):
             "drag": StartDragRecordCommand(anc_controller),
             "replay": ReplayRecordCommand(anc_controller),
             "go": GripperOpenCommand(anc_controller),
-            "gc": GripperClosedCommand(anc_controller)
+            "gc": GripperClosedCommand(anc_controller),
+            "ref": TakeRefCommand(anc_controller)
         }
         self.help_command = ListCommandsCommand(self.command_mapping)
         self.command_mapping["help"] = self.help_command

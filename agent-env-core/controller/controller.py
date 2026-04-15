@@ -63,6 +63,10 @@ class IANCController(ABC):
     # def stop_inference(self):
     #     pass
 
+    @abstractmethod
+    def take_ref_image(self):
+        pass
+
 
 
 class ANCController(IANCController):

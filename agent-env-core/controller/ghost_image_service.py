@@ -44,7 +44,7 @@ class GhostImageServer(IGhostImageServer):
         self.is_running = threading.Event()
 
     def _load_ref(self):
-        """Silently try to load the reference image on boot."""
+        """Try to load the reference image on boot."""
         img = cv2.imread(self.ref_image_path)
         if img is not None:
             self.reference_img = img
@@ -124,4 +124,4 @@ class GhostImageServer(IGhostImageServer):
             self.server.shutdown()
             self.server_thread.join()
             
-        print("Ghost Image Server stopped. Zero resources are currently being used.")
+        print("Ghost Image Server stopped")

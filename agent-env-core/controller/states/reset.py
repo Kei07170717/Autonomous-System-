@@ -66,6 +66,10 @@ class ResettingState(State):
     def stop(self):
         pass
 
+    @disabled_in_this_state
+    def take_ref_image(self):
+        pass
+
     # def stop_drag_record(self):
     #     pass
 

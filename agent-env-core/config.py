@@ -23,13 +23,13 @@ class SemiDummyObserverBuilder():
         self.sensor_modules: list[SensorModule] = []
         self.dummy_component: DummyComponent = DummyComponent()
 
-    def build_and_register_camera_module(self, label: str, device_name: str) -> bool:
+    def build_and_register_camera_module(self, label: str, device_name: str) -> Camera | None:
         cam: Camera | None = None
         try:
             cam = Camera(camera_name=device_name)
         except Exception as e:
             print(f"Couldn't init {label}, most likely wrong path/name: {device_name}")
-            return False
+            return None
 
         assert cam is not None
         # time.sleep(1)
@@ -50,7 +50,7 @@ class SemiDummyObserverBuilder():
 
             except NullFrameReturnedError:
                 print(f"\nCam: {label} returned an invalid frame, skipping {device_name} setup.")
-                return False
+                return None
 
             except FrameNotReadyError:
                 print(".", end="", flush=True)
@@ -58,7 +58,7 @@ class SemiDummyObserverBuilder():
 
 
         print("\nDone initializing", label, flush=True)
-        return True
+        return cam
 
     def register_gripper_sensor_module(self):
         self.sensor_modules.append(GripperSensorModule(

@@ -23,7 +23,8 @@ class IGhostImageServer(ABC):
 class GhostImageServer(IGhostImageServer):
     def __init__(self, camera, ref_image_path: str = "reference_frame.jpg", host: str = '0.0.0.0', port: int = 5000):
         """
-        Takes an instance of your Camera class (which implements ICameraSensor).
+        Serves a video feed over html. Usefull for monitoring but does 
+        take up resources. Best to use during Idling state.
         """
         self.camera = camera
         self.ref_image_path = ref_image_path

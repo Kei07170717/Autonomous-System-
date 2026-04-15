@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import threading
 import time
 
+from controller.ghost_image_service import IGhostImageServer
 from core.interfaces import BaseWriter, IAnnotator, IObserver, IResettable, IArmActuator
 from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
@@ -86,7 +87,8 @@ class ANCController(IANCController):
                  resettable: IResettable | None = None,
                  hz: float = 20.0,
                  writer: BaseWriter | None = None,
-                 annotator: IAnnotator | None = None
+                 annotator: IAnnotator | None = None,
+                 ghost_image_server: IGhostImageServer | None = None
                  ):
         self.observer: IObserver = observer
         self.obs_spec: SpecTree = obs_spec
@@ -105,6 +107,7 @@ class ANCController(IANCController):
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
+        self.ghost_image_server = ghost_image_server
 
         # print("Max steps")
 
@@ -174,6 +177,9 @@ class ANCController(IANCController):
 
     def stop(self):
         self.state.stop()
+
+    def take_ref_image(self):
+        self.state.take_ref_image()
 
     # def stop_drag_record(self):
     #     pass

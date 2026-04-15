@@ -16,10 +16,12 @@ class IdlingState(State):
         super().__init__(context, state_name="Idling")
 
     def on_state_enter(self):
-        pass
+        if self.context.ghost_image_server is not None:
+            self.context.ghost_image_server.start()
 
     def on_state_exit(self):
-        pass
+        if self.context.ghost_image_server is not None:
+            self.context.ghost_image_server.stop()
 
     def execute(self):
         pass
@@ -39,6 +41,10 @@ class IdlingState(State):
 
     def stop(self):
         pass
+
+    def take_ref_image(self):
+        if self.context.ghost_image_server is not None:
+            self.context.ghost_image_server.take_ref()
 
     # def start_inference(self):
     #     pass

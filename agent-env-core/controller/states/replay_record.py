@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from controller.utils import print_action, print_observation
+from controller.utils import disabled_in_this_state, print_action, print_observation
 from environment.environment import WrittenEnvironment
 from ..base_state import State
 from . import reset
@@ -72,18 +72,26 @@ class ReplayRecordingState(State):
 
         if self.timestep.last():
             self.context.set_state(reset.ResettingState(self.context))
-    #add decorator @disabled
+    
+    @disabled_in_this_state
     def open_gripper(self):
         pass
-    #add decorator @disabled
+    
+    @disabled_in_this_state
     def close_gripper(self):
         pass
 
+    @disabled_in_this_state
     def start_replay_record(self):
         pass
 
+    @disabled_in_this_state
     def start_drag_record(self):
         pass
 
     def stop(self):
         self.context.set_state(reset.ResettingState(self.context))
+
+    @disabled_in_this_state
+    def take_ref_image(self):
+        pass

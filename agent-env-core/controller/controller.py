@@ -4,6 +4,7 @@ import threading
 import time
 
 from core.interfaces import BaseWriter, IAnnotator, IObserver, IResettable, IArmActuator, IColorChanger
+from controller.ghost_image_service import IGhostImageServer
 from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
@@ -62,6 +63,10 @@ class IANCController(ABC):
     # def stop_inference(self):
     #     pass
 
+    @abstractmethod
+    def take_ref_image(self):
+        pass
+
 
 
 class ANCController(IANCController):
@@ -87,7 +92,8 @@ class ANCController(IANCController):
                  color_changer: IColorChanger | None = None,
                  hz: float = 20.0,
                  writer: BaseWriter | None = None,
-                 annotator: IAnnotator | None = None
+                 annotator: IAnnotator | None = None,
+                 ghost_image_server: IGhostImageServer | None = None
                  ):
         
         self.observer: IObserver = observer
@@ -109,6 +115,7 @@ class ANCController(IANCController):
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
+        self.ghost_image_server = ghost_image_server
 
         # print("Max steps")
 
@@ -182,6 +189,9 @@ class ANCController(IANCController):
 
     def stop(self):
         self.state.stop()
+
+    def take_ref_image(self):
+        self.state.take_ref_image()
 
     # def stop_drag_record(self):
     #     pass

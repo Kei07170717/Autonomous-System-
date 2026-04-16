@@ -13,3 +13,9 @@ To run the code, make sure to build the python environment. First navigate to ag
 Followed by:
 
 `conda activate anc`
+
+### Recording for Demonstrations
+
+```bash
+python main.py --live --external-cam-id='Elgato Facecam: Elgato Facecam' --wrist-cam-id='USB 2.0 Camera: USB 2.0 Camera' --annotate
+```

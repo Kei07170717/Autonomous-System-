@@ -12,7 +12,7 @@ _GRIPPER_CLOSED_VALUE = 0 # Gripper min
 _GRIPPER_OPEN_VALUE = 100 # Gripper max
 
 # Values higher than this are considered 'closed' (TODO: justify this number)
-_GRIPPER_CLOSED_THRESHOLD = int(0.95 * _GRIPPER_OPEN_VALUE) 
+_GRIPPER_CLOSED_THRESHOLD = int(0.98 * _GRIPPER_OPEN_VALUE) 
 _RESET_ANGLES: NDArray = np.array([0,0,0,0,0,0]) # We consider these angles to be the idle pos
 
 class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable, IGripperSensor, IColorChanger):
@@ -30,7 +30,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
 
         # Questionable, but is to get an 'awareness' of our initial state
         # init_gripper_val: int = self.mc.get_gripper_value()
-        init_gripper_val: int = 0 # TODO: Implement
+        init_gripper_val: int = self.get_gripper_value()
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
 
     def set_gripper_value(self, value: int) -> None:
@@ -90,9 +90,6 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             print(f"Warning, gripper returned lower value than promised: {val} ~ expected min: {_GRIPPER_CLOSED_VALUE}")
             return max(0, val)
         return val
-     
     
     def set_color(self, color: tuple[str, int, int, int]):
         return self.mc.set_color(color[1], color[2], color[3])
-
-        

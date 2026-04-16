@@ -2,6 +2,7 @@ import argparse
 from config import MyCobot280PIObserverBuilder, SemiDummyObserverBuilder
 
 from controller import ANCController
+from controller.ghost_image_service import GhostImageServer, IGhostImageServer
 from core.interfaces import (
     BaseWriter,
     IArmActuator,
@@ -122,6 +123,12 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, will not prompt for annotation after replay",
     )
+    
+    parser.add_argument(
+        "--ghost-ref",
+        action="store_true",
+        help="If set, allows creation of reference image for item alignment during demos. Launches image overlay on port 5000 during IdlingState. Helps with, e.g., placing blocks on their original position before launching replay.",
+    )
 
     args = parser.parse_args()
 
@@ -150,7 +157,7 @@ if __name__ == "__main__":
 
     observer_builder.register_joint_angles_sensor()
     observer_builder.register_gripper_sensor_module()
-    observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id)
+    external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id)
     observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id)
     observer = observer_builder.get_observer()
     obs_spec = observer_builder.get_observation_spec()
@@ -166,6 +173,11 @@ if __name__ == "__main__":
         arm_actuator=arm_actuator,
         gripper_actuator=gripper_actuator,
     )
+
+    # Util for demonstrations
+    ghost_image_server: IGhostImageServer | None = None
+    if external_cam is not None and args.ghost_ref is True: 
+         ghost_image_server = GhostImageServer(external_cam)
 
     # File IO to save recordings
     dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
@@ -185,6 +197,7 @@ if __name__ == "__main__":
         color_changer = color_changer,
         obs_spec=obs_spec,
         action_spec=get_simple_action_spec(),
+        ghost_image_server=ghost_image_server
     )
 
     # We wrap the controller with a simple CLI as UI

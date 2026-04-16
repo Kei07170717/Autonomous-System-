@@ -1,0 +1,21 @@
+{
+  "citation": "// TODO(example_dataset): BibTeX citation",
+  "description": "TODO(example_dataset): Markdown description of your dataset.\nDescription is **formatted** as markdown.\nName of Cobot280piDataset MUST NOT be changed unless the dataset_builder file is also named the same combined with the class inside of said file!\nThis datset is formatted as HDF5 and has the following columns:\nobersevation{\n    arm_angles: Tensor\n    cam_external: Image\n    cam_wrist: Image\n    gripper: Scalar\n}\nsteps {\n\n    actions: Tensor\n    discount: Scalar\n    is_first: Scalar\n    is_last: Scalar\n    is_terminal: Scalar\n}\nIt is then converted to RLDS TFDS\nTo run:\ninstall either environment_macos.yml or environment_ubuntu.yml\ncd Cobot280PiDataset\ntfds build\n\nTo check data:\ncd tests\npython inspect_dataset.py -> prints you the dataset to see what values are in it\npython test_dataset_transform.py Cobot280PiDataset -> Lets you test the the tranform.py to check if everything works before running tfds build -> act like a sanity check\npython visualize_dataset.py -> to visualize all the data inside of the dataset\n\nIt should also contain any processing which has been applied (if any),\n(e.g. corrupted example skipped, images cropped,...):",
+  "fileFormat": "tfrecord",
+  "moduleName": "Cobot280PiDataset.Cobot280PiDataset_dataset_builder",
+  "name": "cobot280_pi_dataset",
+  "releaseNotes": {
+    "1.0.0": "Initial release."
+  },
+  "splits": [
+    {
+      "filepathTemplate": "{DATASET}-{SPLIT}.{FILEFORMAT}-{SHARD_X_OF_Y}",
+      "name": "train",
+      "numBytes": "74479693",
+      "shardLengths": [
+        "5"
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

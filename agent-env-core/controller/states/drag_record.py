@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from controller.utils import print_action, print_observation
+from controller.utils import disabled_in_this_state, print_action, print_observation
 from core.interfaces import Agent
 from agent import KinestheticAgent
 from envio.episode_manager import ActionSequenceManager
@@ -63,11 +63,17 @@ class DragRecordingState(State):
    # def close_gripper(self):
     #    pass
 
+    @disabled_in_this_state
     def start_replay_record(self):
         pass
 
+    @disabled_in_this_state
     def start_drag_record(self):
         pass
 
     def stop(self):
         self.context.set_state(reset.ResettingState(self.context))
+    
+    @disabled_in_this_state
+    def take_ref_image(self):
+        pass

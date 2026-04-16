@@ -59,3 +59,8 @@ class State(ABC):
     @abstractmethod
     def stop(self):
         pass
+
+    @abstractmethod
+    def take_ref_image(self):
+        pass
+

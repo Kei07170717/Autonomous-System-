@@ -31,7 +31,8 @@ from prismatic.vla.constants import (
     ACTION_DIM,
     ACTION_PROPRIO_NORMALIZATION_TYPE,
 )
-from prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
+#from prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
+from prismatic.vla.constants import NormalizationType
 
 # Initialize important constants
 DATE = time.strftime("%Y_%m_%d")
@@ -48,7 +49,7 @@ else:
 
 # MPS has limited bfloat16 support and some float16 ops can fail.
 # Use float32 for maximum compatibility on Mac.
-MAC_DTYPE = torch.float32
+MAC_DTYPE = torch.float16
 
 print(f"[openvla_utils_mac] Using device: {DEVICE}, dtype: {MAC_DTYPE}")
 

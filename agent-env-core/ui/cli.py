@@ -35,6 +35,7 @@ class ANCConsoleUI(IAnnotator):
         self.annotation_complete_event = threading.Event()
         self.annotation_result = {}
         self.session = PromptSession()
+        self.last_annotated_task_description: str = ""
 
     def start(self):
         self.controller_thread.start()
@@ -83,8 +84,9 @@ class ANCConsoleUI(IAnnotator):
                     break
                 print("Error: Input must be 'y' or 'n'.")
 
-            task = await self.session.prompt_async("2. Annotate task: ")
+            task = await self.session.prompt_async("2. Annotate task: ", default=self.last_annotated_task_description)
             task = task.strip()
+            self.last_annotated_task_description = task
 
             print("\n--- Summary ---")
             print(f"is_valid : {is_valid}")

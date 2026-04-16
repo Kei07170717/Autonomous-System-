@@ -122,6 +122,12 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, will not prompt for annotation after replay",
     )
+    
+    parser.add_argument(
+        "--ghost-ref",
+        action="store_true",
+        help="If set, allows creation of reference image for item alignment during demos. Launches image overlay on port 5000 during IdlingState. Helps with, e.g., placing blocks on their original position before launching replay.",
+    )
 
     args = parser.parse_args()
 
@@ -166,7 +172,7 @@ if __name__ == "__main__":
 
     # Util for demonstrations
     ghost_image_server: IGhostImageServer | None = None
-    if external_cam is not None: 
+    if external_cam is not None and args.ghost_ref is True: 
          ghost_image_server = GhostImageServer(external_cam)
 
     # File IO to save recordings

@@ -60,7 +60,7 @@ class GhostImageServer(IGhostImageServer):
             frame = self.camera.get_current_frame()
             cv2.imwrite(self.ref_image_path, frame)
             self.reference_img = frame
-            print(f"Success: Reference image saved to '{self.ref_image_path}'.")
+            # print(f"Success: Reference image saved to '{self.ref_image_path}'.")
         except Exception as e:
             print(f"Error taking reference frame: {e}")
 
@@ -99,29 +99,33 @@ class GhostImageServer(IGhostImageServer):
         return Response(self.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def start(self):
-        """Boots the Flask server in a background thread."""
+        """Boots the Flask server and switches the camera to High Resolution."""
         if self.is_running.is_set():
             print("Ghost server is already running.")
             return
 
+        # Tell the Camera class to switch to 1080p
+        self.camera.change_resolution(1920, 1080)
+
         self.is_running.set()
-        
-        # Using werkzeug make_server allows us to cleanly shut it down later
         self.server = make_server(self.host, self.port, self.app)
         self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.server_thread.start()
         print(f"Ghost Image Server started at http://{self.host}:{self.port}")
 
     def stop(self):
-        """Completely shuts down the web server and halts the frame generator."""
+        """Shuts down the server and reverts the camera to Low Resolution."""
         if not self.is_running.is_set():
             return
 
         print("Shutting down Ghost Image Server...")
-        self.is_running.clear() # Stops the generate_frames() loop
+        self.is_running.clear()
         
         if self.server:
             self.server.shutdown()
             self.server_thread.join()
             
-        print("Ghost Image Server stopped")
+        # Tell the Camera class to switch back to your dataset's low resolution
+        # Make sure _RES_WIDTH and _RES_HEIGHT are imported properly!
+        self.camera.change_resolution(352, 288)
+            

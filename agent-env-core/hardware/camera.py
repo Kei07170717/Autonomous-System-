@@ -5,7 +5,7 @@ import torch
 import platform
 import threading
 from torch import Tensor
-
+import time
 from core.interfaces import ICameraSensor
 
 
@@ -143,6 +143,50 @@ class Camera(ICameraSensor):
             return torch.from_numpy(frame)
 
         return convert_to_tensor(frame)
+
+
+    def change_resolution(self, width: int, height: int):
+        """Safely restart the camera feed with a new resolution."""
+        print(f"Switching camera '{self.camera_name}' resolution to {width}x{height}...")
+        
+        # 1. Stop the background reading thread
+        self.stop_event.set()
+        if self.thread.is_alive():
+            self.thread.join()
+            
+        # 2. Release the hardware lock
+        if self.capture.isOpened():
+            self.capture.release()
+            
+        # 3. Re-initialize the capture with the new resolution
+        self.capture = cv2.VideoCapture(self.path, self.os)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self.capture.set(cv2.CAP_PROP_FPS, _TARGET_FPS)
+        
+        try:
+            self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        except Exception:
+            pass
+
+        # 4. Reset state and restart the background thread
+        self.latest_frame = None
+        self.capture_failed = False
+        self.stop_event.clear()
+        
+        self.thread = threading.Thread(target=self.update_frames, daemon=True)
+        self.thread.start()
+
+        # Wait for the first frame to arrive before returning
+        timeout = 5.0 
+        start_time = time.time()
+        while self.latest_frame is None and (time.time() - start_time) < timeout:
+            time.sleep(0.1)
+            
+        if self.latest_frame is None:
+            raise FrameNotReadyError(f"Camera failed to provide a frame at {width}x{height} within timeout.")
+
+        print(f"Resolution switch complete for '{self.camera_name}'.")
         
     
     def stop(self):

@@ -33,6 +33,7 @@ class GhostImageServer(IGhostImageServer):
         
         self.reference_img = None
         self._load_ref()
+        self.old_res = None  # Resolution before increasing
 
         # Set up Flask app
         self.app = Flask(__name__)
@@ -104,17 +105,18 @@ class GhostImageServer(IGhostImageServer):
             print("Ghost server is already running.")
             return
 
-        # Tell the Camera class to switch to 1080p
+        self.old_res = self.camera.get_actual_resolution()
         self.camera.change_resolution(1920, 1080)
 
         self.is_running.set()
         self.server = make_server(self.host, self.port, self.app)
         self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.server_thread.start()
+
         print(f"Ghost Image Server started at http://{self.host}:{self.port}")
 
     def stop(self):
-        """Shuts down the server and reverts the camera to Low Resolution."""
+        """Shuts down the server and reverts the camera to previously set resolution."""
         if not self.is_running.is_set():
             return
 
@@ -125,7 +127,6 @@ class GhostImageServer(IGhostImageServer):
             self.server.shutdown()
             self.server_thread.join()
             
-        # Tell the Camera class to switch back to your dataset's low resolution
-        # Make sure _RES_WIDTH and _RES_HEIGHT are imported properly!
-        self.camera.change_resolution(352, 288)
+        if self.old_res:
+            self.camera.change_resolution(self.old_res["width"], self.old_res["height"])
             

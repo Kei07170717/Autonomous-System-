@@ -144,10 +144,16 @@ class Camera(ICameraSensor):
 
         return convert_to_tensor(frame)
 
+    def get_actual_resolution(self) -> dict:
+        """Returns the actual resolution currently being used by the hardware."""
+        return {
+            "width": int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            "height": int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        }
 
     def change_resolution(self, width: int, height: int):
         """Safely restart the camera feed with a new resolution."""
-        print(f"Switching camera '{self.camera_name}' resolution to {width}x{height}...")
+        print(f"Attempting to switch camera '{self.camera_name}' resolution to {width}x{height}...")
         
         # 1. Stop the background reading thread
         self.stop_event.set()
@@ -186,7 +192,7 @@ class Camera(ICameraSensor):
         if self.latest_frame is None:
             raise FrameNotReadyError(f"Camera failed to provide a frame at {width}x{height} within timeout.")
 
-        print(f"Resolution switch complete for '{self.camera_name}'.")
+        print(f"Resolution switch complete for '{self.camera_name}'. Set res: {self.get_actual_resolution()}")
         
     
     def stop(self):

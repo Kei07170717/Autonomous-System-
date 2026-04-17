@@ -41,10 +41,9 @@ def create_writer(
     obs_spec = obs_spec
     action_spec = get_simple_action_spec()
     if writer_type == "hdf5":
-        # TODO: return hdf5
         return HDF5Writer(
             obs_spec, action_spec, is_annotation_enabled, dataset_storage_manager
-        )  # TODO: temporary debugging..
+        )
     # elif writer_type == "rlds":
     #     try:
     #         import tensorflow as tf
@@ -114,7 +113,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--writer",
         type=str,
-        default="hdf5",
         help="Type of writer for the recording replay.",
     )
 

@@ -107,15 +107,15 @@ class ANCController(IANCController):
         self.color_changer: IColorChanger | None = color_changer
         #self.color = IColorChanger
         self.loop_period = 1.0 / hz
-        
-        print("Entering Resetting state")
-        self.state: State = ResettingState(self)
-        self.state.on_state_enter()
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
         self.ghost_image_server = ghost_image_server
+        
+        print("Entering Resetting state")
+        self.state: State = ResettingState(self)
+        self.state.on_state_enter()
 
         # print("Max steps")
 

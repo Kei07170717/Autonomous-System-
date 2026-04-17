@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Tuple
 from dm_env import TimeStep
 import numpy as np
-
+import os
 from core.interfaces import BaseWriter
 from core.types import Action, TensorSpec
 
@@ -283,6 +283,7 @@ class HDF5Writer(BaseWriter):
         if self.current_file is None:
             return
 
+        annotation = {}
         if self.is_annotation_enabled and self.end_of_episode_annotation_callback:
             annotation: dict = self.end_of_episode_annotation_callback()
             self._write_episode_metadata(annotation)
@@ -305,8 +306,14 @@ class HDF5Writer(BaseWriter):
         self.current_file.attrs["length"] = rewards_dataset.shape[0]
         self.current_file.attrs["total_reward"] = float(np.sum(rewards_dataset[:]))
         ep_path = self.current_file.filename
+       
 
         self.current_file.close()
-        print(f"Episode {self.episode_index} stored in: {ep_path}")
+        if annotation["is_valid"] is True:
+            print(f"Episode {self.episode_index} stored in: {ep_path}")
+        else:
+            os.remove(ep_path)    
+            print(f"Removed episode because invalid")
+        
         self.episode_index += 1
         self.current_file = None

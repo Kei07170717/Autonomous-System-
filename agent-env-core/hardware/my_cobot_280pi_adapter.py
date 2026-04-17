@@ -12,7 +12,7 @@ _GRIPPER_CLOSED_VALUE = 0 # Gripper min
 _GRIPPER_OPEN_VALUE = 100 # Gripper max
 
 # Values higher than this are considered 'closed' (TODO: justify this number)
-_GRIPPER_CLOSED_THRESHOLD = int(0.98 * _GRIPPER_OPEN_VALUE) 
+_GRIPPER_CLOSED_THRESHOLD = int(0.90 * _GRIPPER_OPEN_VALUE) 
 _RESET_ANGLES: NDArray = np.array([0,0,0,0,0,0]) # We consider these angles to be the idle pos
 
 class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IResettable, IGripperSensor, IColorChanger):
@@ -73,7 +73,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         return False if gripper_val > _GRIPPER_CLOSED_THRESHOLD  else True
     
     def is_reset(self) -> bool:
-        return np.allclose(np.array(self.get_joint_angles()), _RESET_ANGLES, atol=0.8)        
+        return np.allclose(np.array(self.get_joint_angles()), _RESET_ANGLES, atol=1)        
         
 
     def reset(self):

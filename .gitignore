@@ -1,0 +1,16 @@
+.vscode
+
+# Draw io
+**/*.dtmp
+**/*.$*.bkp
+**/__pycache__
+
+**/pyrightconfig.json
+
+**/a.txt
+**/.DS_Store
+
+local-datasets
+
+miscellaneous/inference/**.h5
+miscellaneous/inference/**.hdf5

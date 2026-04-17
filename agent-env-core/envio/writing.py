@@ -309,7 +309,7 @@ class HDF5Writer(BaseWriter):
        
 
         self.current_file.close()
-        if annotation["is_valid"] is True:
+        if annotation.get("is_valid", True):
             print(f"Episode {self.episode_index} stored in: {ep_path}")
         else:
             os.remove(ep_path)    

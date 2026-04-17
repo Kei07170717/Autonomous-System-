@@ -36,9 +36,7 @@ def send_observation(image, state, instruction):
         })
     }
     resp = requests.post(SERVER_URL, json=payload)
-    raw = resp.json()
-    # Decode each json_numpy-encoded action array
-    actions = [json_numpy.loads(json.dumps(a)) for a in raw]
+    actions = json_numpy.loads(resp.json())
     return actions
 
 

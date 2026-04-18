@@ -32,6 +32,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         # init_gripper_val: int = self.mc.get_gripper_value()
         init_gripper_val: int = self.get_gripper_value()
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
+        self.last_angles = np.array([])
+        self.last_gripper_val = init_gripper_val
 
     def set_gripper_value(self, value: int) -> None:
         """
@@ -58,7 +60,12 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     # BLOCKING CALL!!! Will take long time, carefull
     def get_joint_angles(self) -> NDArray[np.float32]:
         # return self.mc.get_angles()
-        return np.array(self.mc.get_angles())
+        angles = np.array(self.mc.get_angles())
+        if angles is None:
+            print("Angles are none")
+            return self.last_angles
+        self.last_angles = angles
+        return angles
 
 
     # actually this might cause issue, needs to be list[float]
@@ -93,8 +100,9 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             print(f"Warning, gripper returned higher value than promised: {val} ~ expected max: {_GRIPPER_OPEN_VALUE}")
             return min(100, val)
         elif val < 0:
-            print(f"Warning, gripper returned lower value than promised: {val} ~ expected min: {_GRIPPER_CLOSED_VALUE}")
-            return max(0, val)
+            print(f"Warning, gripper returned lower value than promised: {val} ~ expected min: {_GRIPPER_CLOSED_VALUE}, copying last value")
+            return self.last_gripper_val
+        self.last_gripper_val = val
         return val
     
     def set_color(self, color: tuple[str, int, int, int]):

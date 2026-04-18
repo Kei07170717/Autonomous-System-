@@ -77,7 +77,13 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         
 
     def reset(self):
-        self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+        self.mc.focus_all_servos()
+        
+        is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+        while is_resetting != 1:
+            print("Warning: mc not listening to reset")
+            time.sleep(0.005)
+            is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
     
     def get_gripper_value(self) -> int:
         """Gets gripper values  between 0-100. For some reason can

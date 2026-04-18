@@ -11,7 +11,7 @@ from core.interfaces import (
     SensorModule,
 )
 from core.types import SpecTree, TensorSpec
-from environment.observer import Observer
+from environment.observer import Observer, OptimizedCobotObserver
 from hardware.camera import Camera, FrameNotReadyError, NullFrameReturnedError
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
@@ -105,3 +105,6 @@ class MyCobot280PIObserverBuilder(SemiDummyObserverBuilder):
                 label, TensorSpec(shape=(6,), dtype=np.float32), self.cobot
             )
         )
+    
+    def get_observer(self) -> IObserver:
+        return OptimizedCobotObserver(self.sensor_modules)

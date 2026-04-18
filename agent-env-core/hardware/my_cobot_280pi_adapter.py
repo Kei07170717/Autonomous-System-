@@ -7,6 +7,7 @@ from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, 
 from core.types import Action
 import math
 
+_MC_ERROR = -1 # Returned on serial timeouts
 
 _GRIPPER_CLOSED_VALUE = 0 # Gripper min
 _GRIPPER_OPEN_VALUE = 100 # Gripper max
@@ -57,20 +58,19 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     def set_gripper_open(self) -> None:
         self.mc.set_gripper_value(_GRIPPER_OPEN_VALUE, self.speed_gripper)
 
-    # BLOCKING CALL!!! Will take long time, carefull
     def get_joint_angles(self) -> NDArray[np.float32]:
         # return self.mc.get_angles()
-        angles = np.array(self.mc.get_angles())
-        if angles is None:
-            print("Angles are none")
+        angles = self.mc.get_angles()
+        if angles is _MC_ERROR:
+            print("Warning: failed to read joint angles")
             return self.last_angles
-        self.last_angles = angles
-        return angles
+        self.last_angles = np.array(angles, dtype=np.float32)
+        return self.last_angles
 
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: NDArray[np.float32]) -> None:
-        self.mc.send_angles(arm_pos.tolist(), self.speed_gripper)
+        self.mc.send_angles(arm_pos.tolist(), self.speed_arm)
 
     def release_joints(self) -> None:
         self.mc.release_all_servos()

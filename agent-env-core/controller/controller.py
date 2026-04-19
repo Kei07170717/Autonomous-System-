@@ -27,6 +27,10 @@ class IANCController(ABC):
         pass
 
     @abstractmethod
+    def get_annotator(self) -> IAnnotator | None:
+        pass
+
+    @abstractmethod
     def open_gripper(self):
         pass
 
@@ -176,6 +180,9 @@ class ANCController(IANCController):
         self.annotator = annotator
         if self.writer and self.annotator:
             self.writer.set_episode_end_annotation_callback(self.annotator.get_annotation)
+
+    def get_annotator(self) -> IAnnotator | None:
+        return self.annotator
 
     def open_gripper(self):
         self.state.open_gripper()

@@ -206,5 +206,5 @@ if __name__ == "__main__":
     )
 
     # We wrap the controller with a simple CLI as UI
-    ui: ANCConsoleUI = ANCConsoleUI(controller)
+    ui: ANCConsoleUI = ANCConsoleUI(controller, set_annotator=args.annotate)
     ui.start()

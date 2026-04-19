@@ -10,9 +10,9 @@ from core.interfaces import IAnnotator
 
 
 class ANCConsoleUI(IAnnotator):
-    def __init__(self, anc_controller: IANCController) -> None:
+    def __init__(self, anc_controller: IANCController, set_annotator: bool=False) -> None:
         self.anc_controller: IANCController = anc_controller
-        self.anc_controller.set_annotator(self)
+        if set_annotator is True: self.anc_controller.set_annotator(self)
         self.terminate_event: threading.Event = threading.Event()
         
         self.controller_thread = threading.Thread(target = self.anc_controller.run_loop, args = (self.terminate_event,), daemon=True)
@@ -68,8 +68,9 @@ class ANCConsoleUI(IAnnotator):
                         self.help_command.execute()
                         
                 except asyncio.CancelledError:
-                    # Triggers when main prompting is cancelled, assumes annotation is required... 
-                    await self._run_annotation_prompts()
+                    if self.anc_controller.get_annotator():
+                        # Triggers when main prompting is cancelled, assumes annotation is required... 
+                        await self._run_annotation_prompts()
 
     async def _run_annotation_prompts(self):
         """Runs the annotation UI, awaited in the main loop."""
@@ -116,7 +117,7 @@ class ANCConsoleUI(IAnnotator):
         # Tell the main thread's event loop to cancel the waiting prompt task
         if self.main_loop and self.prompt_task:
             self.main_loop.call_soon_threadsafe(self.prompt_task.cancel)
-            print("Main loop prompot canceled") 
+            # print("Main loop prompot canceled") 
         
         # Block the background thread until main thread completes annotation
         self.annotation_complete_event.wait()

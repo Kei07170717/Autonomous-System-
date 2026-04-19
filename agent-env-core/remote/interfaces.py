@@ -9,3 +9,7 @@ class IRemoteActionProvider(ABC):
     def fetch_actions(self, obs: dict) -> list[dict]:
         pass
 
+    @abstractmethod
+    def is_alive(self) -> bool:
+        pass
+

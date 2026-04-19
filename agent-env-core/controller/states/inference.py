@@ -42,8 +42,18 @@ class InferenceState(State):
     def execute(self):
         assert self.timestep is not None
         assert self.environment is not None
+        
+        action = None
 
-        action = self.agent.get_action(self.timestep.observation)
+        try:
+            action = self.agent.get_action(self.timestep.observation)
+        except Exception as e:
+            print(f"Error: {e}")
+            print("Exiting inference mode as result from error")
+            self.context.set_state(reset.ResettingState(self.context))
+            return
+        
+        assert action is not None
         if self.verbose_mode: print_action(action)
         self.timestep = self.environment.step(action)
         if self.verbose_mode: print_observation(self.timestep.observation)

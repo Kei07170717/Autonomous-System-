@@ -23,17 +23,29 @@ def act():
         print(f"Image shape : {decoded_data.get('full_image').shape}")
         print(f"Robot state : {decoded_data.get('state')}")
 
-        # 3. Generate mock actions (e.g., returning a trajectory of 5 steps)
-        num_steps = 10
+        # Extract the current state from the decoded data
+        current_state = decoded_data.get('state') 
+        current_joints = current_state[:6]
+        current_gripper = current_state[6]
+
+        num_steps = 5
+        actions = []
         
-        # Generate 6 joint angles (using radians between -pi and pi as an example)
-        joint_angles = np.random.uniform(-np.pi, np.pi, size=(num_steps, 6))
-        
-        # Generate 1 gripper value (between 0 and 100)
-        gripper_values = np.random.uniform(0, 100, size=(num_steps, 1))
-        
-        # Horizontally stack them to create an (N, 7) array
-        actions = np.hstack((joint_angles, gripper_values)).astype(np.float32)
+        for _ in range(num_steps):
+            # Add a very tiny random "wiggle" (e.g., max 0.01 radians) to the current joints
+            safe_joint_delta = np.random.uniform(-0.01, 0.01, size=6)
+            next_joints = current_joints + safe_joint_delta
+            
+            # Keep the gripper mostly the same
+            next_gripper = np.clip(current_gripper + np.random.uniform(-1, 1), 0, 100)
+            
+            actions.append(np.append(next_joints, next_gripper))
+            
+            # Update current_joints for the next step in the trajectory
+            current_joints = next_joints 
+            current_gripper = next_gripper
+            
+        actions = np.array(actions, dtype=np.float32)
 
         print("--- 📤 Sending Mock Actions ---")
         print(f"Actions shape : {actions.shape}")

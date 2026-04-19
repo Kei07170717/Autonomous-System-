@@ -2,6 +2,9 @@ from core.types import Action
 from core.interfaces import Agent
 import math
 import numpy as np
+from collections import deque
+
+from remote.interfaces import IRemoteActionProvider
 
 class KinestheticAgent(Agent):
     '''This agent is passive. This agent is used for gathering 'drag&record' data,
@@ -13,7 +16,6 @@ class KinestheticAgent(Agent):
         return {"arm_angles": obs["arm_angles"], "gripper": obs["gripper"]} # Hardcoding these keys is bad!!!
 
 
-# Vibe coded agent just for the sake of testing
 class RotatingAgent(Agent):
     '''This agent safely rotates a specific joint back and forth.
     It uses a sine wave to guarantee smooth, bounded movements, 
@@ -61,4 +63,18 @@ class ReplayAgent(Agent):
         return next(self.action_iter)
         
 
+class MediatorAgent(Agent):
+    
+    def __init__(self, remote_action_provider: IRemoteActionProvider):
+        self.action_buffer: deque[dict] = deque()
+        self.remote_action_provider: IRemoteActionProvider = remote_action_provider
+
+    def get_action(self, obs: dict) -> dict:
+        if len(self.action_buffer) == 0:
+            self.action_buffer.extend(self.remote_action_provider.fetch_actions(obs)) # Blocking...
+
+        return self.action_buffer.popleft()
+
+        
+        
 

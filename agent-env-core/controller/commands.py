@@ -68,3 +68,10 @@ class TakeRefCommand(ICommand):
 
     def execute(self):
         self.anc_controller.take_ref_image()
+
+class StartInferenceCommand(ICommand):
+    def __init__(self, anc_controller: IANCController) -> None:
+        self.anc_controller = anc_controller
+
+    def execute(self) -> None:
+        self.anc_controller.start_inference()

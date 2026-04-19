@@ -74,3 +74,6 @@ class InferenceState(State):
     def take_ref_image(self):
         pass
 
+    @disabled_in_this_state
+    def start_inference(self):
+        pass

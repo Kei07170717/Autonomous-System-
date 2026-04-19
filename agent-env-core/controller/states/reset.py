@@ -79,3 +79,7 @@ class ResettingState(State):
     #
     # def stop_inference(self):
     #     pass
+    
+    @disabled_in_this_state
+    def start_inference(self):
+        pass

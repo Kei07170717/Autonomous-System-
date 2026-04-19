@@ -57,6 +57,10 @@ class State(ABC):
         pass
 
     @abstractmethod
+    def start_inference(self):
+        pass
+
+    @abstractmethod
     def stop(self):
         pass
 

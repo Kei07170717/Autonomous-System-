@@ -48,6 +48,10 @@ class IANCController(ABC):
         pass
 
     @abstractmethod
+    def start_inference(self):
+        pass
+
+    @abstractmethod
     def stop(self):
         pass
 
@@ -109,6 +113,7 @@ class ANCController(IANCController):
         self.loop_period = 1.0 / hz
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
+        self.instruction = "place the red block on the green block"
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
         self.ghost_image_server = ghost_image_server
@@ -186,6 +191,9 @@ class ANCController(IANCController):
 
     def start_drag_record(self):
         self.state.start_drag_record()
+    
+    def start_inference(self):
+        self.state.start_inference()
 
     def stop(self):
         self.state.stop()

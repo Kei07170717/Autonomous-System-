@@ -127,6 +127,13 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, allows creation of reference image for item alignment during demos. Launches image overlay on port 5000 during IdlingState. Helps with, e.g., placing blocks on their original position before launching replay.",
     )
+    
+    # parser.add_argument(
+    #     "--remote-act-url",
+    #     type=str,
+    #     default="http:/localhost:8777/act",
+    #     help="HTTP REST API endpoint that returns actions",
+    # )
 
     args = parser.parse_args()
 

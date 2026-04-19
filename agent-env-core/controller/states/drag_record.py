@@ -77,3 +77,7 @@ class DragRecordingState(State):
     @disabled_in_this_state
     def take_ref_image(self):
         pass
+    
+    @disabled_in_this_state
+    def start_inference(self):
+        pass

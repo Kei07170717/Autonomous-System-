@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from controller.states import replay_record
+from controller.states import replay_record, inference
 
 from . import drag_record
 
@@ -53,3 +53,6 @@ class IdlingState(State):
     #
     # def stop_inference(self):
     #     pass
+    
+    def start_inference(self):
+        self.context.set_state(inference.InferenceState(self.context))

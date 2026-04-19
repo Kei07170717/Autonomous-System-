@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from controller.utils import disabled_in_this_state
+
 # from controller.states import replay_record
 
 from . import drag_record
@@ -45,3 +47,7 @@ class AnnotateState(State):
     #
     # def stop_inference(self):
     #     pass
+    
+    @disabled_in_this_state
+    def start_inference(self):
+        pass

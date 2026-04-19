@@ -1,4 +1,4 @@
-from core.interfaces import IObserver, SensorModule
+from core.interfaces import GripperSensorModule, IObserver, JointAnglesSensorModule, SensorModule
 
 
 class Observer(IObserver):
@@ -6,15 +6,46 @@ class Observer(IObserver):
         self.sensors: list[SensorModule] = sensors
 
     def get_observation(self):
-        print(f"-- obs-start: {__import__('datetime').datetime.now().microsecond // 1000} ms")
         sensor_states = dict(
             map(lambda sensor:
                 (sensor.get_id(), sensor.get_data()),
                 self.sensors)
         )
-        print(f"-- obs-end: {__import__('datetime').datetime.now().microsecond // 1000} ms")
 
         return sensor_states
 
     def attach_sensor_module(self, module: SensorModule):
         self.sensors.append(module)
+
+class OptimizedCobotObserver(IObserver):
+    """
+    An optimized observer that guarantees strict execution order.
+    Hardware-critical serial reads (Joints, Gripper) are clustered at the 
+    front of the queue to prevent serial bus timeouts caused by slow sensors.
+    """
+    def __init__(self, sensors: list[SensorModule]):
+        self.cobot_sensors: list[SensorModule] = []
+        self.other_sensors: list[SensorModule] = []
+        
+        # Sort initial sensors
+        for sensor in sensors:
+            self.attach_sensor_module(sensor)
+
+    def get_observation(self) -> dict:
+        observation = {}
+        
+        # BURST READ: Execute the fast serial commands back-to-back first
+        for sensor in self.cobot_sensors:
+            observation[sensor.get_id()] = sensor.get_data()
+            
+        for sensor in self.other_sensors:
+            observation[sensor.get_id()] = sensor.get_data()
+            
+        return observation
+
+    def attach_sensor_module(self, module: SensorModule):
+        # Route sensors to the correct execution queue based on their type
+        if isinstance(module, (JointAnglesSensorModule, GripperSensorModule)):
+            self.cobot_sensors.append(module)
+        else:
+            self.other_sensors.append(module)

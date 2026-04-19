@@ -7,6 +7,7 @@ from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, 
 from core.types import Action
 import math
 
+_MC_ERROR = -1 # Returned on serial timeouts
 
 _GRIPPER_CLOSED_VALUE = 0 # Gripper min
 _GRIPPER_OPEN_VALUE = 100 # Gripper max
@@ -32,6 +33,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         # init_gripper_val: int = self.mc.get_gripper_value()
         init_gripper_val: int = self.get_gripper_value()
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
+        self.last_angles = np.array([])
+        self.last_gripper_val = init_gripper_val
 
     def set_gripper_value(self, value: int) -> None:
         """
@@ -55,15 +58,19 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     def set_gripper_open(self) -> None:
         self.mc.set_gripper_value(_GRIPPER_OPEN_VALUE, self.speed_gripper)
 
-    # BLOCKING CALL!!! Will take long time, carefull
     def get_joint_angles(self) -> NDArray[np.float32]:
         # return self.mc.get_angles()
-        return np.array(self.mc.get_angles())
+        angles = self.mc.get_angles()
+        if angles is _MC_ERROR:
+            print("Warning: failed to read joint angles")
+            return self.last_angles
+        self.last_angles = np.array(angles, dtype=np.float32)
+        return self.last_angles
 
 
     # actually this might cause issue, needs to be list[float]
     def set_joint_angles(self, arm_pos: NDArray[np.float32]) -> None:
-        self.mc.send_angles(arm_pos.tolist(), self.speed_gripper)
+        self.mc.send_angles(arm_pos.tolist(), self.speed_arm)
 
     def release_joints(self) -> None:
         self.mc.release_all_servos()
@@ -77,7 +84,13 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         
 
     def reset(self):
-        self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+        self.mc.focus_all_servos()
+        
+        is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+        while is_resetting != 1:
+            print("Warning: mc not listening to reset")
+            time.sleep(0.005)
+            is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
     
     def get_gripper_value(self) -> int:
         """Gets gripper values  between 0-100. For some reason can
@@ -87,8 +100,9 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             print(f"Warning, gripper returned higher value than promised: {val} ~ expected max: {_GRIPPER_OPEN_VALUE}")
             return min(100, val)
         elif val < 0:
-            print(f"Warning, gripper returned lower value than promised: {val} ~ expected min: {_GRIPPER_CLOSED_VALUE}")
-            return max(0, val)
+            print(f"Warning, gripper returned lower value than promised: {val} ~ expected min: {_GRIPPER_CLOSED_VALUE}, copying last value")
+            return self.last_gripper_val
+        self.last_gripper_val = val
         return val
     
     def set_color(self, color: tuple[str, int, int, int]):

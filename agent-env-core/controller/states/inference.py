@@ -20,7 +20,8 @@ class InferenceState(State):
     def __init__(self, context: ANCController, verbose_mode: bool = True):
         super().__init__(context, state_name="Inference", color = ("White", 255, 255, 255 )) 
         
-        self.agent: Agent = MediatorAgent(HTTPRemoteActionProvider("http://localhost:8777/act"))
+        assert self.context.remote_action_provider is not None, "Cannot initialize inference state without remote_action_provider set"
+        self.agent: Agent = MediatorAgent(self.context.remote_action_provider)
         self.verbose_mode = verbose_mode
         
 

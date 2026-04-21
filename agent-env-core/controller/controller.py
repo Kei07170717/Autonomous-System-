@@ -9,6 +9,7 @@ from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from environment.environment import Environment, WrittenEnvironment
+from remote.interfaces import IRemoteActionProvider
 from .states import ResettingState
 from .base_state import State
 
@@ -101,7 +102,8 @@ class ANCController(IANCController):
                  hz: float = 20.0,
                  writer: BaseWriter | None = None,
                  annotator: IAnnotator | None = None,
-                 ghost_image_server: IGhostImageServer | None = None
+                 ghost_image_server: IGhostImageServer | None = None,
+                 remote_action_provider: IRemoteActionProvider | None = None
                  ):
         
         self.observer: IObserver = observer
@@ -113,7 +115,6 @@ class ANCController(IANCController):
         self.arm_actuator: IArmActuator = arm_actuator
         self._state_lock = threading.RLock()
         self.color_changer: IColorChanger | None = color_changer
-        #self.color = IColorChanger
         self.loop_period = 1.0 / hz
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
@@ -121,6 +122,7 @@ class ANCController(IANCController):
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
         self.ghost_image_server = ghost_image_server
+        self.remote_action_provider = remote_action_provider
         
         print("Entering Resetting state")
         self.state: State = ResettingState(self)

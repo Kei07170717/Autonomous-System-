@@ -27,7 +27,7 @@ This approach runs the API on the GPU4EDU cluster with a middleman between the c
 
 ##### On Device A (PI) 
 ```bash
-ssh -N -L -v 8777:localhost:8888 mms@77.172.166.178 -p 42069
+ssh -N -L 8777:localhost:8888 mms@77.172.166.178 -p 42069
 ```
 This tunnels the port of 8777 of the Cobot to port 8888 of the middleman
 
@@ -38,7 +38,7 @@ To start the API on the cluster, create an ssh session to the login node of the 
 
 Then enter the compute node the API is running on and run: 
 ```bash
-ssh -N -R -v 8888:localhost:8777 mms@77.172.166.178 -p 42069
+ssh -N -R 8888:localhost:8777 mms@77.172.166.178 -p 42069
 ```
 This reverse tunnels the port 8777 of the compute node to port 8888 of the middleman.
 

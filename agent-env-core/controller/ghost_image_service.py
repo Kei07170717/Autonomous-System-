@@ -106,6 +106,7 @@ class GhostImageServer(IGhostImageServer):
             return
 
         self.old_res = self.camera.get_actual_resolution()
+        self.camera.set_to_rgb(False)
         self.camera.change_resolution(1920, 1080)
 
         self.is_running.set()
@@ -126,7 +127,8 @@ class GhostImageServer(IGhostImageServer):
         if self.server:
             self.server.shutdown()
             self.server_thread.join()
-            
+        
+        self.camera.set_to_rgb(True)
         if self.old_res:
             self.camera.change_resolution(self.old_res["width"], self.old_res["height"])
             

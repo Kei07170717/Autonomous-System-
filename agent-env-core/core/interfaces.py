@@ -131,6 +131,10 @@ class ICameraSensor(ABC):
     def get_current_frame(self) -> NDArray:
         pass
 
+    @abstractmethod
+    def set_to_rgb(self, to_rgb):
+        pass
+
 
 class CameraSensorModule(SensorModule):
     def __init__(

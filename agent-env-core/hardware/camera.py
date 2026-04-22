@@ -30,10 +30,11 @@ class Camera(ICameraSensor):
     Camera class should be modified with care as transformation of the frames should be 
     the same during gathering demonstrations and inference. 
     """
-    def __init__(self, camera_name: str):
+    def __init__(self, camera_name: str, to_rgb=True):
         self.camera_name: str = camera_name
         self.os: int = self._get_os()
         self.path: int = self.get_camera_path()
+        self.to_rgb: bool = to_rgb
         self.capture = cv2.VideoCapture(self.path, self.os)
                 
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, _RES_WIDTH)
@@ -116,8 +117,21 @@ class Camera(ICameraSensor):
                 self.capture_failed = True
                 # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
+
+            frame = self.preprocess_frame(frame, self.to_rgb)
             with self.lock:
                 self.latest_frame = frame
+
+    def preprocess_frame(self, frame, to_rgb=False, lower_res=False):
+        if to_rgb:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # if lower_res:
+        #     frame = 
+        return frame
+
+    def set_to_rgb(self, to_rgb: bool):
+        with self.lock:
+            self.to_rgb = to_rgb
     
     def get_current_frame(self) -> NDArray:
         """Return the latest frame read by the camera thread."""

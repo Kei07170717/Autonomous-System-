@@ -135,6 +135,14 @@ class Camera(ICameraSensor):
         with self.lock:
             self.to_rgb = to_rgb
     
+    def set_resize_center_crop(self, resize_center_crop: bool):
+        with self.lock:
+            self.resize_center_crop = resize_center_crop
+
+    def get_resize_center_crop(self):
+        with self.lock:
+            return self.resize_center_crop
+    
     def get_current_frame(self) -> NDArray:
         """Return the latest frame read by the camera thread."""
         with self.lock:

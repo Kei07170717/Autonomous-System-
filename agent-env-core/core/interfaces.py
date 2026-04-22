@@ -132,7 +132,15 @@ class ICameraSensor(ABC):
         pass
 
     @abstractmethod
-    def set_to_rgb(self, to_rgb):
+    def set_to_rgb(self, to_rgb: bool):
+        pass
+
+    @abstractmethod
+    def set_resize_center_crop(self, resize_center_crop: bool):
+        pass
+
+    @abstractmethod
+    def get__resize_center_crop(self) -> bool:
         pass
 
 

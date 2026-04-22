@@ -134,10 +134,19 @@ class Camera(ICameraSensor):
     def set_to_rgb(self, to_rgb: bool):
         with self.lock:
             self.to_rgb = to_rgb
+            if to_rgb is True:
+                print("Enabled BGR to RGB conversion")
+            else:
+                print("Disabled BGR to RGB conversion")
     
     def set_resize_center_crop(self, resize_center_crop: bool):
         with self.lock:
             self.resize_center_crop = resize_center_crop
+
+        if resize_center_crop is True:
+            print("Enabled resize and center crop conversion")
+        else:
+            print("Disabled resize and center crop conversion")
 
     def get_resize_center_crop(self):
         with self.lock:

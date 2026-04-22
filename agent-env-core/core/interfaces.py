@@ -140,7 +140,7 @@ class ICameraSensor(ABC):
         pass
 
     @abstractmethod
-    def get__resize_center_crop(self) -> bool:
+    def get_resize_center_crop(self) -> bool:
         pass
 
 

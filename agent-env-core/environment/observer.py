@@ -2,8 +2,9 @@ from core.interfaces import GripperSensorModule, IObserver, JointAnglesSensorMod
 
 
 class Observer(IObserver):
-    def __init__(self, sensors: list[SensorModule]):
+    def __init__(self, sensors: list[SensorModule], instruction: str="place the red block on the green block"):
         self.sensors: list[SensorModule] = sensors
+        self.instruction = instruction
 
     def get_observation(self):
         sensor_states = dict(
@@ -16,6 +17,12 @@ class Observer(IObserver):
 
     def attach_sensor_module(self, module: SensorModule):
         self.sensors.append(module)
+    
+    def set_instruction(self, instruction: str):
+        self.instruction = instruction
+
+    def get_instruction(self) -> str:
+        return self.instruction
 
 class OptimizedCobotObserver(IObserver):
     """

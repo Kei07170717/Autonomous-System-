@@ -106,6 +106,14 @@ class IObserver(ABC):
     def attach_sensor_module(self, module: SensorModule):
         pass
 
+    @abstractmethod
+    def set_instruction(self, instruction: str):
+        pass
+    
+    @abstractmethod
+    def get_instruction(self) -> str:
+        pass
+
 
 # --- sensor modules ---
 class IJointAnglesSensor(ABC):

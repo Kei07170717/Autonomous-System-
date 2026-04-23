@@ -76,6 +76,14 @@ class IANCController(ABC):
     def take_ref_image(self):
         pass
 
+    @abstractmethod
+    def set_instruction(self, instruction: str):
+        pass
+    
+    @abstractmethod
+    def get_instruction(self) -> str:
+        pass
+
 
 
 class ANCController(IANCController):
@@ -118,7 +126,6 @@ class ANCController(IANCController):
         self.loop_period = 1.0 / hz
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
-        self.instruction = "place the red block on the green block"
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
         self.ghost_image_server = ghost_image_server
@@ -217,7 +224,11 @@ class ANCController(IANCController):
     #     pass
     #
     # def stop_inference(self):
-    #     pass
+    def set_instruction(self, instruction: str):
+        self.observer.set_instruction(instruction)
+
+    def get_instruction(self) -> str:
+        return self.observer.get_instruction()
 
     
 

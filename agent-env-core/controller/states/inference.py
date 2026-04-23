@@ -31,6 +31,7 @@ class InferenceState(State):
         assert self.context.live_body is not None
         self.environment = Environment(self.context.observer, self.context.live_body, obs_spec=self.context.obs_spec, action_spec=self.context.action_spec)
         
+        print(f"Executing inference with instruction: \"{self.context.get_instruction()}\"")
         self.timestep = self.environment.reset()
         
 

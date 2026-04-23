@@ -17,7 +17,7 @@ class ANCConsoleUI(IAnnotator):
         
         self.controller_thread = threading.Thread(target = self.anc_controller.run_loop, args = (self.terminate_event,), daemon=True)
         
-        self.command_mapping: dict[str, ICommand] = {
+        self.argless_command_mapping: dict[str, ICommand] = {
             "exit": ExitCommand(self.controller_thread, self.terminate_event),
             "stop": StopCommand(anc_controller),
             "drag": StartDragRecordCommand(anc_controller),
@@ -25,10 +25,10 @@ class ANCConsoleUI(IAnnotator):
             "go": GripperOpenCommand(anc_controller),
             "gc": GripperClosedCommand(anc_controller),
             "ref": TakeRefCommand(anc_controller),
-            "inference": StartInferenceCommand(anc_controller)
+            "inference": StartInferenceCommand(anc_controller),
         }
-        self.help_command = ListCommandsCommand(self.command_mapping)
-        self.command_mapping["help"] = self.help_command
+        self.help_command = ListCommandsCommand(self.argless_command_mapping)
+        self.argless_command_mapping["help"] = self.help_command
 
         # For async cross-thread communication
         self.main_loop: asyncio.AbstractEventLoop | None = None
@@ -60,12 +60,19 @@ class ANCConsoleUI(IAnnotator):
                     if not prompt_input:
                         continue
                         
-                    prompt_input = prompt_input.strip().lower()
-                    command: ICommand | None = self.command_mapping.get(prompt_input)
-                    if command:
-                        command.execute()
-                    else:
-                        self.help_command.execute()
+                    prompt_input: str = prompt_input.strip().lower()
+                    if prompt_input.count(" ") == 0: # If no spaces, we assume argless
+                        command: ICommand | None = self.argless_command_mapping.get(prompt_input)
+                        if command:
+                            command.execute()
+                        else:
+                            self.help_command.execute()
+                    elif prompt_input.count(" ") > 0:
+                        if prompt_input.split(" ")[0] == "instruct":
+                            instruction = prompt_input.split(" ", 1)[1]
+                            SetInstructionCommand(self.anc_controller, instruction).execute()
+
+
                         
                 except asyncio.CancelledError:
                     if self.anc_controller.get_annotator():

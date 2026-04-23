@@ -75,3 +75,12 @@ class StartInferenceCommand(ICommand):
 
     def execute(self) -> None:
         self.anc_controller.start_inference()
+
+class SetInstructionCommand(ICommand):
+    def __init__(self, anc_controller: IANCController, instruction: str) -> None:
+        self.anc_controller = anc_controller
+        self.instruction = instruction
+
+    def execute(self) -> None:
+        self.anc_controller.set_instruction(self.instruction)
+

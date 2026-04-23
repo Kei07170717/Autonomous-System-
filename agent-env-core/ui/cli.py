@@ -70,6 +70,7 @@ class ANCConsoleUI(IAnnotator):
                     elif prompt_input.count(" ") > 0:
                         if prompt_input.split(" ")[0] == "instruct":
                             instruction = prompt_input.split(" ", 1)[1]
+                            SetInstructionCommand(self.anc_controller, instruction).execute()
 
 
                         

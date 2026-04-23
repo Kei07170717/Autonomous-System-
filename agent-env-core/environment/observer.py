@@ -20,6 +20,7 @@ class Observer(IObserver):
     
     def set_instruction(self, instruction: str):
         self.instruction = instruction
+        print(f"Instruction set to \"{self.instruction}\"")
 
     def get_instruction(self) -> str:
         return self.instruction

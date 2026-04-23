@@ -23,10 +23,10 @@ class SemiDummyObserverBuilder():
         self.sensor_modules: list[SensorModule] = []
         self.dummy_component: DummyComponent = DummyComponent()
 
-    def build_and_register_camera_module(self, label: str, device_name: str) -> Camera | None:
+    def build_and_register_camera_module(self, label: str, device_name: str, vla_preprocess: bool = False) -> Camera | None:
         cam: Camera | None = None
         try:
-            cam = Camera(camera_name=device_name)
+            cam = Camera(camera_name=device_name, to_rgb=vla_preprocess, resize_center_crop=vla_preprocess)
         except Exception as e:
             print(f"Couldn't init {label}, most likely wrong path/name: {device_name}")
             return None

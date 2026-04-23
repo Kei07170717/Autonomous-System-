@@ -20,6 +20,8 @@ from environment import Body, Observer
 from hardware.camera import Camera
 from hardware.dummy_components import DummyComponent
 from hardware.my_cobot_280pi_adapter import MyCobot280PiAdapter
+from remote.http_connection_service import HTTPRemoteActionProvider
+from remote.interfaces import IRemoteActionProvider
 from ui import ANCConsoleUI
 import numpy as np
 
@@ -128,12 +130,18 @@ if __name__ == "__main__":
         help="If set, allows creation of reference image for item alignment during demos. Launches image overlay on port 5000 during IdlingState. Helps with, e.g., placing blocks on their original position before launching replay.",
     )
     
-    # parser.add_argument(
-    #     "--remote-act-url",
-    #     type=str,
-    #     default="http:/localhost:8777/act",
-    #     help="HTTP REST API endpoint that returns actions",
-    # )
+    parser.add_argument(
+        "--remote-act-url",
+        type=str,
+        default="http://localhost:8777/act",
+        help="HTTP REST API endpoint that returns actions",
+    )
+
+    parser.add_argument(
+        "--vla-preprocess",
+        action="store_true",
+        help="If set, will resize, center crop and convert from BGR to RGB.",
+    )
 
     args = parser.parse_args()
 
@@ -162,8 +170,9 @@ if __name__ == "__main__":
 
     observer_builder.register_joint_angles_sensor()
     observer_builder.register_gripper_sensor_module()
-    external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id)
-    observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id)
+    external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id, vla_preprocess=args.vla_preprocess)
+    observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id,
+                                                      vla_preprocess=args.vla_preprocess)
     observer = observer_builder.get_observer()
     obs_spec = observer_builder.get_observation_spec()
 
@@ -190,6 +199,8 @@ if __name__ == "__main__":
         args.writer, obs_spec, args.annotate, dataset_storage_manager
     )
 
+    remote_action_provider: IRemoteActionProvider = HTTPRemoteActionProvider(args.remote_act_url)
+
     # Build the controller
     controller: ANCController = ANCController(
         drag_body=drag_body,
@@ -202,7 +213,8 @@ if __name__ == "__main__":
         color_changer = color_changer,
         obs_spec=obs_spec,
         action_spec=get_simple_action_spec(),
-        ghost_image_server=ghost_image_server
+        ghost_image_server=ghost_image_server,
+        remote_action_provider=remote_action_provider
     )
 
     # We wrap the controller with a simple CLI as UI

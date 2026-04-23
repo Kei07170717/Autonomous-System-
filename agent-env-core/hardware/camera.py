@@ -23,6 +23,7 @@ class NullFrameReturnedError(Exception):
 _RES_WIDTH = 352 
 _RES_HEIGHT = 288
 _TARGET_FPS = 30
+
 class Camera(ICameraSensor):
     """
     This class gets as input the camera name(example names are in get_camera_path docstring) 
@@ -30,10 +31,12 @@ class Camera(ICameraSensor):
     Camera class should be modified with care as transformation of the frames should be 
     the same during gathering demonstrations and inference. 
     """
-    def __init__(self, camera_name: str):
+    def __init__(self, camera_name: str, to_rgb=True, resize_center_crop=False):
         self.camera_name: str = camera_name
         self.os: int = self._get_os()
         self.path: int = self.get_camera_path()
+        self.to_rgb: bool = to_rgb
+        self.resize_center_crop: bool = resize_center_crop
         self.capture = cv2.VideoCapture(self.path, self.os)
                 
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, _RES_WIDTH)
@@ -116,8 +119,38 @@ class Camera(ICameraSensor):
                 self.capture_failed = True
                 # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
+
+            frame = self.preprocess_frame(frame, self.to_rgb, self.resize_center_crop)
             with self.lock:
                 self.latest_frame = frame
+
+    def preprocess_frame(self, frame, to_rgb=False, resize_center_crop=False):
+        if to_rgb:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        if resize_center_crop:
+            frame = resize_center_crop_frame(frame)
+        return frame
+
+    def set_to_rgb(self, to_rgb: bool):
+        with self.lock:
+            self.to_rgb = to_rgb
+            if to_rgb is True:
+                print("Enabled BGR to RGB conversion")
+            else:
+                print("Disabled BGR to RGB conversion")
+    
+    def set_resize_center_crop(self, resize_center_crop: bool):
+        with self.lock:
+            self.resize_center_crop = resize_center_crop
+
+        if resize_center_crop is True:
+            print("Enabled resize and center crop conversion")
+        else:
+            print("Disabled resize and center crop conversion")
+
+    def get_resize_center_crop(self):
+        with self.lock:
+            return self.resize_center_crop
     
     def get_current_frame(self) -> NDArray:
         """Return the latest frame read by the camera thread."""
@@ -215,6 +248,36 @@ class Camera(ICameraSensor):
 
 
 
-
+def resize_center_crop_frame(image, target_h=224, target_w=224):
+    """
+    Resizes and center-crops a single image frame to the target resolution.
+    
+    Args:
+        image (np.ndarray): The raw image of shape (H, W, C) or (H, W).
+        target_h (int): Target height (default 224).
+        target_w (int): Target width (default 224).
+        
+    Returns:
+        np.ndarray: Processed image of shape (target_h, target_w, C).
+    """
+    current_h, current_w = image.shape[:2]
+    
+    # 1. Skip resizing if the image is already the exact right shape
+    if (current_h, current_w) == (target_h, target_w):
+        return image
+        
+    # 2. Calculate scale to ensure the resized image is large enough to crop from
+    scale = max(target_h / current_h, target_w / current_w)
+    new_h, new_w = int(current_h * scale), int(current_w * scale)
+    
+    # 3. Resize keeping aspect ratio (INTER_AREA is best for shrinking)
+    resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+    
+    # 4. Calculate center crop coordinates
+    y_start = (new_h - target_h) // 2
+    x_start = (new_w - target_w) // 2
+    
+    # 5. Apply center crop and return
+    return resized[y_start:y_start+target_h, x_start:x_start+target_w]
 
 

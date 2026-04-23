@@ -106,6 +106,14 @@ class IObserver(ABC):
     def attach_sensor_module(self, module: SensorModule):
         pass
 
+    @abstractmethod
+    def set_instruction(self, instruction: str):
+        pass
+    
+    @abstractmethod
+    def get_instruction(self) -> str:
+        pass
+
 
 # --- sensor modules ---
 class IJointAnglesSensor(ABC):
@@ -129,6 +137,18 @@ class ICameraSensor(ABC):
     # TODO: return tensor
     @abstractmethod
     def get_current_frame(self) -> NDArray:
+        pass
+
+    @abstractmethod
+    def set_to_rgb(self, to_rgb: bool):
+        pass
+
+    @abstractmethod
+    def set_resize_center_crop(self, resize_center_crop: bool):
+        pass
+
+    @abstractmethod
+    def get_resize_center_crop(self) -> bool:
         pass
 
 

@@ -9,6 +9,7 @@ from core.types import SpecTree
 from envio.episode_manager import ActionSequenceManager, IActionSequenceManager
 from environment import Body, IBody
 from environment.environment import Environment, WrittenEnvironment
+from remote.interfaces import IRemoteActionProvider
 from .states import ResettingState
 from .base_state import State
 
@@ -75,6 +76,14 @@ class IANCController(ABC):
     def take_ref_image(self):
         pass
 
+    @abstractmethod
+    def set_instruction(self, instruction: str):
+        pass
+    
+    @abstractmethod
+    def get_instruction(self) -> str:
+        pass
+
 
 
 class ANCController(IANCController):
@@ -101,7 +110,8 @@ class ANCController(IANCController):
                  hz: float = 20.0,
                  writer: BaseWriter | None = None,
                  annotator: IAnnotator | None = None,
-                 ghost_image_server: IGhostImageServer | None = None
+                 ghost_image_server: IGhostImageServer | None = None,
+                 remote_action_provider: IRemoteActionProvider | None = None
                  ):
         
         self.observer: IObserver = observer
@@ -113,14 +123,13 @@ class ANCController(IANCController):
         self.arm_actuator: IArmActuator = arm_actuator
         self._state_lock = threading.RLock()
         self.color_changer: IColorChanger | None = color_changer
-        #self.color = IColorChanger
         self.loop_period = 1.0 / hz
         self.terminate_event: bool = False # Terminates loop (but doesn't get set anywhere..)
         self.action_sequence_manager: IActionSequenceManager = ActionSequenceManager() # TODO: Offload to composition root'
-        self.instruction = "place the red block on the green block"
         self.writer: BaseWriter | None = writer
         self.annotator = annotator
         self.ghost_image_server = ghost_image_server
+        self.remote_action_provider = remote_action_provider
         
         print("Entering Resetting state")
         self.state: State = ResettingState(self)
@@ -215,7 +224,11 @@ class ANCController(IANCController):
     #     pass
     #
     # def stop_inference(self):
-    #     pass
+    def set_instruction(self, instruction: str):
+        self.observer.set_instruction(instruction)
+
+    def get_instruction(self) -> str:
+        return self.observer.get_instruction()
 
     
 

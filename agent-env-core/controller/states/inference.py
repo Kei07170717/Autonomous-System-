@@ -20,7 +20,8 @@ class InferenceState(State):
     def __init__(self, context: ANCController, verbose_mode: bool = True):
         super().__init__(context, state_name="Inference", color = ("White", 255, 255, 255 )) 
         
-        self.agent: Agent = MediatorAgent(HTTPRemoteActionProvider("http://localhost:8777/act"))
+        assert self.context.remote_action_provider is not None, "Cannot initialize inference state without remote_action_provider set"
+        self.agent: Agent = MediatorAgent(self.context.remote_action_provider)
         self.verbose_mode = verbose_mode
         
 
@@ -30,6 +31,7 @@ class InferenceState(State):
         assert self.context.live_body is not None
         self.environment = Environment(self.context.observer, self.context.live_body, obs_spec=self.context.obs_spec, action_spec=self.context.action_spec)
         
+        print(f"Executing inference with instruction: \"{self.context.get_instruction()}\"")
         self.timestep = self.environment.reset()
         
 

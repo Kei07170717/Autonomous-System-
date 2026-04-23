@@ -44,6 +44,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
             "encoded": json_numpy.dumps(
                 {
                     "full_image": obs["cam_external"],
+                    "wrist_image": obs["cam_wrist"],
                     "state": np.hstack((obs["arm_angles"], obs["gripper"])),
                     "instruction": "place the red block on the green block",
                 }

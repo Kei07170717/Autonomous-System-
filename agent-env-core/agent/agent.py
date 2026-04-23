@@ -68,12 +68,23 @@ class MediatorAgent(Agent):
     def __init__(self, remote_action_provider: IRemoteActionProvider):
         self.action_buffer: deque[dict] = deque()
         self.remote_action_provider: IRemoteActionProvider = remote_action_provider
+        # self.starting_pos = None
 
     def get_action(self, obs: dict) -> dict:
+
+        # if self.starting_pos is None:
+        #     self.starting_pos = obs["arm_angles"]
+
         if len(self.action_buffer) == 0:
             self.action_buffer.extend(self.remote_action_provider.fetch_actions(obs)) # Blocking...
-
-        return self.action_buffer.popleft()
+        # current_pos_obs = obs
+        next_delta = self.action_buffer.popleft()
+        next_gripper_val = next_delta["gripper"] # TODO: arm_angles are detlas yet gripper is absolute
+        next_action = {
+                "arm_angles": obs["arm_angles"] + next_delta["arm_angles"],
+                "gripper": next_gripper_val
+                }
+        return next_action
 
         
         

@@ -137,6 +137,12 @@ if __name__ == "__main__":
         help="HTTP REST API endpoint that returns actions",
     )
 
+    parser.add_argument(
+        "--vla-preprocess",
+        action="store_true",
+        help="If set, will resize, center crop and convert from BGR to RGB.",
+    )
+
     args = parser.parse_args()
 
     # Initialize dummy components to pretend we have an arm
@@ -164,8 +170,9 @@ if __name__ == "__main__":
 
     observer_builder.register_joint_angles_sensor()
     observer_builder.register_gripper_sensor_module()
-    external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id)
-    observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id)
+    external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id, vla_preprocess=args.vla_preprocess)
+    observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id,
+                                                      vla_preprocess=args.vla_preprocess)
     observer = observer_builder.get_observer()
     obs_spec = observer_builder.get_observation_spec()
 

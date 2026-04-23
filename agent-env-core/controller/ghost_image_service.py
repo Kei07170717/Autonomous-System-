@@ -34,6 +34,7 @@ class GhostImageServer(IGhostImageServer):
         self.reference_img = None
         self._load_ref()
         self.old_res = None  # Resolution before increasing
+        self.old_is_resize_center_crop_enabled = None
 
         # Set up Flask app
         self.app = Flask(__name__)
@@ -106,6 +107,9 @@ class GhostImageServer(IGhostImageServer):
             return
 
         self.old_res = self.camera.get_actual_resolution()
+        self.old_is_resize_center_crop_enabled = self.camera.get_resize_center_crop()
+        self.camera.set_to_rgb(False)
+        self.camera.set_resize_center_crop(False)
         self.camera.change_resolution(1920, 1080)
 
         self.is_running.set()
@@ -126,7 +130,10 @@ class GhostImageServer(IGhostImageServer):
         if self.server:
             self.server.shutdown()
             self.server_thread.join()
-            
+        
+        self.camera.set_to_rgb(True)
+        if self.old_is_resize_center_crop_enabled is True:
+            self.camera.set_resize_center_crop(True)
         if self.old_res:
             self.camera.change_resolution(self.old_res["width"], self.old_res["height"])
             

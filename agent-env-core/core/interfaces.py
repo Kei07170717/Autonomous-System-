@@ -131,6 +131,18 @@ class ICameraSensor(ABC):
     def get_current_frame(self) -> NDArray:
         pass
 
+    @abstractmethod
+    def set_to_rgb(self, to_rgb: bool):
+        pass
+
+    @abstractmethod
+    def set_resize_center_crop(self, resize_center_crop: bool):
+        pass
+
+    @abstractmethod
+    def get_resize_center_crop(self) -> bool:
+        pass
+
 
 class CameraSensorModule(SensorModule):
     def __init__(

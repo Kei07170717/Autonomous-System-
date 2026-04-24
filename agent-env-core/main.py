@@ -1,6 +1,6 @@
 import argparse
 from config import MyCobot280PIObserverBuilder, SemiDummyObserverBuilder
-
+from pathlib import Path
 from controller import ANCController
 from controller.ghost_image_service import GhostImageServer, IGhostImageServer
 from core.interfaces import (
@@ -142,6 +142,13 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, will resize, center crop and convert from BGR to RGB.",
     )
+    
+    parser.add_argument(
+        "--dataset-root-dir",
+        type=str,
+        default=str(Path(r"..").joinpath("local-datasets")),
+        help="Path to the root of the dataset directory, will create a run directory in here."
+    )
 
     args = parser.parse_args()
 
@@ -194,7 +201,7 @@ if __name__ == "__main__":
          ghost_image_server = GhostImageServer(external_cam)
 
     # File IO to save recordings
-    dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager()
+    dataset_storage_manager: IDatasetStorageManager = DatasetStorageManager(args.dataset_root_dir)
     dataset_writer: BaseWriter | None = create_writer(
         args.writer, obs_spec, args.annotate, dataset_storage_manager
     )

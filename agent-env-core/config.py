@@ -26,7 +26,7 @@ class SemiDummyObserverBuilder():
     def build_and_register_camera_module(self, label: str, device_name: str, vla_preprocess: bool = False) -> Camera | None:
         cam: Camera | None = None
         try:
-            cam = Camera(camera_name=device_name, to_rgb=vla_preprocess, resize_center_crop=vla_preprocess)
+            cam = Camera(camera_name=device_name, resize_center_crop=vla_preprocess)
         except Exception as e:
             print(f"Couldn't init {label}, most likely wrong path/name: {device_name}")
             return None

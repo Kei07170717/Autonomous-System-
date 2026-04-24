@@ -851,7 +851,7 @@ def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, A
     # delta[t] = angle[t+1] - angle[t]
     deltas = abs_angles[1:] - abs_angles[:-1]
 
-    gripper = tf.cast(trajectory["observation"]["gripper"], tf.float32) / 100.0  # normalize to [0.0, 1.0]
+    gripper = tf.cast(trajectory["observation"]["gripper"], tf.float32)   # normalize to [0.0, 1.0]
 
     # gripper delta[t] = gripper[t+1] - gripper[t]
     gripper_deltas = gripper[1:] - gripper[:-1]                      # (T-1,)

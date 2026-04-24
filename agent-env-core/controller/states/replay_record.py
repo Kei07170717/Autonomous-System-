@@ -60,7 +60,7 @@ class ReplayRecordingState(State):
         # Clean up...
         if self.replay_environment is not None:
             if self.context.color_changer is not None and self.context.annotator is not None:
-                self.context.color_changer.set_color((255, 255, 0)) # Yellow for annotation
+                self.context.color_changer.set_color(("Yellow", 255, 255, 0)) # Yellow for annotation
             self.replay_environment.close()
 
     def execute(self):

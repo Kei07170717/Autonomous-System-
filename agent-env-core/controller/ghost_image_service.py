@@ -82,7 +82,8 @@ class GhostImageServer(IGhostImageServer):
                     blended = cv2.addWeighted(frame, 0.5, self.reference_img, 0.5, 0)
                 else:
                     blended = frame
-
+                
+                blended = add_square_overlay(blended)
                 # Encode to JPEG
                 ret, buffer = cv2.imencode('.jpg', blended)
                 yield (b'--frame\r\n'
@@ -137,3 +138,25 @@ class GhostImageServer(IGhostImageServer):
         if self.old_res:
             self.camera.change_resolution(self.old_res["width"], self.old_res["height"])
             
+
+def add_square_overlay(frame, color=(0, 255, 0), thickness=2):
+    """
+    Calculates the center square of a frame and draws it.
+    Returns the frame with the overlay.
+    """
+    height, width = frame.shape[:2]
+    
+    # Calculate the side length (shortest dimension)
+    size = min(width, height)
+    
+    # Calculate coordinates for centering
+    start_x = (width - size) // 2
+    start_y = (height - size) // 2
+    end_x = start_x + size
+    end_y = start_y + size
+    
+    # Draw the rectangle on a copy to keep the original clean if needed
+    # Use frame.copy() if you don't want to modify the input frame in place
+    cv2.rectangle(frame, (start_x, start_y), (end_x, end_y), color, thickness)
+    
+    return frame

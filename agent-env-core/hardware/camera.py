@@ -7,6 +7,7 @@ import threading
 from torch import Tensor
 import time
 from core.interfaces import ICameraSensor
+from util.utils import time_it
 
 
 class FrameNotReadyError(Exception):
@@ -125,7 +126,7 @@ class Camera(ICameraSensor):
             with self.lock:
                 self.latest_frame = frame
 
-
+    @time_it
     def set_to_rgb(self, to_rgb: bool):
         with self.lock:
             self.to_rgb = to_rgb
@@ -133,7 +134,8 @@ class Camera(ICameraSensor):
                 print("Enabled BGR to RGB conversion")
             else:
                 print("Disabled BGR to RGB conversion")
-    
+   
+    @time_it
     def set_resize_center_crop(self, resize_center_crop: bool):
         with self.lock:
             self.resize_center_crop = resize_center_crop
@@ -147,6 +149,7 @@ class Camera(ICameraSensor):
         with self.lock:
             return self.resize_center_crop
     
+    @time_it
     def get_current_frame(self, preprocess=True) -> NDArray:
         """Return the latest frame read by the camera thread."""
         with self.lock:

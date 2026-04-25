@@ -1,4 +1,5 @@
 from core.interfaces import GripperSensorModule, IObserver, JointAnglesSensorModule, SensorModule
+from util.utils import time_it
 
 
 class Observer(IObserver):
@@ -39,7 +40,8 @@ class OptimizedCobotObserver(IObserver):
         # Sort initial sensors
         for sensor in sensors:
             self.attach_sensor_module(sensor)
-
+    
+    @time_it
     def get_observation(self) -> dict:
         observation = {}
         

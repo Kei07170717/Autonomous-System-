@@ -7,6 +7,8 @@ from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, 
 from core.types import Action
 import math
 
+from util.utils import time_it
+
 _MC_ERROR = -1 # Returned on serial timeouts
 
 _GRIPPER_CLOSED_VALUE = 0 # Gripper min
@@ -52,10 +54,12 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             self.mc.set_gripper_state(int(is_closing_value), self.speed_gripper)
         #self.mc.set_gripper_value(int(gripper_pos), self.speed_gripper)
 
+    @time_it
     def set_gripper_state(self, close: bool):
         if self.is_last_gripper_state_close != close:
-            self.is_last_gripper_state_close = close
-            self.mc.set_gripper_state(int(close), self.speed_gripper)
+            success = self.mc.set_gripper_state(int(close), self.speed_gripper)
+            if success is not _MC_ERROR:
+                self.is_last_gripper_state_close = close
         else:
             return
 
@@ -76,6 +80,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
 
 
     # actually this might cause issue, needs to be list[float]
+    @time_it
     def set_joint_angles(self, arm_pos: NDArray[np.float32]) -> None:
         self.mc.send_angles(arm_pos.tolist(), self.speed_arm)
 
@@ -98,7 +103,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             print("Warning: mc not listening to reset")
             time.sleep(0.005)
             is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
-    
+   
+    @time_it
     def get_gripper_value(self) -> int:
         """Gets gripper values  between 0-100. For some reason can
         also return negative values (would be nice to add to 280PI documentation)"""

@@ -7,6 +7,47 @@ json_numpy.patch()
 
 app = Flask(__name__)
 
+# ==========================================
+# Action Generation Strategies
+# ==========================================
+
+def strategy_zero_delta(current_state, num_steps):
+    """
+    Safe strategy: Produces strictly zero deltas. 
+    The robot will not move.
+    """
+    # 6 joints + 1 gripper = 7 action dimensions
+    return np.zeros((num_steps, 7), dtype=np.float32)
+
+
+def strategy_random_wiggle(current_state, num_steps):
+    """
+    Produces tiny random delta movements.
+    """
+    # Delta for 6 joints: bounded between -0.01 and 0.01 radians
+    joint_deltas = np.random.uniform(-0.01, 0.01, size=(num_steps, 6))
+    
+    # Delta for 1 gripper: bounded between -1 and 1
+    gripper_deltas = np.random.uniform(-1.0, 1.0, size=(num_steps, 1))
+    
+    # Combine joints and gripper into shape (num_steps, 7)
+    actions = np.hstack((joint_deltas, gripper_deltas))
+    return actions.astype(np.float32)
+
+
+# Map string names to the function objects so they can be easily swapped
+ACTION_STRATEGIES = {
+    "zero_delta": strategy_zero_delta,
+    "random_wiggle": strategy_random_wiggle
+}
+
+# CHANGE THIS VARIABLE TO SWAP STRATEGIES
+CURRENT_STRATEGY = "zero_delta" 
+
+# ==========================================
+# Server Endpoints
+# ==========================================
+
 @app.route('/act', methods=['POST'])
 def act():
     try:
@@ -15,47 +56,34 @@ def act():
         if not payload or "encoded" not in payload:
             return jsonify({"error": "Invalid payload format. Missing 'encoded' key."}), 400
 
-        # 2. Decode the client's observation data (for testing/verification)
+        # 2. Decode the client's observation data
         decoded_data = json_numpy.loads(payload["encoded"])
         
         print("\n--- 📥 Received Observation ---")
         print(f"Instruction : {decoded_data.get('instruction')}")
         print(f"Image shape : {decoded_data.get('full_image').shape}")
-        print(f"Robot state : {decoded_data.get('state')}")
-
-        # Extract the current state from the decoded data
-        current_state = decoded_data.get('state') 
-        current_joints = current_state[:6]
-        current_gripper = current_state[6]
-
-        num_steps = 5
-        actions = []
         
-        for _ in range(num_steps):
-            # Add a very tiny random "wiggle" (e.g., max 0.01 radians) to the current joints
-            safe_joint_delta = np.random.uniform(-0.01, 0.01, size=6)
-            next_joints = current_joints + safe_joint_delta
-            
-            # Keep the gripper mostly the same
-            next_gripper = np.clip(current_gripper + np.random.uniform(-1, 1), 0, 100)
-            
-            actions.append(np.append(next_joints, next_gripper))
-            
-            # Update current_joints for the next step in the trajectory
-            current_joints = next_joints 
-            current_gripper = next_gripper
-            
-        actions = np.array(actions, dtype=np.float32)
+        current_state = decoded_data.get('state')
+        print(f"Robot state : {current_state}")
 
-        print("--- 📤 Sending Mock Actions ---")
-        print(f"Actions shape : {actions.shape}")
-        print(f"First action  : {actions[0]}")
+        # 3. Generate Actions using the active strategy
+        num_steps = 5
+        strategy_func = ACTION_STRATEGIES.get(CURRENT_STRATEGY)
+        
+        if not strategy_func:
+            raise ValueError(f"Strategy '{CURRENT_STRATEGY}' not found.")
+            
+        actions = strategy_func(current_state, num_steps)
+
+        print("--- 📤 Sending Mock DELTA Actions ---")
+        print(f"Active Strategy : {CURRENT_STRATEGY}")
+        print(f"Actions shape   : {actions.shape}")
+        print(f"First action    : {actions[0]}")
 
         # 4. Encode the numpy array back to a string 
         encoded_actions = json_numpy.dumps(actions)
         
-        # Return as a JSON string so resp.json() in your client parses it correctly 
-        # into a string that json_numpy.loads() can then process.
+        # Return as a JSON string
         return jsonify(encoded_actions)
 
     except Exception as e:
@@ -63,6 +91,7 @@ def act():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 Starting Mock OpenVLA Server on http://0.0.0.0:8777...")
-    # Host 0.0.0.0 allows connections if your client ('cerulean') is on another machine
+    print(f"🚀 Starting Mock Server on http://0.0.0.0:8777...")
+    print(f"🔒 Active Action Strategy: {CURRENT_STRATEGY}")
+    # Host 0.0.0.0 allows connections if your client is on another machine
     app.run(host='0.0.0.0', port=8777)

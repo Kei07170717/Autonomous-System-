@@ -15,7 +15,7 @@ class Body(IBody):
         # print(action)
         # print(f"-- affect-start: {__import__('datetime').datetime.now().microsecond // 1000} ms")
         self.arm_actuator.set_joint_angles(action["arm_angles"])
-        self.gripper_actuator.set_gripper_value(action["gripper"])
+        self.gripper_actuator.set_gripper_state(action["gripper"])
 
         # print(f"-- affect-end: {__import__('datetime').datetime.now().microsecond // 1000} ms")
 

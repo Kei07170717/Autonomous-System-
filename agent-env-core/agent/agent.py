@@ -56,6 +56,8 @@ class ReplayAgent(Agent):
     Usefull for replaying recordings.
     """
     def __init__(self, actions: list[dict]):
+        for action in actions:
+            action["gripper"] = 1 if action["gripper"] > 90 else 0 # TODO: remove this dependency
         self.actions: list[dict] = actions
         self.action_iter = iter(self.actions)
 

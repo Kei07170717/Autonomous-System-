@@ -52,6 +52,12 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
             self.mc.set_gripper_state(int(is_closing_value), self.speed_gripper)
         #self.mc.set_gripper_value(int(gripper_pos), self.speed_gripper)
 
+    def set_gripper_state(self, close: bool):
+        if self.is_last_gripper_state_close != close:
+            self.mc.set_gripper_state(int(close), self.speed_gripper)
+        else:
+            return
+
     def set_gripper_closed(self) -> None:
         self.mc.set_gripper_value(_GRIPPER_CLOSED_VALUE, self.speed_gripper)
 

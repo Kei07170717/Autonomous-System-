@@ -71,6 +71,8 @@ class IGripperActuator(ABC):
     def set_gripper_value(self, value: int) -> None:
         pass
 
+    def set_gripper_state(self, close: bool):
+        pass
 
 class IResettable(ABC):
     """

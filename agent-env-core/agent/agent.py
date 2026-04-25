@@ -10,10 +10,22 @@ class KinestheticAgent(Agent):
     '''This agent is passive. This agent is used for gathering 'drag&record' data,
     which can later be replayed through another agent. The environment should
     not execute actions using this agent.'''
+    def __init__(self) -> None:
+        super().__init__()
+        self.explicit_gripper_val: int | None = None
 
     def get_action(self, obs: dict) -> dict:
-        # TODO: return gripper state
-        return {"arm_angles": obs["arm_angles"], "gripper": obs["gripper"]} # Hardcoding these keys is bad!!!
+        
+        if self.explicit_gripper_val is not None:
+            final_gripper_val = self.explicit_gripper_val
+        else:
+            final_gripper_val = 0 if obs["gripper"] > 90 else 1 # TODO: remove this dependency 
+        return {"arm_angles": obs["arm_angles"], 
+                "gripper": final_gripper_val
+                } # Hardcoding these keys is bad!!!
+
+    def set_griper_manually(self, explicit_gripper_val: int):
+        self.explicit_gripper_val = explicit_gripper_val
 
 
 class RotatingAgent(Agent):
@@ -56,8 +68,6 @@ class ReplayAgent(Agent):
     Usefull for replaying recordings.
     """
     def __init__(self, actions: list[dict]):
-        for action in actions:
-            action["gripper"] = 1 if action["gripper"] > 90 else 0 # TODO: remove this dependency
         self.actions: list[dict] = actions
         self.action_iter = iter(self.actions)
 

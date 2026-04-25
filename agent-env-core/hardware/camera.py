@@ -31,11 +31,12 @@ class Camera(ICameraSensor):
     Camera class should be modified with care as transformation of the frames should be 
     the same during gathering demonstrations and inference. 
     """
-    def __init__(self, camera_name: str, to_rgb=True, resize_center_crop=False):
+    def __init__(self, camera_name: str, to_rgb=True, resize_center_crop=False, rotate_90deg_left: bool = False):
         self.camera_name: str = camera_name
         self.os: int = self._get_os()
         self.path: int = self.get_camera_path()
         self.to_rgb: bool = to_rgb
+        self.rotate_90deg_left: bool = rotate_90deg_left
         self.resize_center_crop: bool = resize_center_crop
         self.capture = cv2.VideoCapture(self.path, self.os)
                 
@@ -120,16 +121,10 @@ class Camera(ICameraSensor):
                 # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
 
-            frame = self.preprocess_frame(frame, self.to_rgb, self.resize_center_crop)
+            frame = preprocess_frame(frame, self.to_rgb, self.resize_center_crop, self.rotate_90deg_left)
             with self.lock:
                 self.latest_frame = frame
 
-    def preprocess_frame(self, frame, to_rgb=False, resize_center_crop=False):
-        if to_rgb:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        if resize_center_crop:
-            frame = resize_center_crop_frame(frame)
-        return frame
 
     def set_to_rgb(self, to_rgb: bool):
         with self.lock:
@@ -247,6 +242,14 @@ class Camera(ICameraSensor):
             pass
 
 
+def preprocess_frame(frame, to_rgb=False, resize_center_crop=False, rotate_90deg_left: bool=False):
+    if to_rgb:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    if resize_center_crop:
+        frame = resize_center_crop_frame(frame)
+    if rotate_90deg_left:
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return frame
 
 def resize_center_crop_frame(image, target_h=224, target_w=224):
     """

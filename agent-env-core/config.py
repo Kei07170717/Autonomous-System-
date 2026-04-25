@@ -23,13 +23,23 @@ class SemiDummyObserverBuilder():
         self.sensor_modules: list[SensorModule] = []
         self.dummy_component: DummyComponent = DummyComponent()
 
-    def build_and_register_camera_module(self, label: str, device_name: str, vla_preprocess: bool = False) -> Camera | None:
+    def build_and_register_camera_module(self, label: str, device_name: str, vla_preprocess: bool = False, rotate_90deg_left: bool = False) -> Camera | None:
         cam: Camera | None = None
         try:
-            cam = Camera(camera_name=device_name, resize_center_crop=vla_preprocess)
-        except Exception as e:
-            print(f"Couldn't init {label}, most likely wrong path/name: {device_name}")
+            cam = Camera(
+                camera_name=device_name, 
+                resize_center_crop=vla_preprocess, 
+                rotate_90deg_left=rotate_90deg_left
+            )
+        except ValueError as e:
+            # Catches the specific ValueError raised in Camera.get_camera_path()
+            print(f"Path/Name error for {label} ({device_name}): {e}")
             return None
+        except Exception as e:
+            # Catches everything else and prints the ACTUAL error message
+            print(f"Unexpected error initializing {label} ({device_name}): {type(e).__name__} - {e}")
+            return None
+            
 
         assert cam is not None
         # time.sleep(1)
@@ -56,8 +66,11 @@ class SemiDummyObserverBuilder():
                 print(".", end="", flush=True)
                 time.sleep(0.1)
 
-
-        print("\nDone initializing", label, flush=True)
+        print(f"\nDone initializing {label}")
+        print(f"  ↳ Configuration:")
+        print(f"      • to_rgb:             {cam.to_rgb}")
+        print(f"      • resize_center_crop: {cam.resize_center_crop}")
+        print(f"      • rotate_90deg_left:  {cam.rotate_90deg_left}\n", flush=True)
         return cam
 
     def register_gripper_sensor_module(self):

@@ -179,7 +179,7 @@ if __name__ == "__main__":
     observer_builder.register_gripper_sensor_module()
     external_cam = observer_builder.build_and_register_camera_module("cam_external", args.external_cam_id, vla_preprocess=args.vla_preprocess)
     observer_builder.build_and_register_camera_module("cam_wrist", args.wrist_cam_id,
-                                                      vla_preprocess=args.vla_preprocess)
+                                                      vla_preprocess=args.vla_preprocess, rotate_90deg_left=True)
     observer = observer_builder.get_observer()
     obs_spec = observer_builder.get_observation_spec()
 

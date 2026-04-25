@@ -121,7 +121,7 @@ class Camera(ICameraSensor):
                 # raise NullFrameReturnedError("Frame does not exist, exiting cam thread")
                 break
 
-            frame = preprocess_frame(frame, self.to_rgb, self.resize_center_crop, self.rotate_90deg_left)
+            # frame = preprocess_frame(frame, self.to_rgb, self.resize_center_crop, self.rotate_90deg_left)
             with self.lock:
                 self.latest_frame = frame
 
@@ -147,7 +147,7 @@ class Camera(ICameraSensor):
         with self.lock:
             return self.resize_center_crop
     
-    def get_current_frame(self) -> NDArray:
+    def get_current_frame(self, preprocess=True) -> NDArray:
         """Return the latest frame read by the camera thread."""
         with self.lock:
             # Check for permanent failure first
@@ -157,8 +157,23 @@ class Camera(ICameraSensor):
             # Then check if we are just waiting for the first frame
             if self.latest_frame is None:
                 raise FrameNotReadyError("Frame doesn't exist yet")
+            
+            frame = self.latest_frame.copy()
 
-            return self.latest_frame.copy()
+        if preprocess is True:
+            start_time = time.perf_counter()
+
+            frame = preprocess_frame(
+                frame, 
+                self.to_rgb, 
+                self.resize_center_crop, 
+                self.rotate_90deg_left
+            )
+
+            end_time = time.perf_counter()
+            print(f"Frame preprocessing took: {(end_time - start_time) * 1000:.2f} ms for {self.camera_name}")
+
+        return frame
 
     
 
@@ -282,5 +297,6 @@ def resize_center_crop_frame(image, target_h=224, target_w=224):
     
     # 5. Apply center crop and return
     return resized[y_start:y_start+target_h, x_start:x_start+target_w]
+
 
 

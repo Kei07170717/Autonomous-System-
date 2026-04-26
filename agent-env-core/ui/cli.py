@@ -1,5 +1,7 @@
 import threading
 import asyncio
+import json
+import os
 
 from controller.commands import *
 from controller.controller import IANCController, ICommand
@@ -36,7 +38,11 @@ class ANCConsoleUI(IAnnotator):
         self.annotation_complete_event = threading.Event()
         self.annotation_result = {}
         self.session = PromptSession()
-        self.last_annotated_task_description: str = ""
+        # self.last_annotated_task_description: str = ""
+
+        self.cache_file = ".annotation_cache.json"
+        self.annotation_fields = ["task", "location", "camera_pos", "distractors", "blue_pos", "block_proximity"]
+        self.cached_defaults = self._load_cache()
 
     def start(self):
         self.controller_thread.start()
@@ -47,6 +53,23 @@ class ANCConsoleUI(IAnnotator):
             self.terminate_event.set()
             self.controller_thread.join()
             exit(0)
+
+    def _load_cache(self) -> dict:
+        """Loads cached defaults from a JSON file, or creates empty ones."""
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, 'r') as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                pass # Fallback to empty if file is corrupted
+        
+        # Return empty strings for all defined fields if no cache exists
+        return {field: "" for field in self.annotation_fields}
+
+    def _save_cache(self, current_annotations: dict):
+        """Saves the accepted annotations to the JSON file for next time."""
+        with open(self.cache_file, 'w') as f:
+            json.dump(current_annotations, f, indent=4)
 
     async def _async_start(self):
         self.main_loop = asyncio.get_running_loop()
@@ -81,7 +104,6 @@ class ANCConsoleUI(IAnnotator):
 
     async def _run_annotation_prompts(self):
         """Runs the annotation UI, awaited in the main loop."""
-
         print("Initiated annotation")
         
         while True:
@@ -93,13 +115,23 @@ class ANCConsoleUI(IAnnotator):
                     break
                 print("Error: Input must be 'y' or 'n'.")
 
-            task = await self.session.prompt_async("2. Annotate task: ", default=self.last_annotated_task_description)
-            task = task.strip()
-            self.last_annotated_task_description = task
+            # --- NEW: Dynamic prompting for all fields ---
+            current_annotations = {}
+            for i, field in enumerate(self.annotation_fields, start=2):
+                # Grab the cached value, default to empty string if not found
+                cached_val = self.cached_defaults.get(field, "")
+                
+                # Prompt the user. If they just press Enter, it uses the cached_val
+                prompt_str = f"{i}. {field.replace('_', ' ').capitalize()}: "
+                val = await self.session.prompt_async(prompt_str, default=cached_val)
+                current_annotations[field] = val.strip()
 
+            # --- NEW: Dynamic Summary ---
             print("\n--- Summary ---")
-            print(f"is_valid : {is_valid}")
-            print(f"task     : {task}")
+            print(f"is_valid    : {is_valid}")
+            for field, val in current_annotations.items():
+                # Just formatting nicely to align the colons
+                print(f"{field:<11} : {val}")
 
             while True:
                 verify_input = await self.session.prompt_async("Are these answers correct? (y/n): ")
@@ -109,7 +141,12 @@ class ANCConsoleUI(IAnnotator):
                 print("Error: Input must be 'y' or 'n'.")
 
             if verify_input == 'y':
-                self.annotation_result = {"is_valid": is_valid, "task": task}
+                # --- NEW: Save to cache and prepare result ---
+                self.cached_defaults.update(current_annotations)
+                self._save_cache(self.cached_defaults)
+                
+                self.annotation_result = {"is_valid": is_valid}
+                self.annotation_result.update(current_annotations)
                 break
 
             print("\nRestarting annotation...\n")

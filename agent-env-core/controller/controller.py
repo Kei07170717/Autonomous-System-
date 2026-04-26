@@ -2,6 +2,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import threading
 import time
+import gc
+
 
 from core.interfaces import BaseWriter, IAnnotator, IObserver, IResettable, IArmActuator, IColorChanger
 from controller.ghost_image_service import IGhostImageServer
@@ -154,37 +156,58 @@ class ANCController(IANCController):
             
 
     def run_loop(self, terminate_event: threading.Event):
-        # Set the first deadline
-        next_wake_time = time.perf_counter() + self.loop_period
+        # 1. Disable automatic garbage collection to prevent unpredictable jitter
+        gc.disable()
+        
+        try:
+            # Set the first deadline
+            next_wake_time = time.perf_counter() + self.loop_period
 
-        while not terminate_event.is_set():
-            exec_start = time.perf_counter()
+            while not terminate_event.is_set():
+                exec_start = time.perf_counter()
 
-            # Safely execute the current state
-            with self._state_lock:
-                self.state.execute()
+                # Safely execute the current state
+                with self._state_lock:
+                    self.state.execute()
 
-            now = time.perf_counter()
-            exec_duration = now - exec_start
-            sleep_duration = next_wake_time - now
+                now = time.perf_counter()
+                exec_duration = now - exec_start
+                sleep_duration = next_wake_time - now
 
-            if sleep_duration > 0:
-                time.sleep(sleep_duration)
-                # Step the deadline forward cleanly
-                next_wake_time += self.loop_period 
-            else:
-                # OVERRUN handling
-                delay = -sleep_duration
-                print(f"OVERRUN: Delayed by {delay:.4f}s. "
-                      f"Execution took {exec_duration:.4f}s (Budget: {self.loop_period:.4f}s)")
-                
-                # Reset the deadline to be exactly one period from right NOW, 
-                # dropping the missed frames.
-                next_wake_time = time.perf_counter() + self.loop_period
+                if sleep_duration > 0:
+                    # --- GC Optimization ---
+                    # If we have a safe margin of idle time, run a Generation 0 collection.
+                    # Gen 0 targets the youngest objects and is extremely fast. 
+                    # Adjust this threshold (e.g., 0.002s) based on your specific loop period.
+                    if sleep_duration > 0.002: 
+                        gc.collect(0) 
+                        
+                        # GC takes time, so we MUST recalculate the remaining sleep duration
+                        now = time.perf_counter()
+                        sleep_duration = next_wake_time - now
+                    
+                    # Sleep only if we still have time left after the potential GC run
+                    if sleep_duration > 0:
+                        time.sleep(sleep_duration)
+                        
+                    # Step the deadline forward cleanly
+                    next_wake_time += self.loop_period 
+                else:
+                    # OVERRUN handling
+                    delay = -sleep_duration
+                    print(f"OVERRUN: Delayed by {delay:.4f}s. "
+                          f"Execution took {exec_duration:.4f}s (Budget: {self.loop_period:.4f}s)")
+                    
+                    # Reset the deadline to be exactly one period from right NOW, 
+                    # dropping the missed frames.
+                    next_wake_time = time.perf_counter() + self.loop_period
 
-        # Gracefully exit the current state
-        self.state.on_state_exit()
-
+            # Gracefully exit the current state
+            self.state.on_state_exit()
+            
+        finally:
+            # 2. Re-enable GC when the loop exits so the rest of your app doesn't leak memory
+            gc.enable()
     def set_annotator(self, annotator: IAnnotator):
         self.annotator = annotator
         if self.writer and self.annotator:

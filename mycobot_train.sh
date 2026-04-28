@@ -4,7 +4,7 @@
 #SBATCH -t 0-36:00
 #SBATCH -o slurm.%N.%j.out
 #SBATCH -e slurm.%N.%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 
 if [ -f "/usr/local/anaconda3/etc/profile.d/conda.sh" ]; then
     . "/usr/local/anaconda3/etc/profile.d/conda.sh"
@@ -21,26 +21,27 @@ fi
 
 conda activate torchgpu
 cd "/home/u818797/Project_git/openvla-oft" || exit 1
-export PYTHONPATH="/home/u818797/Project_git_2/openvla-oft:$PYTHONPATH"
+export PYTHONPATH="/home/u818797/Project_git/openvla-oft:$PYTHONPATH"
 
-mkdir -p /home/u818797/my_cobot_280_VLA/runs
+mkdir -p /home/u818797/my_cobot_280_VLA/runs_huge_dataset_v3
 
-torchrun --standalone --nnodes 1 --nproc-per-node 1 vla-scripts/finetune.py \
+torchrun --standalone --nnodes 1 --nproc-per-node 2 vla-scripts/finetune.py \
   --data_root_dir "$DATASET_PATH" \
   --dataset_name my_cobot_280_pi \
-  --run_root_dir /home/u818797/my_cobot_280_VLA/runs \
+  --run_root_dir /home/u818797/my_cobot_280_VLA/runs_huge_dataset_v3 \
   --use_l1_regression True \
   --use_diffusion False \
   --use_film False \
-  --num_images_in_input 1 \
+  --num_images_in_input 2 \
   --use_proprio True \
-  --batch_size 1 \
+  --batch_size 2 \
   --learning_rate 5e-4 \
-  --num_steps_before_decay 1000 \
-  --max_steps 2000 \
-  --use_val_set False \
-  --val_freq 5000 \
-  --save_freq 5000 \
+  --num_steps_before_decay 8000 \
+  --grad_accumulation_steps 4 \
+  --max_steps 10000 \
+  --use_val_set True \
+  --val_freq 250 \
+  --save_freq 1000 \
   --save_latest_checkpoint_only False \
   --image_aug True \
   --use_lora True \

@@ -32,7 +32,7 @@ class OptimizedCobotObserver(IObserver):
     Hardware-critical serial reads (Joints, Gripper) are clustered at the 
     front of the queue to prevent serial bus timeouts caused by slow sensors.
     """
-    def __init__(self, sensors: list[SensorModule], instruction: str="place the red block on the green block"):
+    def __init__(self, sensors: list[SensorModule], instruction: str="put the red block on top of the blue block"):
         self.cobot_sensors: list[SensorModule] = []
         self.other_sensors: list[SensorModule] = []
         self.instruction = instruction
@@ -45,11 +45,11 @@ class OptimizedCobotObserver(IObserver):
     def get_observation(self) -> dict:
         observation = {}
         
-        # BURST READ: Execute the fast serial commands back-to-back first
-        for sensor in self.cobot_sensors:
-            observation[sensor.get_id()] = sensor.get_data()
             
         for sensor in self.other_sensors:
+            observation[sensor.get_id()] = sensor.get_data()
+        
+        for sensor in self.cobot_sensors:
             observation[sensor.get_id()] = sensor.get_data()
             
         return observation

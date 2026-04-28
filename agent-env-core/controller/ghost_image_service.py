@@ -111,7 +111,7 @@ class GhostImageServer(IGhostImageServer):
         self.old_is_resize_center_crop_enabled = self.camera.get_resize_center_crop()
         self.camera.set_to_rgb(False)
         self.camera.set_resize_center_crop(False)
-        self.camera.change_resolution(1920, 1080)
+        self.camera.change_resolution(700, 700)
 
         self.is_running.set()
         self.server = make_server(self.host, self.port, self.app)

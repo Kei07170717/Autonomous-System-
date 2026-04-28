@@ -4,7 +4,7 @@ from functools import wraps
 
 # --- GLOBAL TOGGLE ---
 # Set this to False to instantly disable all timing prints across your codebase.
-ENABLE_PROFILING = True 
+ENABLE_PROFILING = False
 
 # Alternatively, you can control it via environment variables without changing code:
 # ENABLE_PROFILING = os.getenv("PROFILE_CODE") == "1"

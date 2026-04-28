@@ -164,7 +164,7 @@ class Camera(ICameraSensor):
             frame = self.latest_frame.copy()
 
         if preprocess is True:
-            start_time = time.perf_counter()
+            # start_time = time.perf_counter()
 
             frame = preprocess_frame(
                 frame, 
@@ -173,8 +173,8 @@ class Camera(ICameraSensor):
                 self.rotate_90deg_left
             )
 
-            end_time = time.perf_counter()
-            print(f"Frame preprocessing took: {(end_time - start_time) * 1000:.2f} ms for {self.camera_name}")
+            # end_time = time.perf_counter()
+            # print(f"Frame preprocessing took: {(end_time - start_time) * 1000:.2f} ms for {self.camera_name}")
 
         return frame
 

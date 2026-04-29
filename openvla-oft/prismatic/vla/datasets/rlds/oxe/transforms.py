@@ -846,17 +846,17 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     return trajectory
 
 def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
-    # Get the time dimension (T) to properly size our padding
     batch_size = tf.shape(trajectory["observation"]["arm_angles"])[0]
 
     # --- 1. FORMAT ACTIONS (8-dim) ---
     obs_angles = trajectory["observation"]["arm_angles"]       # (T, 6)
     target_angles = trajectory["action"][:, :6]                # (T, 6)
     
-    # Delta 
+    # Deltas
     target_joint_angle_deltas = target_angles - obs_angles     # (T, 6)
     
     # Slice the 7th element for the gripper action and keep 2D shape (T, 1)
+    # Action scale is already: 0 (open) to 1 (close)
     action_gripper = trajectory["action"][:, -1:]              # (T, 1)
     
     # Create 1-dim padding (T, 1)
@@ -871,7 +871,11 @@ def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, A
 
     # --- 2. FORMAT OBSERVATION STATE (8-dim) ---
     # Cast the uint8 observation gripper to float32 and add a dimension -> (T, 1)
-    obs_gripper = tf.cast(trajectory["observation"]["gripper"][:, None], tf.float32)
+    raw_obs_gripper = tf.cast(trajectory["observation"]["gripper"][:, None], tf.float32)
+    
+    # Map 100 (open) -> 0.0 (open) and 0 (close) -> 1.0 (close) to match actions
+    obs_gripper = 1.0 - (raw_obs_gripper / 100.0)
+    
     obs_pad = tf.zeros((batch_size, 1), dtype=tf.float32)
 
     # Concatenate to form the 8-dim state: [6 angles + 1 pad + 1 gripper]
@@ -882,7 +886,6 @@ def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, A
     ], axis=-1)
 
     return trajectory
-
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
     "bridge_oxe": bridge_oxe_dataset_transform,

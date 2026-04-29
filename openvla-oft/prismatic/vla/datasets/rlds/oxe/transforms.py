@@ -846,25 +846,41 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     return trajectory
 
 def my_cobot_280_pi_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
-    abs_angles = tf.cast(trajectory["observation"]["arm_angles"], tf.float32)  # (T, 6)
+    # Get the time dimension (T) to properly size our padding
+    batch_size = tf.shape(trajectory["observation"]["arm_angles"])[0]
 
-    # delta[t] = angle[t+1] - angle[t]
-    deltas = abs_angles[1:] - abs_angles[:-1]
+    # --- 1. FORMAT ACTIONS (8-dim) ---
+    obs_angles = trajectory["observation"]["arm_angles"]       # (T, 6)
+    target_angles = trajectory["action"][:, :6]                # (T, 6)
+    
+    # Delta 
+    target_joint_angle_deltas = target_angles - obs_angles     # (T, 6)
+    
+    # Slice the 7th element for the gripper action and keep 2D shape (T, 1)
+    action_gripper = trajectory["action"][:, -1:]              # (T, 1)
+    
+    # Create 1-dim padding (T, 1)
+    action_pad = tf.zeros((batch_size, 1), dtype=tf.float32)
 
-    gripper = tf.cast(trajectory["observation"]["gripper"], tf.float32)   # normalize to [0.0, 1.0]
+    # Concatenate to form the 8-dim action: [6 deltas + 1 pad + 1 gripper]
+    trajectory["action"] = tf.concat([
+        target_joint_angle_deltas, 
+        action_pad, 
+        action_gripper
+    ], axis=-1)
 
-    # gripper delta[t] = gripper[t+1] - gripper[t]
-    gripper_deltas = gripper[1:] - gripper[:-1]                      # (T-1,)
-    gripper_obs = gripper[:-1, None]                                  # (T-1, 1) current normalized state
+    # --- 2. FORMAT OBSERVATION STATE (8-dim) ---
+    # Cast the uint8 observation gripper to float32 and add a dimension -> (T, 1)
+    obs_gripper = tf.cast(trajectory["observation"]["gripper"][:, None], tf.float32)
+    obs_pad = tf.zeros((batch_size, 1), dtype=tf.float32)
 
-    trajectory["action"] = tf.concat([deltas, gripper_deltas[:, None]], axis=-1)
+    # Concatenate to form the 8-dim state: [6 angles + 1 pad + 1 gripper]
+    trajectory["observation"]["state"] = tf.concat([
+        obs_angles, 
+        obs_pad, 
+        obs_gripper
+    ], axis=-1)
 
-    trajectory["observation"] = {
-        "arm_angles": abs_angles[:-1],
-        "cam_external": trajectory["observation"]["cam_external"][:-1],
-        "cam_wrist": trajectory["observation"]["cam_wrist"][:-1],
-        "gripper": gripper_obs,
-    }
     return trajectory
 
 # === Registry ===

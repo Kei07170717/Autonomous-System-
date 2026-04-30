@@ -14,7 +14,7 @@ from experiments.robot.openvla_utils_mac import (
 )
 
 # Initialize important constants
-ACTION_DIM = 7
+ACTION_DIM = 8
 DATE = time.strftime("%Y_%m_%d")
 DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
 if torch.backends.mps.is_available():

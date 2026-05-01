@@ -80,7 +80,7 @@ class IResettable(ABC):
     """
 
     @abstractmethod
-    def reset(self):
+    def reset(self, randomize: bool = True): #TODO: migrate randomize
         pass
 
     @abstractmethod

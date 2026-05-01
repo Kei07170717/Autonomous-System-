@@ -6,7 +6,7 @@ from pymycobot import PI_PORT, PI_BAUD
 from core.interfaces import IArmActuator, IJointAnglesSensor, IGripperActuator, IJointAnglesSensor, IResettable, IGripperSensor, IColorChanger
 from core.types import Action
 import math
-
+import random
 from util.utils import time_it
 
 _MC_ERROR = -1 # Returned on serial timeouts
@@ -37,6 +37,17 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         self.is_last_gripper_state_close: bool = self._gripper_value_to_is_closed_bool(init_gripper_val)
         self.last_angles = np.array([])
         self.last_gripper_val = init_gripper_val
+        self.target_reset_angles = _RESET_ANGLES.tolist()
+
+#        original_read = self.mc._read
+#
+#        # 2. Create a wrapper that forces the timeout parameter into the library's function
+#        def fast_read(genre, **kwargs):
+#            return original_read(genre, timeout=0.07, **kwargs)
+#
+#        # 3. Overwrite the library's read function with our fast version
+#        self.mc._read = fast_read
+
 
     def set_gripper_value(self, value: int) -> None:
         """
@@ -95,14 +106,18 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         return np.allclose(np.array(self.get_joint_angles()), _RESET_ANGLES, atol=1)        
         
 
-    def reset(self):
+    def reset(self, randomize: bool=True):
         self.mc.focus_all_servos()
         
-        is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+        if randomize: 
+            random_coords = generate_random_reset_coords()
+            random_joint_angles = self.mc.solve_inv_kinematics(random_coords, self.mc.get_angles())
+            self.target_reset_angles = random_joint_angles
+        is_resetting = self.mc.send_angles(self.target_reset_angles, 10)
         while is_resetting == _MC_ERROR:
-            print("Warning: mc not responding to reset, retrying...")
+            print("Warning: mc not listening to reset")
             time.sleep(0.005)
-            is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
+            is_resetting = self.mc.send_angles(self.target_reset_angles, 10)
    
     @time_it
     def get_gripper_value(self) -> int:
@@ -120,3 +135,24 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
     
     def set_color(self, color: tuple[str, int, int, int]):
         return self.mc.set_color(color[1], color[2], color[3])
+
+def normalize_angle(angle):
+    return (angle + 180) % 360 - 180
+
+def generate_random_reset_coords():
+    # Position logic
+    radius = random.uniform(170.0, 240.0)
+    angle = random.uniform(-math.pi/2, math.pi/2)
+    
+    # Clamp to API limits
+    x = max(min(radius * math.cos(angle), 281.45), -281.45)
+    y = max(min(radius * math.sin(angle), 281.45), -281.45)
+    z = random.uniform(140.0, 220.0)
+
+    # Orientation logic
+    rx = normalize_angle(random.uniform(150.0, 210.0))
+    ry = random.uniform(-40.0, 40.0)
+    rz = random.uniform(-180.0, 180.0)
+    
+    coords = [x, y, z, rx, ry, rz]
+    return [round(val, 2) for val in coords]

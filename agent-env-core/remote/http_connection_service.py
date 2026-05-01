@@ -45,7 +45,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
                 {
                     "full_image": obs["cam_external"],
                     "wrist_image": obs["cam_wrist"],
-                    "state": np.hstack((obs["arm_angles"],0, obs["gripper"])), # Pad 0 in between to match model 7DoF expectation
+                    "state": np.hstack((obs["arm_angles"], [0], [1.0 - (obs["gripper"] / 100.0)])),
                     "instruction": obs.get("instruction"),
                 }
             )
@@ -61,7 +61,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
             actions.append(
                 {
                     "arm_angles": row[:6].astype(np.float32),
-                    "gripper": np.array(row[6], dtype=np.uint8),
+                    "gripper": np.array(row[7], dtype=np.uint8),
                 }
             )
 

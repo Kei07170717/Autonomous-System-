@@ -99,8 +99,8 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         self.mc.focus_all_servos()
         
         is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
-        while is_resetting != 1:
-            print("Warning: mc not listening to reset")
+        while is_resetting == _MC_ERROR:
+            print("Warning: mc not responding to reset, retrying...")
             time.sleep(0.005)
             is_resetting = self.mc.send_angles(_RESET_ANGLES.tolist(), 10)
    

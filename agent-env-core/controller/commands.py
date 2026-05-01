@@ -84,3 +84,9 @@ class SetInstructionCommand(ICommand):
     def execute(self) -> None:
         self.anc_controller.set_instruction(self.instruction)
 
+class ResetCommand(ICommand):
+    def __init__(self, anc_controller: IANCController) -> None:
+        self.anc_controller = anc_controller
+
+    def execute(self) -> None:
+        self.anc_controller.reset()

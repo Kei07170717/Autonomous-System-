@@ -28,6 +28,7 @@ class ANCConsoleUI(IAnnotator):
             "gc": GripperClosedCommand(anc_controller),
             "ref": TakeRefCommand(anc_controller),
             "inference": StartInferenceCommand(anc_controller),
+            "reset": ResetCommand(anc_controller)
         }
         self.help_command = ListCommandsCommand(self.argless_command_mapping)
         self.argless_command_mapping["help"] = self.help_command

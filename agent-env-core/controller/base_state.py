@@ -68,3 +68,10 @@ class State(ABC):
     def take_ref_image(self):
         pass
 
+    def reset(self):
+        if self.context.resettable is None:
+            print("Can't reset without Resettable")
+            return
+        else:
+            print("Resetting...")
+            self.context.resettable.reset()

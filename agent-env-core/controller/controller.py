@@ -86,6 +86,10 @@ class IANCController(ABC):
     def get_instruction(self) -> str:
         pass
 
+    @abstractmethod
+    def reset(self):
+        pass
+
 
 
 class ANCController(IANCController):
@@ -252,6 +256,9 @@ class ANCController(IANCController):
 
     def get_instruction(self) -> str:
         return self.observer.get_instruction()
+
+    def reset(self):
+        self.state.reset()
 
     
 

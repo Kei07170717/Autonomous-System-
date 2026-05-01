@@ -46,7 +46,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
                     "full_image": obs["cam_external"],
                     "wrist_image": obs["cam_wrist"],
                     "state": np.hstack((obs["arm_angles"], [0], [1.0 - (obs["gripper"] / 100.0)])),
-                    "instruction": obs.get("instruction"),
+                    "instruction": "Put the red block on top of the blue block",
                 }
             )
         }

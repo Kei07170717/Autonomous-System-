@@ -3,7 +3,7 @@ from util.utils import time_it
 
 
 class Observer(IObserver):
-    def __init__(self, sensors: list[SensorModule], instruction: str="place the red block on the green block"):
+    def __init__(self, sensors: list[SensorModule], instruction: str="put the red block on top of the blue block"):
         self.sensors: list[SensorModule] = sensors
         self.instruction = instruction
 
@@ -51,6 +51,8 @@ class OptimizedCobotObserver(IObserver):
         
         for sensor in self.cobot_sensors:
             observation[sensor.get_id()] = sensor.get_data()
+
+        observation["instruction"] = self.instruction
             
         return observation
 

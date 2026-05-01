@@ -39,6 +39,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
         return []
 
     def _map_obs_to_payload(self, obs: dict) -> dict:
+        assert obs["instruction"] is not None
 
         payload = {
             "encoded": json_numpy.dumps(
@@ -46,7 +47,7 @@ class HTTPRemoteActionProvider(IRemoteActionProvider):
                     "full_image": obs["cam_external"],
                     "wrist_image": obs["cam_wrist"],
                     "state": np.hstack((obs["arm_angles"], [0], [1.0 - (obs["gripper"] / 100.0)])),
-                    "instruction": "Put the red block on top of the blue block",
+                    "instruction": obs["instruction"],
                 }
             )
         }

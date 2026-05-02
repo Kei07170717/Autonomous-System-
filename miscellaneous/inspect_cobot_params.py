@@ -28,13 +28,13 @@ try:
 except Exception:
     print("Fresh Mode      : Unsupported or Error")
 
-# Sports Mode / Movement Type (1: movel, 0: moveJ)
+# Movement Type (1: movel, 0: moveJ)
 try:
     move_type = mc.get_movement_type()
     move_name = "Linear (movel)" if move_type == 1 else "Joint (moveJ)" if move_type == 0 else f"Unknown ({move_type})"
-    print(f"Sports Mode     : {move_name}")
+    print(f"Movement type     : {move_name}")
 except Exception:
-    print("Sports Mode     : Unsupported or Error")
+    print("Movement type     : Unsupported or Error")
 
 # Free Mode (1: Free mode open, 0: Free mode closed)
 try:

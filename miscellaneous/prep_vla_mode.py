@@ -16,3 +16,6 @@ for i in range(1,6):
 
 mc.set_fresh_mode(1)
 print("Set fresh mode:", mc.get_fresh_mode())
+
+mc.set_movement_type(1)
+print("Set movement type:", mc.get_movement_type())

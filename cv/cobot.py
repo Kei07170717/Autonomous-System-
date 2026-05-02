@@ -3,6 +3,10 @@ from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import time
 
+_RIGHT_OUTER_BOUND = [200.0, -140.0, 200.0, 180, 0, -45]
+_RIGHT_INNER_BOUND = [80.0, -140.0, 200.0, 180, 0, -45]
+_LEFT_INNER_BOUND = [80.0, 140.0, 200.0, 180, 0, -45]
+_LEFT_OUTER_BOUND = [200.0, 140.0, 200.0, 180, 0, -45]
 class Cobot:
     def __init__(self) -> None:
         self.mc = MyCobot280(PI_PORT, str(PI_BAUD))

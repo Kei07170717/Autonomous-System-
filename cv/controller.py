@@ -62,7 +62,7 @@ class StackController():
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
 
     @stable_bool(threshold=5)
-    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=30) -> bool:
+    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=1) -> bool:
 
         aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold
         # print(f"Tar: {aligned}")
@@ -74,7 +74,7 @@ class StackController():
         target_coords = [
             current_xy[0] + delta_x,
             current_xy[1] + delta_y
-        ]
+        ]       
         
         # Send the new coordinates back to the arm
         # print(f"Corrective coords: {coords}")

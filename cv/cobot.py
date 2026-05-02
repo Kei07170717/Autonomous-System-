@@ -77,8 +77,8 @@ class Cobot:
 
 
     def set_xyz(self, xyz):
-        success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 5, 1)
+        success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
         while success == -1:
-            success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 5, 1)
+            success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
 
 

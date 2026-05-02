@@ -9,7 +9,7 @@ from visual_perceptor import VisualPerceptor
 import time
 
 _OVERVIEW_HEIGHT = 200
-
+_STACKED_BLOCK_THRESHOLD = 10
 class StackController():
     
     def __init__(self, cobot: Cobot, visual_perceptor: VisualPerceptor) -> None:
@@ -31,6 +31,7 @@ class StackController():
         self.cobot.open_gripper()
 
         block_pos = self.vp.get_block_pos(self.top_block)
+        
 
         while block_pos is None:
             self._explore_space()
@@ -39,14 +40,22 @@ class StackController():
         self.cobot.stop_moving()
 
         while not self._is_xy_aligned(current_xy = block_pos):
-            time.sleep(0.5)
+            time.sleep(0.3)
             new_block_pos = self.vp.get_block_xy_distance(self.top_block)
             block_pos = new_block_pos if new_block_pos is not None else block_pos
             self.correct_xy_position(block_pos[0], -block_pos[1])
             print(f"Block pos: {block_pos}")
+            
+        
+        if self._is_block_stacked(): 
+            return self._locate_top_block
+        else:
+            return self._grab_top_block
+
 
 
     def _grab_top_block(self):
+        print("GRABBING")
         return None
     
     def _locate_bottom_block(self):
@@ -62,7 +71,7 @@ class StackController():
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
 
     @stable_bool(threshold=5)
-    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=1) -> bool:
+    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=3) -> bool:
 
         aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold
         # print(f"Tar: {aligned}")
@@ -79,3 +88,14 @@ class StackController():
         # Send the new coordinates back to the arm
         # print(f"Corrective coords: {coords}")
         self.cobot.set_xyz((target_coords[0], target_coords[1], self.operating_height))
+
+    @stable_bool(threshold=5)
+    def _is_block_stacked(self) -> bool:
+        length = self.vp.get_block_length(self.top_block)
+        if length is None:
+            return True
+
+        if length > _STACKED_BLOCK_THRESHOLD:
+            return True
+        else:
+            return False

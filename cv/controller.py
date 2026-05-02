@@ -2,7 +2,7 @@
 from block import Block
 from cobot import Cobot
 from visual_perceptor import VisualPerceptor
-
+import time
 
 class StackController():
     
@@ -20,7 +20,14 @@ class StackController():
             strat = strat()
 
     def _locate_top_block(self):
-        return None
+        self.cobot.open_gripper()
+        while self.vp.get_block_pos(self.top_block) is None:
+            self._explore_space()
+
+        self.cobot.stop_moving()
+        while True:
+            time.sleep(0.5)
+            print(f"Block pos: {self.vp.get_block_xy_distance(self.top_block)}")
 
 
     def _grab_top_block(self):
@@ -32,4 +39,5 @@ class StackController():
     def _stack_top_block(self):
         return None
 
-        
+    def _explore_space(self):
+        pass

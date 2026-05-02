@@ -1,0 +1,11 @@
+name: cv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - opencv-python==4.13.0.92
+      - pymycobot==4.0.4
+      - numpy==2.4.4

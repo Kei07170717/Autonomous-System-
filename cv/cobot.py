@@ -38,3 +38,9 @@ class Cobot:
 
     def rotate_eef(self, angle: float, speed: int = 50) -> None:
         self.mc.send_angle(6, angle, speed)
+
+    def stop_moving(self) -> None:
+        self.mc.stop()
+
+    def is_moving(self) -> bool:
+        return bool(self.mc.is_moving())

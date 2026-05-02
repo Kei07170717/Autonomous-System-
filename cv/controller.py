@@ -1,6 +1,10 @@
 
+from typing import Tuple
+
+from cv2 import threshold
 from block import Block
 from cobot import Cobot
+from util import stable_bool
 from visual_perceptor import VisualPerceptor
 import time
 
@@ -21,13 +25,20 @@ class StackController():
 
     def _locate_top_block(self):
         self.cobot.open_gripper()
-        while self.vp.get_block_pos(self.top_block) is None:
+
+        block_pos = self.vp.get_block_pos(self.top_block)
+
+        while block_pos is None:
             self._explore_space()
+            block_pos = self.vp.get_block_pos(self.top_block)
 
         self.cobot.stop_moving()
-        while True:
+
+        while not self._is_xy_aligned(current_xy = block_pos):
             time.sleep(0.5)
-            print(f"Block pos: {self.vp.get_block_xy_distance(self.top_block)}")
+            new_block_pos = self.vp.get_block_xy_distance(self.top_block)
+            block_pos = new_block_pos if new_block_pos is not None else block_pos
+            print(f"Block pos: {block_pos}")
 
 
     def _grab_top_block(self):
@@ -41,3 +52,15 @@ class StackController():
 
     def _explore_space(self):
         pass
+
+    # def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float], threshold: float=10) -> bool:
+    #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
+
+    @stable_bool(threshold=5)
+    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=30) -> bool:
+
+        aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold
+        # print(f"Tar: {aligned}")
+        print(f"Aligned: {aligned}")
+        return aligned
+        

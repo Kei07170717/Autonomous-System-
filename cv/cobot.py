@@ -1,3 +1,4 @@
+from typing import Tuple
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import time
@@ -6,6 +7,27 @@ class Cobot:
     def __init__(self) -> None:
         self.mc = MyCobot280(PI_PORT, str(PI_BAUD))
         self.reset_pos()
+        
+        # 1. Save a reference to the original, unpatched method
+        self._original_send_coords = self.mc.send_coords
+        
+        # 2. Define your custom override
+        def patched_send_coords(coords, speed, mode=1):
+            if coords and len(coords) >= 3:
+                # Extract x, y, z from whatever was passed in
+                x, y, z = coords[0], coords[1], coords[2]
+                
+                # Append your static rx, ry, rz values
+                static_coords = [x, y, z, -180, 0, -45]
+                
+                # Pass the modified coordinates to the original method
+                self._original_send_coords(static_coords, speed, mode)
+            else:
+                # Fallback just in case malformed data is passed
+                self._original_send_coords(coords, speed, mode)
+                
+        # 3. Replace the library's method with your patched version
+        self.mc.send_coords = patched_send_coords
 
     def reset_pos(self) -> None:
         self.mc.send_coords([110, -63, 205, -180, 0, -45], 5, 1)
@@ -44,3 +66,19 @@ class Cobot:
 
     def is_moving(self) -> bool:
         return bool(self.mc.is_moving())
+
+    def get_xy(self) -> Tuple[float, float]:
+        coords = self.mc.get_coords()
+
+        while coords == -1:
+            coords = self.mc.get_coords()
+        xy = (float(coords[0]), float(coords[1]))
+        return xy
+
+
+    def set_xyz(self, xyz):
+        success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 5, 1)
+        while success == -1:
+            success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 5, 1)
+
+

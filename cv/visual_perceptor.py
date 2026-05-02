@@ -3,7 +3,7 @@ import numpy as np
 from typing import Tuple, Any, Optional
 
 class VisualPerceptor:
-    def __init__(self, mm_per_pixel: float = 1.0, debug: bool = False) -> None:
+    def __init__(self, mm_per_pixel: float = 0.1, debug: bool = False) -> None:
         self._capture = cv2.VideoCapture(0)
         self.mm_per_pixel = mm_per_pixel
         self.debug = debug

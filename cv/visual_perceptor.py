@@ -5,6 +5,7 @@ from typing import Tuple, Any, Optional
 class VisualPerceptor:
     def __init__(self, mm_per_pixel: float = 0.09, debug: bool = False) -> None:
         self._capture = cv2.VideoCapture(0)
+        self._capture.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Makes sure only the latest frame can be read
         self.mm_per_pixel = mm_per_pixel
         self.debug = debug
         # Reference origin: assuming the center of a 640x480 camera frame

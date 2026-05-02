@@ -39,13 +39,7 @@ class StackController():
 
         self.cobot.stop_moving()
 
-        while not self._is_xy_aligned(current_xy = block_pos):
-            time.sleep(0.3)
-            new_block_pos = self.vp.get_block_xy_distance(self.top_block)
-            block_pos = new_block_pos if new_block_pos is not None else block_pos
-            self.correct_xy_position(block_pos[0], -block_pos[1])
-            print(f"Block pos: {block_pos}")
-            
+        self._align_xy(block_pos) 
         
         if self._is_block_stacked(): 
             return self._locate_top_block
@@ -66,6 +60,14 @@ class StackController():
 
     def _explore_space(self):
         pass
+
+    def _align_xy(self, block_pos):
+        while not self._is_xy_aligned(current_xy = block_pos):
+            time.sleep(0.3)
+            new_block_pos = self.vp.get_block_xy_distance(self.top_block)
+            block_pos = new_block_pos if new_block_pos is not None else block_pos
+            self.correct_xy_position(block_pos[0], -block_pos[1])
+            print(f"Block pos: {block_pos}")
 
     # def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float], threshold: float=10) -> bool:
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold

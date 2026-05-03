@@ -46,7 +46,12 @@ class Cobot:
     def reset_pos(self) -> None:
 
         self.current_eef_angle = -45
-        self.mc.send_coords([110, -63, 205, -180, 0, self.current_eef_angle], 5, 1)
+        success = self.mc.send_coords([110, -63, 205, -180, 0, self.current_z_rotation], 5, 1)
+        while success == -1:
+            print("Failed to reset pos")
+            success = self.mc.send_coords([110, -63, 205, -180, 0, self.current_z_rotation], 5, 1)
+
+
         time.sleep(2)
 
     def set_color(self, r: int, g: int, b: int) -> None:

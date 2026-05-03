@@ -116,7 +116,7 @@ class StackController():
     def _align_xy(self, block_pos):
         lost_count = 0
         while not self._is_xy_aligned(current_xy = block_pos):
-            time.sleep(1)
+            time.sleep(0.1)
             new_block_pos = self.vp.get_block_xy_distance(self.top_block)
             if new_block_pos is not None:
                 block_pos = new_block_pos

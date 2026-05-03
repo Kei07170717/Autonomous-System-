@@ -134,6 +134,7 @@ class Cobot:
         success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], speed, 1)
         
         while success == -1:
+            print("Retrying set_xyz")
             success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], speed, 1)
     
     def set_z(self, z: float, speed: int = 50):
@@ -150,9 +151,11 @@ class Cobot:
 
     def wait_for_navigation_completion(self):
         while self.is_moving():
+            print("Waiting for nav completion...")
             time.sleep(0.1)
 
 
     def wait_for_gripper_movement_completion(self):
         while self.mc.is_gripper_moving() != 0:
+            print("Waiting for gripper completion...")
             time.sleep(0.2)

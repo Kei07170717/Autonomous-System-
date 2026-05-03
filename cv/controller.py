@@ -29,8 +29,8 @@ class StackController():
         self.vp = visual_perceptor
         blue_block = Block(color=(120, 255, 255), classification_threshold=15.0)
         red_block = Block(color=(0, 255, 255), classification_threshold=10.0)
-        self.top_block: Block = red_block
-        self.bottom_block: Block = blue_block
+        self.top_block: Block = blue_block
+        self.bottom_block: Block = red_block
         self.operating_height = _OVERVIEW_HEIGHT
         self.vp.set_x_offset(_OFFSET)
 
@@ -55,7 +55,7 @@ class StackController():
         self.cobot.stop_moving()
 
         try:
-            self._align_xy(block_pos) 
+            self._align_xy(self.top_block) 
         except LostBlockError as e:
             print(e)
             return self._locate_top_block
@@ -79,10 +79,10 @@ class StackController():
             return self._locate_top_block
        
         while True:
-            time.sleep(1)
+            time.sleep(0.2)
             block_pos = self.vp.get_block_pos(self.top_block)
             if not self._is_xy_aligned(block_pos):
-                self._align_xy(block_pos)
+                self._align_xy(self.top_block)
                 block_pos = self.vp.get_block_pos(self.top_block)
 
             if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
@@ -115,7 +115,12 @@ class StackController():
 
         self.cobot.stop_moving()
         
-        return None
+        while True:
+            try:
+                self._align_xy(self.bottom_block) 
+            except LostBlockError as e:
+                print("Warning: ", e)
+                return self._locate_bottom_block
 
     def _stack_top_block(self):
         return None
@@ -129,11 +134,12 @@ class StackController():
             self.cobot.rotate_eef(rotation)
         print(f"Block orientation: {rotation}")
 
-    def _align_xy(self, block_pos):
+    def _align_xy(self, target_block: Block):
         lost_count = 0
+        block_pos = self.vp.get_block_xy_distance(target_block)
         while not self._is_xy_aligned(current_xy = block_pos):
             time.sleep(0.1)
-            new_block_pos = self.vp.get_block_xy_distance(self.top_block)
+            new_block_pos = self.vp.get_block_xy_distance(target_block)
             if new_block_pos is not None:
                 block_pos = new_block_pos
                 self.correct_xy_position(block_pos[0], -block_pos[1])

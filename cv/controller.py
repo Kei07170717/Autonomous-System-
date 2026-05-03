@@ -11,7 +11,7 @@ import itertools
 
 _OVERVIEW_HEIGHT = 200
 _GRABBING_HEIGHT = 135
-_STACKING_HEIGHT = 180
+_STACKING_HEIGHT = 175
 _STACKED_BLOCK_THRESHOLD = 11
 _LOST_BLOCK_THRESHOLD = 5
 
@@ -94,6 +94,7 @@ class StackController():
                 block_pos = self.vp.get_block_pos(self.top_block)
 
             if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
+                self._align_xy(self.top_block, threshold=1)
                 self.cobot.close_gripper()
                 return self._locate_bottom_block
                 
@@ -112,6 +113,7 @@ class StackController():
         self.vp.set_x_offset(_BOTTOM_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
         self.cobot.set_z(self.operating_height, 100)
+        time.sleep(0.5)
         self.cobot.wait_for_navigation_completion()
 
         block_pos = self.vp.get_block_pos(self.bottom_block)
@@ -161,6 +163,7 @@ class StackController():
                 block_pos = self.vp.get_block_pos(self.bottom_block)
 
             if abs(_STACKING_HEIGHT - self.operating_height) <= 3:
+                self._align_xy(self.bottom_block, threshold=1)
                 self.vp.set_x_offset(-300)
                 block_pos = self._get_block_delta_pos_or_panic(self.bottom_block)
                 print(f"FINAL BLOCK POS: {block_pos}")
@@ -198,7 +201,7 @@ class StackController():
             self.cobot.rotate_eef(rotation)
         print(f"Block orientation: {rotation}")
 
-    def _align_xy(self, target_block: Block):
+    def _align_xy(self, target_block: Block, threshold: float=3):
         lost_count = 0
         block_pos = self.vp.get_block_xy_distance(target_block)
         while block_pos is None:
@@ -209,12 +212,12 @@ class StackController():
 
 
         lost_count = 0
-        while not self._is_xy_aligned(current_xy = block_pos):
+        while not self._is_xy_aligned(current_xy = block_pos, threshold=threshold):
             time.sleep(0.1)
             new_block_pos = self.vp.get_block_xy_distance(target_block)
             if new_block_pos is not None:
                 block_pos = new_block_pos
-                self.correct_xy_position(block_pos[0], -block_pos[1])
+                self.correct_xy_position(block_pos[0], -block_pos[1], self.cobot.get_relative_z_rotation())
                 lost_count = 0
             else:
                 lost_count += 1
@@ -229,7 +232,7 @@ class StackController():
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
 
     @stable_bool(threshold=1)
-    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=2.5) -> bool:
+    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=3) -> bool:
 
         aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold
         # print(f"Tar: {aligned}")

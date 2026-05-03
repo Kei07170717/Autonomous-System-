@@ -13,6 +13,8 @@ _OVERVIEW_HEIGHT = 200
 _STACKED_BLOCK_THRESHOLD = 10
 _LOST_BLOCK_THRESHOLD = 5
 
+_GRABBING_HEIGHT = 140
+
 _EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND]
 _COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
 
@@ -63,7 +65,11 @@ class StackController():
 
 
     def _grab_top_block(self):
-        print("GRABBING")
+        print("Entered grab top block strat")
+        
+        self._match_rotation(self.top_block)
+        # if self._is_xy_aligned()
+        
         return None
     
     def _locate_bottom_block(self):
@@ -74,6 +80,12 @@ class StackController():
 
     def _explore_space(self):
         self.cobot.set_xyz(next(_COORD_ITERATOR))
+
+    def _match_rotation(self, block: Block):
+        rotation = self.vp.get_block_orientation(block)
+        if rotation is not None:
+            self.cobot.rotate_eef(rotation)
+        print(f"Block orientation: {rotation}")
 
     def _align_xy(self, block_pos):
         lost_count = 0

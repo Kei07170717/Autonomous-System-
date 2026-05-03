@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from typing import Tuple, Any, Optional
 
+
 class VisualPerceptor:
     def __init__(self, mm_per_pixel: float = 0.09, debug: bool = False) -> None:
         self._capture = cv2.VideoCapture(0)
@@ -11,6 +12,9 @@ class VisualPerceptor:
         # Reference origin: assuming the center of a 640x480 camera frame
         self.frame_center_x = 320 
         self.frame_center_y = 240
+    
+    def set_x_offset(self, x_offset: float):
+        self.frame_center_x = 320 + x_offset
 
     def _get_block_contour(self, block: Any) -> np.ndarray | None:
         ret, frame = self._capture.read()
@@ -49,37 +53,41 @@ class VisualPerceptor:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         # --- NEW FILTERING LOGIC ---
+        # --- ADJUSTED FILTERING LOGIC FOR OCCLUSION ---
         valid_contours = []
         for c in contours:
             area = cv2.contourArea(c)
             
-            # 1. Size Check
+            # 1. Size Check (remains the same)
             if not (500 < area < 25000): 
                 continue
 
-            # 2. Solidity Check (Is it a solid, convex shape?)
+            # 2. Relaxed Solidity Check
+            # When the gripper covers the block, it takes a "bite" out of it.
+            # We lower the required solidity from 0.85 to 0.65 to allow for this.
             hull = cv2.convexHull(c)
             hull_area = cv2.contourArea(hull)
             if hull_area == 0:
                 continue
             solidity = float(area) / hull_area
-            if solidity < 0.85: # A perfect square is 1.0. This rejects jagged shapes.
+            if solidity < 0.65: 
                 continue
             
-            # 3. Shape Check (Does it have ~4 corners?)
+            # 3. Relaxed Shape Check
+            # Occlusion creates extra geometric corners. 
+            # We bump the max allowed corners up to 8 (or you can remove this check entirely).
             peri = cv2.arcLength(c, True)
-            # The 0.04 multiplier is the approximation accuracy. 
-            # Tweak slightly if it rejects real blocks.
             approx = cv2.approxPolyDP(c, 0.04 * peri, True) 
-            if not (3 <= len(approx) <= 5): # Allow 3-5 corners to account for perspective/noise
+            if not (3 <= len(approx) <= 8): 
                 continue
 
+            # valid_contours.append(c)
             # 4. Aspect Ratio Check
-            x, y, w, h = cv2.boundingRect(c)
-            aspect_ratio = float(w) / h
-            # A perfect square is 1.0. This allows a little stretching from the camera angle.
-            if not (0.7 < aspect_ratio < 1.3): 
-                continue
+            # x, y, w, h = cv2.boundingRect(c)
+            # aspect_ratio = float(w) / h
+            # # A perfect square is 1.0. This allows a little stretching from the camera angle.
+            # if not (0.7 < aspect_ratio < 1.3): 
+            #     continue
 
             valid_contours.append(c)
         largest_contour = max(valid_contours, key=cv2.contourArea) if valid_contours else None

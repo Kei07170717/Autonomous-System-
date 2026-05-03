@@ -90,23 +90,25 @@ class Cobot:
         coords = self.mc.get_coords()
         return coords[2] if coords and len(coords) >= 3 else 0.0
 
-    def rotate_eef(self, angle: float, speed: int = 50) -> None:
-        print(f"Applying {angle} to current rotation {self.current_eef_angle}")
-        new_z_rotation = self.current_eef_angle + angle
-        success = self.mc.send_angle(6, new_z_rotation, speed)
+    def rotate_eef(self, angle: float, speed: int = 100) -> None:
+        print(f"Applying {angle} to current rotation {self.current_z_rotation}")
+        new_z_rotation = self.current_z_rotation - angle
+        success = self.mc.send_coord(6, new_z_rotation, speed)
         while success == -1:
             print("Rotation set failed")
-            success = self.mc.send_angle(6, new_z_rotation, speed)
-        self.current_eef_angle = new_z_rotation
+            success = self.mc.send_coord(6, new_z_rotation, speed)
+        # self.current_eef_angle = new_z_rotation
         self.wait_for_navigation_completion()
+        # time.sleep(1)
 
-        coords = self.mc.get_coords()
-        while coords == -1:
-            coords = self.mc.get_coords()
-        read_z_rotation = coords[5]
+        # coords = self.mc.get_coords()
+        # while coords == -1:
+        #     coords = self.mc.get_coords()
+        # read_z_rotation = coords[5]
 
-        print(f"Setting current_z_rotation ({self.current_z_rotation}) to {read_z_rotation}")
-        self.current_z_rotation = read_z_rotation
+        # print(f"Setting current_z_rotation ({self.current_z_rotation}) to {read_z_rotation}")
+        print(f"Setting current_z_rotation ({self.current_z_rotation}) to {new_z_rotation}")
+        self.current_z_rotation = new_z_rotation
 
 
     def stop_moving(self) -> None:

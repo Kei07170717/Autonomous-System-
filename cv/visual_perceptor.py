@@ -170,6 +170,7 @@ class VisualPerceptor:
             cv2.destroyAllWindows()
 
 def rotate_point(x, y, degrees):
+    degrees = 0
     # Convert degrees to radians
     radians = math.radians(degrees)
     

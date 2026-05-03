@@ -167,7 +167,7 @@ class Cobot:
         # while self.mc.is_gripper_moving() != 0: # Often gets stuck
         #     print("Waiting for gripper completion...")
         #     time.sleep(0.2)
-        time.sleep(1)
+        time.sleep(2)
 
-    def get_current_z_rotation(self) -> float:
-        return self.current_z_rotation
+    def get_relative_z_rotation(self) -> float:
+        return self.current_z_rotation + 45

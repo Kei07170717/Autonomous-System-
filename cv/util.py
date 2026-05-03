@@ -1,4 +1,5 @@
 import functools
+import math
 
 def smooth_tuple(alpha=0.2):
     def decorator(func):
@@ -49,3 +50,14 @@ def stable_bool(threshold=5):
         
         return wrapper # Must return the wrapper
     return decorator # Must return the decorator
+
+
+def rotate_point(x, y, degrees):
+    # Convert degrees to radians
+    radians = math.radians(degrees)
+    
+    # Calculate new coordinates
+    new_x = x * math.cos(radians) - y * math.sin(radians)
+    new_y = x * math.sin(radians) + y * math.cos(radians)
+    
+    return new_x, new_y

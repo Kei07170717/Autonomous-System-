@@ -4,7 +4,7 @@ from typing import Tuple
 from cv2 import threshold
 from block import Block
 from cobot import _RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND, Cobot
-from util import stable_bool
+from util import rotate_point, stable_bool
 from visual_perceptor import VisualPerceptor
 import time
 import itertools
@@ -21,7 +21,7 @@ _EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND
 _COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
 _TOP_BLOCK_ALIGNMENT_OFFSET = -100
 _BOTTOM_BLOCK_ALIGNMENT_OFFSET = 0
-_STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -50
+# _STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -50
 
 class LostBlockError(Exception):
     pass
@@ -133,7 +133,7 @@ class StackController():
 
     def _stack_top_block(self):
         print("Entered stack top block strat")
-        self.vp.set_x_offset(_STACK_TOP_BLOCK_ALIGNMENT_OFSSET)
+        self.vp.set_x_offset(_BOTTOM_BLOCK_ALIGNMENT_OFFSET)
         self._match_rotation(self.bottom_block)
         self._align_xy(self.bottom_block)
         
@@ -160,6 +160,13 @@ class StackController():
                 block_pos = self.vp.get_block_pos(self.bottom_block)
 
             if abs(_STACKING_HEIGHT - self.operating_height) <= 3:
+                self.vp.set_x_offset(-300)
+                block_pos = self._get_block_delta_pos_or_panic(self.bottom_block)
+                print(f"FINAL BLOCK POS: {block_pos}")
+                time.sleep(5)
+                self.correct_xy_position(block_pos[0], block_pos[1], self.cobot.get_relative_z_rotation())
+                time.sleep(3)
+                self.cobot.wait_for_navigation_completion()
                 self.cobot.open_gripper(100)
                 return self._locate_top_block
                 
@@ -174,7 +181,7 @@ class StackController():
     def _get_block_delta_pos_or_panic(self, block: Block, panic_threshold: int = 3):
         lost_count = 0
         while True:
-            block_pos = self.vp.get_block_xy_distance(block, self.cobot.get_current_z_rotation())
+            block_pos = self.vp.get_block_xy_distance(block, self.cobot.get_relative_z_rotation())
             if block_pos is not None:
                 return block_pos
             
@@ -229,8 +236,10 @@ class StackController():
         print(f"Aligned: {aligned}")
         return aligned
         
-    def correct_xy_position(self, delta_x: float, delta_y: float) -> None:
+    def correct_xy_position(self, delta_x: float, delta_y: float, rot_degree: float = 0) -> None:
         current_xy = self.cobot.get_xy()
+        if rot_degree != 0:
+            delta_x, delta_y = rotate_point(delta_x, delta_y, rot_degree)
         target_coords = [
             current_xy[0] + delta_x,
             current_xy[1] + delta_y

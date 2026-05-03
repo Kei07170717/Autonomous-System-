@@ -80,6 +80,7 @@ class Cobot:
 
     def open_gripper(self, speed: int = 50) -> None:
         self.mc.set_gripper_state(0, speed)
+        self.wait_for_gripper_movement_completion()
 
     def get_z(self) -> float:
         coords = self.mc.get_coords()
@@ -156,6 +157,7 @@ class Cobot:
 
 
     def wait_for_gripper_movement_completion(self):
-        while self.mc.is_gripper_moving() != 0:
-            print("Waiting for gripper completion...")
-            time.sleep(0.2)
+        # while self.mc.is_gripper_moving() != 0: # Often gets stuck
+        #     print("Waiting for gripper completion...")
+        #     time.sleep(0.2)
+        time.sleep(1)

@@ -10,15 +10,19 @@ import time
 import itertools
 
 _OVERVIEW_HEIGHT = 200
+_GRABBING_HEIGHT = 140
+_STACKING_HEIGHT = 180
 _STACKED_BLOCK_THRESHOLD = 11
 _LOST_BLOCK_THRESHOLD = 5
 
-_GRABBING_HEIGHT = 140
 _DESCEND_RATE = 5
 
 _EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND]
 _COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
-_OFFSET = -100
+_TOP_BLOCK_ALIGNMENT_OFFSET = -100
+_BOTTOM_BLOCK_ALIGNMENT_OFFSET = 0
+_STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -50
+
 class LostBlockError(Exception):
     pass
 
@@ -32,7 +36,7 @@ class StackController():
         self.top_block: Block = blue_block
         self.bottom_block: Block = red_block
         self.operating_height = _OVERVIEW_HEIGHT
-        self.vp.set_x_offset(_OFFSET)
+        self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
 
     def start(self):
         strat = self._locate_top_block
@@ -41,6 +45,7 @@ class StackController():
 
     def _locate_top_block(self):
         print("Entered locate top block strat")
+        self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
         self.cobot.open_gripper()
 
@@ -70,6 +75,7 @@ class StackController():
 
     def _grab_top_block(self):
         print("Entered grab top block strat")
+        self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
          
         self._match_rotation(self.top_block)
         
@@ -101,6 +107,7 @@ class StackController():
     
     def _locate_bottom_block(self):
         print("Entered locate bottom block strat")
+        self.vp.set_x_offset(_BOTTOM_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
         self.cobot.set_z(self.operating_height, 100)
         self.cobot.wait_for_navigation_completion()
@@ -115,14 +122,36 @@ class StackController():
 
         self.cobot.stop_moving()
         
-        while True:
-            try:
-                self._align_xy(self.bottom_block) 
-            except LostBlockError as e:
-                print("Warning: ", e)
-                return self._locate_bottom_block
+        try:
+            self._align_xy(self.bottom_block) 
+        except LostBlockError as e:
+            print("Warning: ", e)
+            return self._locate_bottom_block
+
+        return self._stack_top_block
 
     def _stack_top_block(self):
+        print("Entered stack top block strat")
+        self.vp.set_x_offset(_STACK_TOP_BLOCK_ALIGNMENT_OFSSET)
+        self._match_rotation(self.bottom_block)
+        self._align_xy(self.bottom_block)
+        
+        while True:
+            block_pos = self.vp.get_block_pos(self.bottom_block)
+            if not self._is_xy_aligned(block_pos):
+                self._align_xy(self.bottom_block)
+                block_pos = self.vp.get_block_pos(self.bottom_block)
+
+            if abs(_STACKING_HEIGHT - self.operating_height) <= 3:
+                self.cobot.close_gripper(100)
+                return self._locate_top_block
+                
+            self.cobot.descend(_DESCEND_RATE, 1)
+            while self.cobot.is_moving():
+                time.sleep(0.1)
+            self.operating_height -= _DESCEND_RATE
+            time.sleep(0.2)
+        self.cobot.open_gripper(100)
         return None
 
     def _explore_space(self):
@@ -137,6 +166,14 @@ class StackController():
     def _align_xy(self, target_block: Block):
         lost_count = 0
         block_pos = self.vp.get_block_xy_distance(target_block)
+        while block_pos is None:
+            block_pos = self.vp.get_block_xy_distance(target_block)
+            lost_count += 1
+            if lost_count >= _LOST_BLOCK_THRESHOLD:
+                raise LostBlockError("Lost block while aligning")
+
+
+        lost_count = 0
         while not self._is_xy_aligned(current_xy = block_pos):
             time.sleep(0.1)
             new_block_pos = self.vp.get_block_xy_distance(target_block)

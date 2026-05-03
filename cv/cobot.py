@@ -67,13 +67,16 @@ class Cobot:
 
 
     # def ascend(self, z_step: float = 20.0, speed: int = 50) -> None:
-    #     coords = self.mc.get_coords()
-    #     if coords:
-    #         coords[2] += z_step
-    #         self.mc.send_coords(coords, speed, 1)
+    #     new_z = max(self.current_z + z_step, _MIN_Z)
+    #     success = self.mc.send_coord(3, new_z, speed)
+    #     while success == -1:
+    #         success = self.mc.send_coord(3, new_z, speed)
+    #
+    #     self.current_z = new_z
 
-    def close_gripper(self, speed: int = 50) -> None:
+    def close_gripper(self, speed: int = 100) -> None:
         self.mc.set_gripper_state(1, speed)
+        self.wait_for_gripper_movement_completion()
 
     def open_gripper(self, speed: int = 50) -> None:
         self.mc.set_gripper_state(0, speed)
@@ -90,8 +93,7 @@ class Cobot:
             print("Rotation set failed")
             success = self.mc.send_angle(6, new_z_rotation, speed)
         self.current_eef_angle = new_z_rotation
-        while self.is_moving():
-            time.sleep(0.1)
+        self.wait_for_navigation_completion()
 
         coords = self.mc.get_coords()
         while coords == -1:
@@ -123,14 +125,34 @@ class Cobot:
     #     while success == -1:
     #         success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
     
-    def set_xyz(self, xyz):
+    def set_xyz(self, xyz, speed: int = 30):
         clamped_x = max(_MIN_X, min(xyz[0], _MAX_X))
         clamped_y = max(_MIN_Y, min(xyz[1], _MAX_Y))
         clamped_z = max(_MIN_Z, min(xyz[2], _MAX_Z))
 
         # Use the clamped values for the movement command
-        success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], 1, 1)
+        success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], speed, 1)
         
         while success == -1:
-            success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], 1, 1)
+            success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], speed, 1)
+    
+    def set_z(self, z: float, speed: int = 50):
+        clamped_z = max(_MIN_Z, min(z, _MAX_Z))
 
+        # Use the clamped values for the movement command
+        success = self.mc.send_coord(3, clamped_z, speed)
+        
+        while success == -1:
+            success = self.mc.send_coord(3, clamped_z, speed)
+
+        self.current_z = clamped_z
+
+
+    def wait_for_navigation_completion(self):
+        while self.is_moving():
+            time.sleep(0.1)
+
+
+    def wait_for_gripper_movement_completion(self):
+        while self.mc.is_gripper_moving() != 0:
+            time.sleep(0.2)

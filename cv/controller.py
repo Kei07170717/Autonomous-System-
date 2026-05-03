@@ -40,6 +40,7 @@ class StackController():
             strat = strat()
 
     def _locate_top_block(self):
+        print("Entered locate top block strat")
         self.operating_height = _OVERVIEW_HEIGHT
         self.cobot.open_gripper()
 
@@ -99,13 +100,28 @@ class StackController():
         return None
     
     def _locate_bottom_block(self):
+        print("Entered locate bottom block strat")
+        self.operating_height = _OVERVIEW_HEIGHT
+        self.cobot.set_z(self.operating_height, 100)
+        self.cobot.wait_for_navigation_completion()
+
+        block_pos = self.vp.get_block_pos(self.bottom_block)
+        
+
+        while block_pos is None:
+            if not self.cobot.is_moving():
+                self._explore_space()
+            block_pos = self.vp.get_block_pos(self.bottom_block)
+
+        self.cobot.stop_moving()
+        
         return None
 
     def _stack_top_block(self):
         return None
 
     def _explore_space(self):
-        self.cobot.set_xyz(next(_COORD_ITERATOR))
+        self.cobot.set_xyz(next(_COORD_ITERATOR), speed=50)
 
     def _match_rotation(self, block: Block):
         rotation = self.vp.get_block_orientation(block)
@@ -134,7 +150,7 @@ class StackController():
     # def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float], threshold: float=10) -> bool:
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
 
-    @stable_bool(threshold=5)
+    @stable_bool(threshold=1)
     def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=3) -> bool:
 
         aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold

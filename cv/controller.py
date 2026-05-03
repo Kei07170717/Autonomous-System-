@@ -10,7 +10,7 @@ import time
 import itertools
 
 _OVERVIEW_HEIGHT = 200
-_GRABBING_HEIGHT = 140
+_GRABBING_HEIGHT = 135
 _STACKING_HEIGHT = 180
 _STACKED_BLOCK_THRESHOLD = 11
 _LOST_BLOCK_THRESHOLD = 5
@@ -229,7 +229,7 @@ class StackController():
     #     return (target_xy[0] - current_xy[0]) < threshold and  (target_xy[1] - current_xy[1]) < threshold
 
     @stable_bool(threshold=1)
-    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=3) -> bool:
+    def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float] = (0, 0), threshold: float=2.5) -> bool:
 
         aligned = abs(target_xy[0] - current_xy[0]) < threshold and abs(target_xy[1] - current_xy[1]) < threshold
         # print(f"Tar: {aligned}")

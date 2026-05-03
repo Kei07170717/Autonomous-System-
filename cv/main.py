@@ -7,7 +7,7 @@ from visual_perceptor import VisualPerceptor
 def main():
     print('Starting...')
     cobot: Cobot = Cobot()
-    visual_perceptor: VisualPerceptor = VisualPerceptor(debug=True)
+    visual_perceptor: VisualPerceptor = VisualPerceptor(mm_per_pixel=0.09, debug=True)
     controller: StackController = StackController(cobot, visual_perceptor) 
 
     controller.start()

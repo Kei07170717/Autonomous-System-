@@ -47,7 +47,8 @@ class StackController():
         print("Entered locate top block strat")
         self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
-        self.cobot.reset_pos()
+        self.cobot.set_z(self.operating_height)
+        # self.cobot.reset_pos()
         self.cobot.open_gripper()
 
         block_pos = self.vp.get_block_pos(self.top_block)
@@ -163,9 +164,9 @@ class StackController():
                 self.vp.set_x_offset(-300)
                 block_pos = self._get_block_delta_pos_or_panic(self.bottom_block)
                 print(f"FINAL BLOCK POS: {block_pos}")
-                time.sleep(5)
+                time.sleep(1)
                 self.correct_xy_position(block_pos[0], block_pos[1], self.cobot.get_relative_z_rotation())
-                time.sleep(3)
+                time.sleep(1)
                 self.cobot.wait_for_navigation_completion()
                 self.cobot.open_gripper(100)
                 return self._locate_top_block
@@ -175,7 +176,6 @@ class StackController():
                 time.sleep(0.1)
             self.operating_height -= _DESCEND_RATE
             time.sleep(0.2)
-        self.cobot.open_gripper(100)
         return None
 
     def _get_block_delta_pos_or_panic(self, block: Block, panic_threshold: int = 3):

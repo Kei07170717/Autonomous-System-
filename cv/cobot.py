@@ -75,11 +75,15 @@ class Cobot:
     #     self.current_z = new_z
 
     def close_gripper(self, speed: int = 100) -> None:
-        self.mc.set_gripper_state(1, speed)
+        success = self.mc.set_gripper_state(1, speed)
+        while success == -1:
+            success = self.mc.set_gripper_state(1, speed)
         self.wait_for_gripper_movement_completion()
 
     def open_gripper(self, speed: int = 50) -> None:
-        self.mc.set_gripper_state(0, speed)
+        success =self.mc.set_gripper_state(0, speed)
+        while success == -1:
+            success =self.mc.set_gripper_state(0, speed)
         self.wait_for_gripper_movement_completion()
 
     def get_z(self) -> float:

@@ -47,6 +47,7 @@ class StackController():
         print("Entered locate top block strat")
         self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
+        self.cobot.reset_pos()
         self.cobot.open_gripper()
 
         block_pos = self.vp.get_block_pos(self.top_block)
@@ -62,7 +63,7 @@ class StackController():
         try:
             self._align_xy(self.top_block) 
         except LostBlockError as e:
-            print(e)
+            print("Lost block while locating top block")
             return self._locate_top_block
         
         if self._is_block_stacked(): 
@@ -136,14 +137,30 @@ class StackController():
         self._match_rotation(self.bottom_block)
         self._align_xy(self.bottom_block)
         
+        recovery_attempts_allowed = 2
+        recovery_count = 0
         while True:
-            block_pos = self.vp.get_block_pos(self.bottom_block)
+            try:
+                block_pos = self._get_block_pos_or_panic(self.bottom_block)
+            except LostBlockError as e:
+                print("Lost block while aliging for stacking")
+                # if recovery_count == recovery_attempts_allowed:
+                return self._locate_bottom_block
+                # else:
+                #     recovery_count += 1
+                    # ???
+
+                
             if not self._is_xy_aligned(block_pos):
-                self._align_xy(self.bottom_block)
+                try:
+                    self._align_xy(self.bottom_block) 
+                except LostBlockError as e:
+                    print("Warning: ", e)
+                    return self._locate_bottom_block
                 block_pos = self.vp.get_block_pos(self.bottom_block)
 
             if abs(_STACKING_HEIGHT - self.operating_height) <= 3:
-                self.cobot.close_gripper(100)
+                self.cobot.open_gripper(100)
                 return self._locate_top_block
                 
             self.cobot.descend(_DESCEND_RATE, 1)
@@ -153,6 +170,17 @@ class StackController():
             time.sleep(0.2)
         self.cobot.open_gripper(100)
         return None
+
+    def _get_block_pos_or_panic(self, block: Block, panic_threshold: int = 3):
+        lost_count = 0
+        while True:
+            block_pos = self.vp.get_block_xy_distance(block)
+            if block_pos is not None:
+                return block_pos
+            
+            lost_count += 1
+            if lost_count >= panic_threshold:
+                raise LostBlockError("Lost block")
 
     def _explore_space(self):
         self.cobot.set_xyz(next(_COORD_ITERATOR), speed=50)

@@ -3,13 +3,22 @@ from typing import Tuple
 
 from cv2 import threshold
 from block import Block
-from cobot import Cobot
+from cobot import _RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND, Cobot
 from util import stable_bool
 from visual_perceptor import VisualPerceptor
 import time
+import itertools
 
 _OVERVIEW_HEIGHT = 200
 _STACKED_BLOCK_THRESHOLD = 10
+_LOST_BLOCK_THRESHOLD = 5
+
+_EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND]
+_COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
+
+class LostBlockError(Exception):
+    pass
+
 class StackController():
     
     def __init__(self, cobot: Cobot, visual_perceptor: VisualPerceptor) -> None:
@@ -34,12 +43,17 @@ class StackController():
         
 
         while block_pos is None:
-            self._explore_space()
+            if not self.cobot.is_moving():
+                self._explore_space()
             block_pos = self.vp.get_block_pos(self.top_block)
 
         self.cobot.stop_moving()
 
-        self._align_xy(block_pos) 
+        try:
+            self._align_xy(block_pos) 
+        except LostBlockError as e:
+            print(e)
+            return self._locate_top_block
         
         if self._is_block_stacked(): 
             return self._locate_top_block
@@ -59,14 +73,24 @@ class StackController():
         return None
 
     def _explore_space(self):
-        pass
+        self.cobot.set_xyz(next(_COORD_ITERATOR))
 
     def _align_xy(self, block_pos):
+        lost_count = 0
         while not self._is_xy_aligned(current_xy = block_pos):
             time.sleep(0.3)
             new_block_pos = self.vp.get_block_xy_distance(self.top_block)
-            block_pos = new_block_pos if new_block_pos is not None else block_pos
-            self.correct_xy_position(block_pos[0], -block_pos[1])
+            if new_block_pos is not None:
+                block_pos = new_block_pos
+                self.correct_xy_position(block_pos[0], -block_pos[1])
+                lost_count = 0
+            else:
+                lost_count += 1
+                print(f"Lost block count: {lost_count}")
+                if lost_count >= _LOST_BLOCK_THRESHOLD:
+                    raise LostBlockError("Lost block while aligning")
+                
+            
             print(f"Block pos: {block_pos}")
 
     # def _is_xy_aligned(self, current_xy: Tuple[float, float], target_xy: Tuple[float, float], threshold: float=10) -> bool:

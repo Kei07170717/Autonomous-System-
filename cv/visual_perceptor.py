@@ -52,11 +52,36 @@ class VisualPerceptor:
         valid_contours = []
         for c in contours:
             area = cv2.contourArea(c)
-            # Ignore tiny noise (< 500) AND massive backgrounds (> 25000)
-            # You may need to tweak 25000 based on your camera's resolution and the block's size
-            if 500 < area < 25000: 
-                valid_contours.append(c)
+            
+            # 1. Size Check
+            if not (500 < area < 25000): 
+                continue
 
+            # 2. Solidity Check (Is it a solid, convex shape?)
+            hull = cv2.convexHull(c)
+            hull_area = cv2.contourArea(hull)
+            if hull_area == 0:
+                continue
+            solidity = float(area) / hull_area
+            if solidity < 0.85: # A perfect square is 1.0. This rejects jagged shapes.
+                continue
+            
+            # 3. Shape Check (Does it have ~4 corners?)
+            peri = cv2.arcLength(c, True)
+            # The 0.04 multiplier is the approximation accuracy. 
+            # Tweak slightly if it rejects real blocks.
+            approx = cv2.approxPolyDP(c, 0.04 * peri, True) 
+            if not (3 <= len(approx) <= 5): # Allow 3-5 corners to account for perspective/noise
+                continue
+
+            # 4. Aspect Ratio Check
+            x, y, w, h = cv2.boundingRect(c)
+            aspect_ratio = float(w) / h
+            # A perfect square is 1.0. This allows a little stretching from the camera angle.
+            if not (0.7 < aspect_ratio < 1.3): 
+                continue
+
+            valid_contours.append(c)
         largest_contour = max(valid_contours, key=cv2.contourArea) if valid_contours else None
 
         if self.debug:

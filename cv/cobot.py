@@ -7,6 +7,8 @@ _RIGHT_OUTER_BOUND = [200.0, -140.0, 200.0, 180, 0, -45]
 _RIGHT_INNER_BOUND = [80.0, -140.0, 200.0, 180, 0, -45]
 _LEFT_INNER_BOUND = [80.0, 140.0, 200.0, 180, 0, -45]
 _LEFT_OUTER_BOUND = [200.0, 140.0, 200.0, 180, 0, -45]
+_MIN_X, _MAX_X = 80.0, 200.0
+_MIN_Y, _MAX_Y = -140.0, 140.0
 class Cobot:
     def __init__(self) -> None:
         self.mc = MyCobot280(PI_PORT, str(PI_BAUD))
@@ -80,9 +82,24 @@ class Cobot:
         return xy
 
 
+    # def set_xyz(self, xyz):
+    #     success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
+    #     while success == -1:
+    #         success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
+    
     def set_xyz(self, xyz):
-        success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
-        while success == -1:
-            success = self.mc.send_coords([xyz[0], xyz[1], xyz[2], 0, 0, 0], 1, 1)
+        # Clamp X: ensure it's at least MIN_X and at most MAX_X
+        clamped_x = max(_MIN_X, min(xyz[0], _MAX_X))
+        
+        # Clamp Y: ensure it's at least MIN_Y and at most MAX_Y
+        clamped_y = max(_MIN_Y, min(xyz[1], _MAX_Y))
+        
+        # Z remains the same (unless you have Z bounds too)
+        clamped_z = xyz[2]
 
+        # Use the clamped values for the movement command
+        success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], 1, 1)
+        
+        while success == -1:
+            success = self.mc.send_coords([clamped_x, clamped_y, clamped_z, 0, 0, 0], 1, 1)
 

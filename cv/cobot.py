@@ -73,10 +73,11 @@ class Cobot:
         return coords[2] if coords and len(coords) >= 3 else 0.0
 
     def rotate_eef(self, angle: float, speed: int = 50) -> None:
-        success = self.mc.send_angle(6, angle, speed)
+        new_z_rotation = self.current_z_rotation + angle
+        success = self.mc.send_angle(6, new_z_rotation, speed)
         while success == -1:
-            success = self.mc.send_angle(6, angle, speed)
-        self.current_z_rotation = angle
+            success = self.mc.send_angle(6, new_z_rotation, speed)
+        self.current_z_rotation = new_z_rotation
 
 
     def stop_moving(self) -> None:

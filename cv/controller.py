@@ -70,8 +70,8 @@ class StackController():
     def _grab_top_block(self):
         print("Entered grab top block strat")
          
-        # self._match_rotation(self.top_block)
-        return
+        self._match_rotation(self.top_block)
+        
         block_pos = self.vp.get_block_pos(self.top_block)
         
         if block_pos is None:

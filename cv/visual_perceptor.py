@@ -129,10 +129,16 @@ class VisualPerceptor:
         rect = cv2.minAreaRect(contour)
         angle = rect[2]
         width, height = rect[1]
-        
-        if width < height:
-            angle += 90.0
-            
+
+        # 1. Normalize the angle to be within [0, 90)
+        # OpenCV's minAreaRect angle behavior can vary by version, 
+        # but modulo 90 consistently handles the 'square' symmetry.
+        angle = angle % 90
+
+        # 2. Shift the range from [0, 90] to [-45, 45]
+        if angle > 45:
+            angle -= 90
+
         return angle
 
     def get_block_length(self, block: Any) -> float | None:

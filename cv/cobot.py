@@ -13,6 +13,7 @@ _MIN_Z, _MAX_Z = 140.0, 200.0
 class Cobot:
     def __init__(self) -> None:
         self.mc = MyCobot280(PI_PORT, str(PI_BAUD))
+        self.current_eef_angle = -45
         self.current_z_rotation = -45
         self.current_z = 200.0
         self.reset_pos()
@@ -25,14 +26,18 @@ class Cobot:
             if coords and len(coords) >= 3:
                 # Extract x, y, z from whatever was passed in
                 x, y, z = coords[0], coords[1], coords[2]
+               
                 
+                print(f"SELF Z ROTATION: {self.current_z_rotation}")
                 # Append your static rx, ry, rz values
                 static_coords = [x, y, self.current_z, -180, 0, self.current_z_rotation]
+                # print(f"SELF Z ROTATION: {self.current_z_rotation}")
                 
                 # Pass the modified coordinates to the original method
                 self._original_send_coords(static_coords, speed, mode)
             else:
                 # Fallback just in case malformed data is passed
+                print("Patch ignored")
                 self._original_send_coords(coords, speed, mode)
                 
         # 3. Replace the library's method with your patched version
@@ -40,8 +45,8 @@ class Cobot:
 
     def reset_pos(self) -> None:
 
-        self.current_z_rotation = -45
-        self.mc.send_coords([110, -63, 205, -180, 0, self.current_z_rotation], 5, 1)
+        self.current_eef_angle = -45
+        self.mc.send_coords([110, -63, 205, -180, 0, self.current_eef_angle], 5, 1)
         time.sleep(2)
 
     def set_color(self, r: int, g: int, b: int) -> None:
@@ -73,11 +78,23 @@ class Cobot:
         return coords[2] if coords and len(coords) >= 3 else 0.0
 
     def rotate_eef(self, angle: float, speed: int = 50) -> None:
-        new_z_rotation = self.current_z_rotation + angle
+        print(f"Applying {angle} to current rotation {self.current_eef_angle}")
+        new_z_rotation = self.current_eef_angle + angle
         success = self.mc.send_angle(6, new_z_rotation, speed)
         while success == -1:
+            print("Rotation set failed")
             success = self.mc.send_angle(6, new_z_rotation, speed)
-        self.current_z_rotation = new_z_rotation
+        self.current_eef_angle = new_z_rotation
+        while self.is_moving():
+            time.sleep(0.1)
+
+        coords = self.mc.get_coords()
+        while coords == -1:
+            coords = self.mc.get_coords()
+        read_z_rotation = coords[5]
+
+        print(f"Setting current_z_rotation ({self.current_z_rotation}) to {read_z_rotation}")
+        self.current_z_rotation = read_z_rotation
 
 
     def stop_moving(self) -> None:

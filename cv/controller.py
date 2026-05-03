@@ -78,7 +78,7 @@ class StackController():
             return self._locate_top_block
        
         while True:
-
+            time.sleep(1)
             block_pos = self.vp.get_block_pos(self.top_block)
             if not self._is_xy_aligned(block_pos):
                 self._align_xy(block_pos)
@@ -89,8 +89,10 @@ class StackController():
                 return self._locate_bottom_block
                 
             self.cobot.descend(_DESCEND_RATE, 1)
+            while self.cobot.is_moving():
+                time.sleep(0.1)
             self.operating_height -= _DESCEND_RATE
-            break
+            # break
 
 
         
@@ -114,7 +116,7 @@ class StackController():
     def _align_xy(self, block_pos):
         lost_count = 0
         while not self._is_xy_aligned(current_xy = block_pos):
-            time.sleep(0.3)
+            time.sleep(1)
             new_block_pos = self.vp.get_block_xy_distance(self.top_block)
             if new_block_pos is not None:
                 block_pos = new_block_pos

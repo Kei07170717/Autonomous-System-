@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from typing import Tuple, Any, Optional
 
+
 class VisualPerceptor:
     def __init__(self, mm_per_pixel: float = 0.09, debug: bool = False) -> None:
         self._capture = cv2.VideoCapture(0)
@@ -11,6 +12,9 @@ class VisualPerceptor:
         # Reference origin: assuming the center of a 640x480 camera frame
         self.frame_center_x = 320 
         self.frame_center_y = 240
+    
+    def set_x_offset(self, x_offset: float):
+        self.frame_center_x = 320 + x_offset
 
     def _get_block_contour(self, block: Any) -> np.ndarray | None:
         ret, frame = self._capture.read()

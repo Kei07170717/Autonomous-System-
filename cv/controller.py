@@ -10,14 +10,15 @@ import time
 import itertools
 
 _OVERVIEW_HEIGHT = 200
-_STACKED_BLOCK_THRESHOLD = 10
+_STACKED_BLOCK_THRESHOLD = 11
 _LOST_BLOCK_THRESHOLD = 5
 
 _GRABBING_HEIGHT = 140
+_DESCEND_RATE = 5
 
 _EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND, _LEFT_INNER_BOUND]
 _COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
-
+_OFFSET = -100
 class LostBlockError(Exception):
     pass
 
@@ -31,6 +32,7 @@ class StackController():
         self.top_block: Block = red_block
         self.bottom_block: Block = blue_block
         self.operating_height = _OVERVIEW_HEIGHT
+        self.vp.set_x_offset(_OFFSET)
 
     def start(self):
         strat = self._locate_top_block
@@ -58,6 +60,7 @@ class StackController():
             return self._locate_top_block
         
         if self._is_block_stacked(): 
+            print("Blocks are already stacked...")
             return self._locate_top_block
         else:
             return self._grab_top_block
@@ -66,9 +69,30 @@ class StackController():
 
     def _grab_top_block(self):
         print("Entered grab top block strat")
+         
+        # self._match_rotation(self.top_block)
+        return
+        block_pos = self.vp.get_block_pos(self.top_block)
         
-        self._match_rotation(self.top_block)
-        # if self._is_xy_aligned()
+        if block_pos is None:
+            return self._locate_top_block
+       
+        while True:
+
+            block_pos = self.vp.get_block_pos(self.top_block)
+            if not self._is_xy_aligned(block_pos):
+                self._align_xy(block_pos)
+                block_pos = self.vp.get_block_pos(self.top_block)
+
+            if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
+                self.cobot.close_gripper()
+                return self._locate_bottom_block
+                
+            self.cobot.descend(_DESCEND_RATE, 1)
+            self.operating_height -= _DESCEND_RATE
+            break
+
+
         
         return None
     
@@ -127,13 +151,25 @@ class StackController():
         # print(f"Corrective coords: {coords}")
         self.cobot.set_xyz((target_coords[0], target_coords[1], self.operating_height))
 
-    @stable_bool(threshold=5)
-    def _is_block_stacked(self) -> bool:
-        length = self.vp.get_block_length(self.top_block)
-        if length is None:
-            return True
+    def _is_block_stacked(self, certainty_count: int = 3) -> bool:
+        is_stacked_count = 0 
 
-        if length > _STACKED_BLOCK_THRESHOLD:
-            return True
-        else:
-            return False
+        # is_stacked_list = []
+        for _ in range(certainty_count):
+            length = self.vp.get_block_length(self.top_block)
+            print(f"Length: {length}")
+            if length is None:
+                # return True
+                is_stacked_count += 1
+                continue
+
+            if length > _STACKED_BLOCK_THRESHOLD:
+                # return True
+                is_stacked_count += 1
+                continue
+            # else:
+                # return False
+                # is_stacked_count += 
+        is_stacked: bool = float(is_stacked_count) / float(certainty_count) > 0.5
+        return is_stacked
+

@@ -21,7 +21,7 @@ _EXPLORATION_COORDS = [_RIGHT_INNER_BOUND, _RIGHT_OUTER_BOUND, _LEFT_OUTER_BOUND
 _COORD_ITERATOR = itertools.cycle(_EXPLORATION_COORDS)
 _TOP_BLOCK_ALIGNMENT_OFFSET = -100
 _BOTTOM_BLOCK_ALIGNMENT_OFFSET = 0
-# _STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -50
+_STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -200
 
 class LostBlockError(Exception):
     pass
@@ -164,7 +164,7 @@ class StackController():
 
             if abs(_STACKING_HEIGHT - self.operating_height) <= 3:
                 self._align_xy(self.bottom_block, threshold=1)
-                self.vp.set_x_offset(-300)
+                self.vp.set_x_offset(_STACK_TOP_BLOCK_ALIGNMENT_OFSSET)
                 block_pos = self._get_block_delta_pos_or_panic(self.bottom_block)
                 print(f"FINAL BLOCK POS: {block_pos}")
                 time.sleep(1)

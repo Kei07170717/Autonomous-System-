@@ -2,6 +2,7 @@ from typing import Tuple
 from pymycobot.mycobot280 import MyCobot280
 from pymycobot import PI_PORT, PI_BAUD
 import time
+import math
 
 _RIGHT_OUTER_BOUND = [200.0, -140.0, 200.0, 180, 0, -45]
 _RIGHT_INNER_BOUND = [80.0, -140.0, 200.0, 180, 0, -45]
@@ -29,7 +30,7 @@ class Cobot:
                
                 
                 print(f"SELF Z ROTATION: {self.current_z_rotation}")
-                # Append your static rx, ry, rz values
+
                 static_coords = [x, y, self.current_z, -180, 0, self.current_z_rotation]
                 # print(f"SELF Z ROTATION: {self.current_z_rotation}")
                 
@@ -167,3 +168,6 @@ class Cobot:
         #     print("Waiting for gripper completion...")
         #     time.sleep(0.2)
         time.sleep(1)
+
+    def get_current_z_rotation(self) -> float:
+        return self.current_z_rotation

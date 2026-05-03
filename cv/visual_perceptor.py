@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from typing import Tuple, Any, Optional
+import math
 
 
 class VisualPerceptor:
@@ -145,7 +146,7 @@ class VisualPerceptor:
         pixel_length = max(width, height)
         return pixel_length * self.mm_per_pixel
 
-    def get_block_xy_distance(self, block: Any) -> Tuple[float, float] | None:
+    def get_block_xy_distance(self, block: Any, rotate_deg: float = 0) -> Tuple[float, float] | None:
         pos = self.get_block_pos(block)
         if pos is None:
             return None
@@ -154,10 +155,20 @@ class VisualPerceptor:
         dx = (cx - self.frame_center_x) * self.mm_per_pixel
         dy = (cy - self.frame_center_y) * self.mm_per_pixel
         
-        return dx, dy
+        return rotate_point(dx, dy, rotate_deg)
 
     def cleanup(self) -> None:
         """Closes the camera and any open debug windows."""
         self._capture.release()
         if self.debug:
             cv2.destroyAllWindows()
+
+def rotate_point(x, y, degrees):
+    # Convert degrees to radians
+    radians = math.radians(degrees)
+    
+    # Calculate new coordinates
+    new_x = x * math.cos(radians) - y * math.sin(radians)
+    new_y = x * math.sin(radians) + y * math.cos(radians)
+    
+    return new_x, new_y

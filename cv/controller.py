@@ -141,7 +141,7 @@ class StackController():
         recovery_count = 0
         while True:
             try:
-                block_pos = self._get_block_pos_or_panic(self.bottom_block)
+                block_pos = self._get_block_delta_pos_or_panic(self.bottom_block)
             except LostBlockError as e:
                 print("Lost block while aliging for stacking")
                 # if recovery_count == recovery_attempts_allowed:
@@ -171,10 +171,10 @@ class StackController():
         self.cobot.open_gripper(100)
         return None
 
-    def _get_block_pos_or_panic(self, block: Block, panic_threshold: int = 3):
+    def _get_block_delta_pos_or_panic(self, block: Block, panic_threshold: int = 3):
         lost_count = 0
         while True:
-            block_pos = self.vp.get_block_xy_distance(block)
+            block_pos = self.vp.get_block_xy_distance(block, self.cobot.get_current_z_rotation())
             if block_pos is not None:
                 return block_pos
             

@@ -9,8 +9,6 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
 from core.interfaces import IAnnotator
 
-
-
 class ANCConsoleUI(IAnnotator):
     def __init__(self, anc_controller: IANCController, set_annotator: bool=False) -> None:
         self.anc_controller: IANCController = anc_controller
@@ -39,7 +37,9 @@ class ANCConsoleUI(IAnnotator):
         self.annotation_complete_event = threading.Event()
         self.annotation_result = {}
         self.session = PromptSession()
-        # self.last_annotated_task_description: str = ""
+        
+        # --- NEW: Flag to track pending annotations across race conditions ---
+        self._annotation_pending = False
 
         self.cache_file = ".annotation_cache.json"
         self.annotation_fields = ["task", "location", "camera_pos", "distractors", "blue_pos", "block_proximity"]
@@ -64,7 +64,6 @@ class ANCConsoleUI(IAnnotator):
             except json.JSONDecodeError:
                 pass # Fallback to empty if file is corrupted
         
-        # Return empty strings for all defined fields if no cache exists
         return {field: "" for field in self.annotation_fields}
 
     def _save_cache(self, current_annotations: dict):
@@ -78,6 +77,12 @@ class ANCConsoleUI(IAnnotator):
         with patch_stdout():
             while True:
                 try:
+                    if self._annotation_pending:
+                        self._annotation_pending = False
+                        if self.anc_controller.get_annotator():
+                            await self._run_annotation_prompts()
+                        continue
+
                     self.prompt_task = asyncio.create_task(self.session.prompt_async("agent-env-core> "))
                     prompt_input = await self.prompt_task
                     
@@ -85,22 +90,26 @@ class ANCConsoleUI(IAnnotator):
                         continue
                         
                     prompt_input: str = prompt_input.strip().lower()
-                    if prompt_input.count(" ") == 0: # If no spaces, we assume argless
+                    if prompt_input.count(" ") == 0: 
                         command: ICommand | None = self.argless_command_mapping.get(prompt_input)
                         if command:
-                            command.execute()
+                            # --- FIXED: Special-case 'exit' to run synchronously and break the loop ---
+                            if prompt_input == "exit":
+                                command.execute()
+                                break 
+                            else:
+                                self.main_loop.run_in_executor(None, command.execute)
                         else:
                             self.help_command.execute()
                     elif prompt_input.count(" ") > 0:
                         if prompt_input.split(" ")[0] == "instruct":
                             instruction = prompt_input.split(" ", 1)[1]
-                            SetInstructionCommand(self.anc_controller, instruction).execute()
-
-
+                            cmd = SetInstructionCommand(self.anc_controller, instruction)
+                            self.main_loop.run_in_executor(None, cmd.execute)
                         
                 except asyncio.CancelledError:
-                    if self.anc_controller.get_annotator():
-                        # Triggers when main prompting is cancelled, assumes annotation is required... 
+                    if self._annotation_pending and self.anc_controller.get_annotator():
+                        self._annotation_pending = False
                         await self._run_annotation_prompts()
 
     async def _run_annotation_prompts(self):
@@ -116,22 +125,16 @@ class ANCConsoleUI(IAnnotator):
                     break
                 print("Error: Input must be 'y' or 'n'.")
 
-            # --- NEW: Dynamic prompting for all fields ---
             current_annotations = {}
             for i, field in enumerate(self.annotation_fields, start=2):
-                # Grab the cached value, default to empty string if not found
                 cached_val = self.cached_defaults.get(field, "")
-                
-                # Prompt the user. If they just press Enter, it uses the cached_val
                 prompt_str = f"{i}. {field.replace('_', ' ').capitalize()}: "
                 val = await self.session.prompt_async(prompt_str, default=cached_val)
                 current_annotations[field] = val.strip()
 
-            # --- NEW: Dynamic Summary ---
             print("\n--- Summary ---")
             print(f"is_valid    : {is_valid}")
             for field, val in current_annotations.items():
-                # Just formatting nicely to align the colons
                 print(f"{field:<11} : {val}")
 
             while True:
@@ -142,7 +145,6 @@ class ANCConsoleUI(IAnnotator):
                 print("Error: Input must be 'y' or 'n'.")
 
             if verify_input == 'y':
-                # --- NEW: Save to cache and prepare result ---
                 self.cached_defaults.update(current_annotations)
                 self._save_cache(self.cached_defaults)
                 
@@ -158,16 +160,20 @@ class ANCConsoleUI(IAnnotator):
     def get_annotation(self) -> dict:
         """Called by the background controller thread."""
         self.annotation_complete_event.clear()
+        
+        # --- NEW: Flag the main loop that we need it to run the prompt ---
+        self._annotation_pending = True 
         print("Annotate cleared") 
+        
         # Tell the main thread's event loop to cancel the waiting prompt task
-        if self.main_loop and self.prompt_task:
+        # --- FIXED: Only try to cancel if the task isn't already done processing a command ---
+        if self.main_loop and self.prompt_task and not self.prompt_task.done():
             self.main_loop.call_soon_threadsafe(self.prompt_task.cancel)
-            # print("Main loop prompot canceled") 
         
         # Block the background thread until main thread completes annotation
+        print("Waiting for annotation...") 
         self.annotation_complete_event.wait()
 
         print("Complete event wait") 
         
         return self.annotation_result
-

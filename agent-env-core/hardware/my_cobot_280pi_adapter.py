@@ -107,7 +107,12 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         
 
     def reset(self, randomize: bool=True):
-        self.mc.focus_all_servos()
+        # self.mc.focus_all_servos()
+        self.set_gripper_open()
+        success = self.mc.send_coord(3, 300, 50)
+        while success == _MC_ERROR:
+            success = self.mc.send_coord(3, 300, 50)
+        time.sleep(1)
         
         if randomize: 
             random_coords = generate_random_reset_coords()

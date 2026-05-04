@@ -40,7 +40,7 @@ class ResettingState(State):
             self.context.set_state(IdlingState(self.context))
             return
         else:
-            self.context.resettable.reset()
+            self.context.resettable.reset(randomize=False)
 
     def on_state_exit(self):
         pass

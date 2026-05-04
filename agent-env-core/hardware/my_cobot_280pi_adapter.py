@@ -103,7 +103,7 @@ class MyCobot280PiAdapter(IArmActuator, IJointAnglesSensor, IGripperActuator, IR
         return False if gripper_val > _GRIPPER_CLOSED_THRESHOLD  else True
     
     def is_reset(self) -> bool:
-        return np.allclose(np.array(self.get_joint_angles()), _RESET_ANGLES, atol=1)        
+        return np.allclose(np.array(self.get_joint_angles()), self.target_reset_angles, atol=2)        
         
 
     def reset(self, randomize: bool=True):
@@ -145,14 +145,14 @@ def generate_random_reset_coords():
     angle = random.uniform(-math.pi/2, math.pi/2)
     
     # Clamp to API limits
-    x = max(min(radius * math.cos(angle), 281.45), -281.45)
+    x = max(min(radius * math.cos(angle), 281.45), 100.45)
     y = max(min(radius * math.sin(angle), 281.45), -281.45)
     z = random.uniform(140.0, 220.0)
 
     # Orientation logic
     rx = normalize_angle(random.uniform(150.0, 210.0))
     ry = random.uniform(-40.0, 40.0)
-    rz = random.uniform(-180.0, 180.0)
+    rz = random.uniform(-90.0, 0)
     
     coords = [x, y, z, rx, ry, rz]
     return [round(val, 2) for val in coords]

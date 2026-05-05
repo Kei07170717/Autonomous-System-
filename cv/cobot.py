@@ -55,8 +55,8 @@ class Cobot:
 
         time.sleep(2)
 
-    def set_color(self, r: int, g: int, b: int) -> None:
-        self.mc.set_color(r, g, b)
+    def set_color(self, rgb_value: tuple) -> None:
+        self.mc.set_color(rgb_value[0], rgb_value[1], rgb_value[2])
 
     def descend(self, z_step: float = 5.0, speed: int = 50) -> None:
         new_z = max(self.current_z - z_step, _MIN_Z)

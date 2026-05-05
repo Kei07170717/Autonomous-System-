@@ -23,6 +23,10 @@ _TOP_BLOCK_ALIGNMENT_OFFSET = -100
 _BOTTOM_BLOCK_ALIGNMENT_OFFSET = 0
 _STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -200
 
+PURPLE = (160, 32, 240)
+GREEN = (0, 128, 0)
+WHITE = (255, 255, 255)
+
 class LostBlockError(Exception):
     pass
 
@@ -35,11 +39,28 @@ class StackController():
         red_block = Block(color=(0, 255, 255), classification_threshold=10.0)
         self.top_block: Block = blue_block
         self.bottom_block: Block = red_block
+        
         self.operating_height = _OVERVIEW_HEIGHT
         self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
+        
+    
+    def set_state_color(self, state,):
+        if state == "start" or state == "Found":
+            self.cobot.set_color(GREEN)
+        if state == self.bottom_block: # looking for bottom block
+            self.cobot.set_color(self.bottom_block.color)
+        if state == self.top_block:
+            self.cobot.set_color(self.top_block.color)
+        if state == "end" or state == "idle":
+            self.cobot.set_color(PURPLE)
+        if state == "failed":
+            self.cobot.set_color(WHITE)
+            
+            
 
     def start(self):
         strat = self._locate_top_block
+        self.set_state_color("start") #set color to green when starting
         while strat != None:
             strat = strat()
 
@@ -52,12 +73,13 @@ class StackController():
         self.cobot.open_gripper()
 
         block_pos = self.vp.get_block_pos(self.top_block)
-        
-
+        self.set_state_color(self.top_block)# set color to that of top block while looking for that color
         while block_pos is None:
             if not self.cobot.is_moving():
+
                 self._explore_space()
             block_pos = self.vp.get_block_pos(self.top_block)
+            
 
         self.cobot.stop_moving()
 
@@ -69,8 +91,10 @@ class StackController():
         
         if self._is_block_stacked(): 
             print("Blocks are already stacked...")
+            self.cobot.set_color("idle")
             return self._locate_top_block
         else:
+            self.set_state_color("found") #change the display to green
             return self._grab_top_block
 
 
@@ -94,11 +118,13 @@ class StackController():
                 block_pos = self.vp.get_block_pos(self.top_block)
 
             if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
+                
                 self._align_xy(self.top_block, threshold=1)
                 self.cobot.close_gripper()
                 return self._locate_bottom_block
                 
             self.cobot.descend(_DESCEND_RATE, 1)
+            
             while self.cobot.is_moving():
                 time.sleep(0.1)
             self.operating_height -= _DESCEND_RATE
@@ -110,6 +136,7 @@ class StackController():
     
     def _locate_bottom_block(self):
         print("Entered locate bottom block strat")
+        self.set_state_color(self.bottom_block) # Color of bottom block
         self.vp.set_x_offset(_BOTTOM_BLOCK_ALIGNMENT_OFFSET)
         self.operating_height = _OVERVIEW_HEIGHT
         self.cobot.set_z(self.operating_height, 100)
@@ -129,9 +156,10 @@ class StackController():
         try:
             self._align_xy(self.bottom_block) 
         except LostBlockError as e:
+            self.set_state_color("failed")
             print("Warning: ", e)
             return self._locate_bottom_block
-
+        self.set_state_color("found")
         return self._stack_top_block
 
     def _stack_top_block(self):
@@ -148,6 +176,7 @@ class StackController():
             except LostBlockError as e:
                 print("Lost block while aliging for stacking")
                 # if recovery_count == recovery_attempts_allowed:
+                self.set_state_color("failed")
                 return self._locate_bottom_block
                 # else:
                 #     recovery_count += 1
@@ -190,6 +219,7 @@ class StackController():
             
             lost_count += 1
             if lost_count >= panic_threshold:
+                self.set_state_color("failed")
                 raise LostBlockError("Lost block")
 
     def _explore_space(self):
@@ -208,6 +238,7 @@ class StackController():
             block_pos = self.vp.get_block_xy_distance(target_block)
             lost_count += 1
             if lost_count >= _LOST_BLOCK_THRESHOLD:
+                self.set_state_color("failed")
                 raise LostBlockError("Lost block while aligning")
 
 
@@ -223,6 +254,7 @@ class StackController():
                 lost_count += 1
                 print(f"Lost block count: {lost_count}")
                 if lost_count >= _LOST_BLOCK_THRESHOLD:
+                    self.set_state_color("failed")
                     raise LostBlockError("Lost block while aligning")
                 
             

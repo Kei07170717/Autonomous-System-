@@ -93,7 +93,7 @@ class StackController():
         
         if self._is_block_stacked(): 
             print("Blocks are already stacked...")
-            self.cobot.set_color("idle")
+            self.set_state_color("idle")
             return self._locate_top_block
         else:
             self.set_state_color("found") #change the display to green

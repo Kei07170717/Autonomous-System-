@@ -2,7 +2,10 @@ from core.types import Action
 from core.interfaces import Agent
 import math
 import numpy as np
-from collections import deque
+from collections import defaultdict, deque
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 from remote.interfaces import IRemoteActionProvider
 
@@ -76,28 +79,114 @@ class ReplayAgent(Agent):
         
 
 class MediatorAgent(Agent):
-    
-    def __init__(self, remote_action_provider: IRemoteActionProvider):
-        self.action_buffer: deque[dict] = deque()
-        self.remote_action_provider: IRemoteActionProvider = remote_action_provider
-        # self.starting_pos = None
+    def __init__(self, remote_action_provider: IRemoteActionProvider, use_virtual_target: bool = False):
+        self.remote_action_provider = remote_action_provider
+        self.use_virtual_target = use_virtual_target
+
+        # Temporal Ensembling State
+        self.current_step = 0
+        self.ensemble_buffer = defaultdict(list)
+        self.buffer_lock = threading.Lock()
+
+        # Async Fetching State
+        # Using a single worker ensures we don't spam the API with concurrent requests
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.fetch_future = None
+
+        # Virtual Target State
+        self.virtual_target_angles = None
 
     def get_action(self, obs: dict) -> dict:
+        # Initialize virtual target on the very first observation
+        if self.virtual_target_angles is None:
+            self.virtual_target_angles = obs["arm_angles"].copy()
 
-        # if self.starting_pos is None:
-        #     self.starting_pos = obs["arm_angles"]
+        # 1. Non-blocking Fetch: If no fetch is running, dispatch one in the background
+        if self.fetch_future is None or self.fetch_future.done():
+            # Pass a copy of obs and the *current* step so the background thread 
+            # knows exactly which timesteps this new chunk belongs to.
+            self.fetch_future = self.executor.submit(
+                self._fetch_actions_async, obs.copy(), self.current_step
+            )
 
-        if len(self.action_buffer) == 0:
-            self.action_buffer.extend(self.remote_action_provider.fetch_actions(obs)) # Blocking...
-        # current_pos_obs = obs
-        next_delta = self.action_buffer.popleft()
-        next_gripper_val = next_delta["gripper"] # TODO: arm_angles are detlas yet gripper is absolute
+        # 2. Retrieve ensembled action for the current step
+        # We only block on the very first step (to let the initial chunk arrive)
+        action_delta = self._pop_ensembled_action(wait=(self.current_step == 0))
+
+        # 3. Handle Buffer Underruns (Latency Spikes)
+        if action_delta is None:
+            print(f"[Warning] Buffer underrun at step {self.current_step}. Holding position.")
+            action_delta = {
+                "arm_angles": np.zeros_like(obs["arm_angles"]),
+                "gripper": obs["gripper"] # Fallback to keeping gripper as is
+            }
+
+        # 4. Apply Actions (Real vs Virtual Target)
+        if self.use_virtual_target:
+            # Actions accumulate on top of our perfect "virtual" tracking target
+            base_arm_angles = self.virtual_target_angles
+        else:
+            # Actions apply directly to noisy real-world observation
+            base_arm_angles = obs["arm_angles"]
+
         next_action = {
-                "arm_angles": obs["arm_angles"] + next_delta["arm_angles"],
-                "gripper": next_gripper_val
-                }
+            "arm_angles": base_arm_angles + action_delta["arm_angles"],
+            "gripper": action_delta["gripper"] # Treated as absolute value
+        }
+
+        # Update virtual target for the next loop iteration
+        if self.use_virtual_target:
+            self.virtual_target_angles = next_action["arm_angles"].copy()
+
+        self.current_step += 1
         return next_action
 
-        
-        
+    def _fetch_actions_async(self, obs: dict, request_step: int):
+        """Runs in a background thread to prevent blocking the 10Hz loop."""
+        actions = self.remote_action_provider.fetch_actions(obs)
 
+        if not actions:
+            return
+
+        with self.buffer_lock:
+            for i, action in enumerate(actions):
+                target_step = request_step + i
+                
+                # Only queue actions for steps we haven't executed yet.
+                # Because inference takes ~0.7s (7 steps), the first 7 actions
+                # in this chunk will likely be discarded as they are in the past.
+                if target_step >= self.current_step:
+                    self.ensemble_buffer[target_step].append(action)
+
+    def _pop_ensembled_action(self, wait: bool = False) -> dict | None:
+        """Safely extracts and averages overlapping actions for the current step."""
+        if wait:
+            # Block and wait for the API (only happens at step 0)
+            while True:
+                with self.buffer_lock:
+                    if len(self.ensemble_buffer[self.current_step]) > 0:
+                        break
+                time.sleep(0.01)
+
+        with self.buffer_lock:
+            actions_for_step = self.ensemble_buffer.pop(self.current_step, [])
+            
+            # Clean up stale memory (just in case steps were skipped)
+            stale_keys = [k for k in self.ensemble_buffer.keys() if k < self.current_step]
+            for k in stale_keys:
+                del self.ensemble_buffer[k]
+
+        if not actions_for_step:
+            return None # Signals a buffer underrun
+
+        # Temporal Ensembling: Average the predictions across different chunks
+        avg_arm_angles = np.mean([a["arm_angles"] for a in actions_for_step], axis=0)
+        
+        # For the gripper, average the absolute positions
+        avg_gripper = np.mean([a["gripper"] for a in actions_for_step], axis=0)
+        avg_gripper = np.round(avg_gripper).astype(np.uint8)
+
+        return {
+            "arm_angles": avg_arm_angles,
+            "gripper": avg_gripper
+        }

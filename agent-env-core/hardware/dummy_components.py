@@ -29,7 +29,7 @@ class DummyComponent(IArmActuator, IGripperActuator, IJointAnglesSensor, IResett
     def get_joint_angles(self) -> NDArray:
         return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
-    def reset(self):
+    def reset(self, randomize: bool=False):
         # if self.is_resetting:
         #     return
         self.reset_timestamp = (time.time() * 1000) + self.time_to_reset * 1000

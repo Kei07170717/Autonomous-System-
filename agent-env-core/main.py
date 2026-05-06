@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--external-cam-id",
         type=str,
-        default="USB 2.0 Camera: USB Camera",
+        default="HD Pro Webcam C920",
         help="The name of the external camera to use.",
     )
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--remote-act-url",
         type=str,
-        default="http://localhost:8777/act",
+        default="http://127.0.0.1:8777/act",
         help="HTTP REST API endpoint that returns actions",
     )
 

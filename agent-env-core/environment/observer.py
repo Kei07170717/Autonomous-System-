@@ -14,6 +14,7 @@ class Observer(IObserver):
                 self.sensors)
         )
 
+        sensor_states["instruction"] = self.instruction
         return sensor_states
 
     def attach_sensor_module(self, module: SensorModule):

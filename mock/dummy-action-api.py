@@ -16,16 +16,16 @@ def strategy_zero_delta(current_state, num_steps):
     Safe strategy: Produces strictly zero deltas. 
     The robot will not move.
     """
-    # 6 joints + 1 gripper = 7 action dimensions
-    return np.zeros((num_steps, 7), dtype=np.float32)
+    # 6 joints + 1 gripper = 8 action dimensions
+    return np.zeros((num_steps, 8), dtype=np.float32)
 
 
 def strategy_random_wiggle(current_state, num_steps):
     """
     Produces tiny random delta movements.
     """
-    # Delta for 6 joints: bounded between -0.01 and 0.01 radians
-    joint_deltas = np.random.uniform(-0.01, 0.01, size=(num_steps, 6))
+    # Delta for 7 joints: bounded between -0.01 and 0.01 radians
+    joint_deltas = np.random.uniform(-0.01, 0.01, size=(num_steps, 7))
     
     # Delta for 1 gripper: bounded between -1 and 1
     gripper_deltas = np.random.uniform(-1.0, 1.0, size=(num_steps, 1))
@@ -67,7 +67,7 @@ def act():
         print(f"Robot state : {current_state}")
 
         # 3. Generate Actions using the active strategy
-        num_steps = 5
+        num_steps = 10
         strategy_func = ACTION_STRATEGIES.get(CURRENT_STRATEGY)
         
         if not strategy_func:

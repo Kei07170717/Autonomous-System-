@@ -11,8 +11,8 @@ import itertools
 
 _OVERVIEW_HEIGHT = 200
 _GRABBING_HEIGHT = 135
-_STACKING_HEIGHT = 175
-_STACKED_BLOCK_THRESHOLD = 11
+_STACKING_HEIGHT = 170
+_STACKED_BLOCK_THRESHOLD = 10.5
 _LOST_BLOCK_THRESHOLD = 5
 
 _DESCEND_RATE = 5
@@ -118,7 +118,8 @@ class StackController():
             if not self._is_xy_aligned(block_pos):
                 self._align_xy(self.top_block)
                 block_pos = self.vp.get_block_pos(self.top_block)
-
+            
+            print(f"Operating height: ", self.operating_height)
             if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
                 
                 self._align_xy(self.top_block, threshold=1)

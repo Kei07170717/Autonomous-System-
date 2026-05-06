@@ -10,7 +10,7 @@ _LEFT_INNER_BOUND = [80.0, 140.0, 200.0, 180, 0, -45]
 _LEFT_OUTER_BOUND = [200.0, 140.0, 200.0, 180, 0, -45]
 _MIN_X, _MAX_X = 80.0, 200.0
 _MIN_Y, _MAX_Y = -140.0, 140.0
-_MIN_Z, _MAX_Z = 140.0, 200.0
+_MIN_Z, _MAX_Z = 100.0, 200.0
 class Cobot:
     def __init__(self) -> None:
         self.mc = MyCobot280(PI_PORT, str(PI_BAUD))

@@ -53,9 +53,9 @@ class StackController():
         if state == "start" or state == "Found":
             self.cobot.set_color(GREEN)
         if state == self.bottom_block: # looking for bottom block
-            self.cobot.set_color(RED)
-        if state == self.top_block:
             self.cobot.set_color(BLUE)
+        if state == self.top_block:
+            self.cobot.set_color(RED)
         if state == "end" or state == "idle":
             self.cobot.set_color(PURPLE)
         if state == "failed":

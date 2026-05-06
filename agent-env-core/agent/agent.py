@@ -179,14 +179,16 @@ class MediatorAgent(Agent):
         if not actions_for_step:
             return None # Signals a buffer underrun
 
-        # Temporal Ensembling: Average the predictions across different chunks
+        # 1. Continuous Ensembling for Arm Angles
         avg_arm_angles = np.mean([a["arm_angles"] for a in actions_for_step], axis=0)
         
-        # For the gripper, average the absolute positions
-        avg_gripper = np.mean([a["gripper"] for a in actions_for_step], axis=0)
-        avg_gripper = np.round(avg_gripper).astype(np.uint8)
+        # 2. Binary Majority Vote for the Gripper
+        # Taking the mean of 0s and 1s gives the percentage of "close" predictions.
+        # If >= 0.5, the majority voted to close (1). Otherwise, open (0).
+        gripper_mean = np.mean([a["gripper"] for a in actions_for_step])
+        ensembled_gripper = 1 if gripper_mean >= 0.5 else 0
 
         return {
             "arm_angles": avg_arm_angles,
-            "gripper": avg_gripper
+            "gripper": int(ensembled_gripper) # Cast to int to ensure strict binary 0 or 1
         }

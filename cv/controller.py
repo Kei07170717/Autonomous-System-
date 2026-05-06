@@ -39,9 +39,12 @@ class StackController():
         self.vp = visual_perceptor
         blue_block = Block(color=(120, 255, 255), classification_threshold=15.0)
         red_block = Block(color=(0, 255, 255), classification_threshold=10.0)
-        self.top_block: Block = blue_block
-        self.bottom_block: Block = red_block
+        # self.top_block: Block = blue_block
+        # self.bottom_block: Block = red_block
         
+        self.top_block: Block = red_block
+        self.bottom_block: Block = blue_block
+
         self.operating_height = _OVERVIEW_HEIGHT
         self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
         
@@ -84,6 +87,9 @@ class StackController():
             
 
         self.cobot.stop_moving()
+        # while True:
+        #     rotation = self.vp.get_block_orientation(self.top_block)
+        #     print("Rotation: ", rotation)
 
         try:
             self._align_xy(self.top_block) 

@@ -1,6 +1,7 @@
 import json_numpy
 import numpy as np
 from flask import Flask, request, jsonify
+import time
 
 # Patch json module to handle numpy arrays seamlessly
 json_numpy.patch()
@@ -16,7 +17,7 @@ def strategy_zero_delta(current_state, num_steps):
     Safe strategy: Produces strictly zero deltas. 
     The robot will not move.
     """
-    # 6 joints + 1 gripper = 8 action dimensions
+    # 7 joints + 1 gripper = 8 action dimensions
     return np.zeros((num_steps, 8), dtype=np.float32)
 
 
@@ -41,8 +42,16 @@ ACTION_STRATEGIES = {
     "random_wiggle": strategy_random_wiggle
 }
 
+# ==========================================
+# Server Configuration
+# ==========================================
+
 # CHANGE THIS VARIABLE TO SWAP STRATEGIES
 CURRENT_STRATEGY = "zero_delta" 
+
+# CHANGE THIS TO SIMULATE LATENCY (in seconds)
+# Set to 0.0 to disable latency.
+ARTIFICIAL_LATENCY = 0.7 
 
 # ==========================================
 # Server Endpoints
@@ -66,7 +75,12 @@ def act():
         current_state = decoded_data.get('state')
         print(f"Robot state : {current_state}")
 
-        # 3. Generate Actions using the active strategy
+        # 3. Simulate Network & Inference Latency
+        if ARTIFICIAL_LATENCY > 0:
+            print(f"⏳ Simulating API latency: sleeping for {ARTIFICIAL_LATENCY} seconds...")
+            time.sleep(ARTIFICIAL_LATENCY)
+
+        # 4. Generate Actions using the active strategy
         num_steps = 10
         strategy_func = ACTION_STRATEGIES.get(CURRENT_STRATEGY)
         
@@ -80,7 +94,7 @@ def act():
         print(f"Actions shape   : {actions.shape}")
         print(f"First action    : {actions[0]}")
 
-        # 4. Encode the numpy array back to a string 
+        # 5. Encode the numpy array back to a string 
         encoded_actions = json_numpy.dumps(actions)
         
         # Return as a JSON string
@@ -93,5 +107,6 @@ def act():
 if __name__ == '__main__':
     print(f"🚀 Starting Mock Server on http://0.0.0.0:8777...")
     print(f"🔒 Active Action Strategy: {CURRENT_STRATEGY}")
+    print(f"⏱️  Simulated Latency: {ARTIFICIAL_LATENCY} seconds")
     # Host 0.0.0.0 allows connections if your client is on another machine
     app.run(host='0.0.0.0', port=8777)

@@ -78,71 +78,70 @@ class ReplayAgent(Agent):
         return next(self.action_iter)
         
 
-class MediatorAgent(Agent):
+class MediatorAgent(Agent): 
     def __init__(self, remote_action_provider: IRemoteActionProvider, use_virtual_target: bool = False):
         self.remote_action_provider = remote_action_provider
         self.use_virtual_target = use_virtual_target
 
         # Temporal Ensembling State
-        self.current_step = 0
+        self.execution_step = 0  # Replaces 'current_step'. Only increments on valid actions.
         self.ensemble_buffer = defaultdict(list)
         self.buffer_lock = threading.Lock()
 
         # Async Fetching State
-        # Using a single worker ensures we don't spam the API with concurrent requests
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.fetch_future = None
 
-        # Virtual Target State
+        # Fallback tracking
         self.virtual_target_angles = None
+        self.last_gripper_act = None
 
     def get_action(self, obs: dict) -> dict:
-        # Initialize virtual target on the very first observation
+        # Initialize tracking on the very first observation
         if self.virtual_target_angles is None:
             self.virtual_target_angles = obs["arm_angles"].copy()
+            # Map the initial observation to a strict 0 or 1 for the first fallback
+            self.last_gripper_act = 1 if obs["gripper"] < 90 else 0 
 
-        # 1. Non-blocking Fetch: If no fetch is running, dispatch one in the background
-        if self.fetch_future is None or self.fetch_future.done():
-            # Pass a copy of obs and the *current* step so the background thread 
-            # knows exactly which timesteps this new chunk belongs to.
+        # 1. Non-blocking Fetch: Pass the current *execution step* if self.fetch_future is None or self.fetch_future.done():
             self.fetch_future = self.executor.submit(
-                self._fetch_actions_async, obs.copy(), self.current_step
+                self._fetch_actions_async, obs.copy(), self.execution_step
             )
 
         # 2. Retrieve ensembled action for the current step
-        # We only block on the very first step (to let the initial chunk arrive)
-        action_delta = self._pop_ensembled_action(wait=(self.current_step == 0))
+        # Block only on the very first step to wait for the first chunk
+        action_delta = self._pop_ensembled_action(wait=(self.execution_step == 0))
 
         # 3. Handle Buffer Underruns (Latency Spikes)
         if action_delta is None:
-            print(f"[Warning] Buffer underrun at step {self.current_step}. Holding position.")
-            action_delta = {
-                "arm_angles": np.zeros_like(obs["arm_angles"]),
-                "gripper": obs["gripper"] # Fallback to keeping gripper as is
+            # We are starving. Output a fallback action, but DO NOT increment execution_step.
+            # The robot pauses in time until the actions arrive.
+            print(f"[Warning] Buffer underrun at step {self.execution_step}. Holding position.")
+            return {
+                "arm_angles": self.virtual_target_angles if self.use_virtual_target else obs["arm_angles"],
+                "gripper": self.last_gripper_act # Safe binary fallback
             }
 
-        # 4. Apply Actions (Real vs Virtual Target)
-        if self.use_virtual_target:
-            # Actions accumulate on top of our perfect "virtual" tracking target
-            base_arm_angles = self.virtual_target_angles
-        else:
-            # Actions apply directly to noisy real-world observation
-            base_arm_angles = obs["arm_angles"]
+        # 4. Apply Actions 
+        base_arm_angles = self.virtual_target_angles if self.use_virtual_target else obs["arm_angles"]
 
         next_action = {
             "arm_angles": base_arm_angles + action_delta["arm_angles"],
-            "gripper": action_delta["gripper"] # Treated as absolute value
+            "gripper": action_delta["gripper"]
         }
 
-        # Update virtual target for the next loop iteration
+        # Update persistent state for the next iteration
         if self.use_virtual_target:
             self.virtual_target_angles = next_action["arm_angles"].copy()
+            
+        self.last_gripper_act = next_action["gripper"]
+        
+        # 5. Advance the clock ONLY because we successfully applied an action
+        self.execution_step += 1
 
-        self.current_step += 1
         return next_action
 
     def _fetch_actions_async(self, obs: dict, request_step: int):
-        """Runs in a background thread to prevent blocking the 10Hz loop."""
         actions = self.remote_action_provider.fetch_actions(obs)
 
         if not actions:
@@ -152,43 +151,38 @@ class MediatorAgent(Agent):
             for i, action in enumerate(actions):
                 target_step = request_step + i
                 
-                # Only queue actions for steps we haven't executed yet.
-                # Because inference takes ~0.7s (7 steps), the first 7 actions
-                # in this chunk will likely be discarded as they are in the past.
-                if target_step >= self.current_step:
+                # Because execution_step pauses during stalls, target_step will 
+                # correctly align with the unexecuted future steps once they arrive.
+                if target_step >= self.execution_step:
                     self.ensemble_buffer[target_step].append(action)
 
     def _pop_ensembled_action(self, wait: bool = False) -> dict | None:
-        """Safely extracts and averages overlapping actions for the current step."""
         if wait:
-            # Block and wait for the API (only happens at step 0)
             while True:
                 with self.buffer_lock:
-                    if len(self.ensemble_buffer[self.current_step]) > 0:
+                    if len(self.ensemble_buffer[self.execution_step]) > 0:
                         break
                 time.sleep(0.01)
 
         with self.buffer_lock:
-            actions_for_step = self.ensemble_buffer.pop(self.current_step, [])
+            actions_for_step = self.ensemble_buffer.pop(self.execution_step, [])
             
-            # Clean up stale memory (just in case steps were skipped)
-            stale_keys = [k for k in self.ensemble_buffer.keys() if k < self.current_step]
+            # Clean up stale memory
+            stale_keys = [k for k in list(self.ensemble_buffer.keys()) if k < self.execution_step]
             for k in stale_keys:
                 del self.ensemble_buffer[k]
 
         if not actions_for_step:
-            return None # Signals a buffer underrun
+            return None # Triggers the underrun hold
 
-        # 1. Continuous Ensembling for Arm Angles
+        # Continuous Ensembling for Arm Angles
         avg_arm_angles = np.mean([a["arm_angles"] for a in actions_for_step], axis=0)
         
-        # 2. Binary Majority Vote for the Gripper
-        # Taking the mean of 0s and 1s gives the percentage of "close" predictions.
-        # If >= 0.5, the majority voted to close (1). Otherwise, open (0).
+        # Binary Majority Vote for the Gripper
         gripper_mean = np.mean([a["gripper"] for a in actions_for_step])
         ensembled_gripper = 1 if gripper_mean >= 0.5 else 0
 
         return {
             "arm_angles": avg_arm_angles,
-            "gripper": int(ensembled_gripper) # Cast to int to ensure strict binary 0 or 1
+            "gripper": int(ensembled_gripper)
         }

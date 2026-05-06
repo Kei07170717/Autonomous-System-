@@ -26,6 +26,8 @@ _STACK_TOP_BLOCK_ALIGNMENT_OFSSET = -200
 PURPLE = (160, 32, 240)
 GREEN = (0, 128, 0)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0,0,255)
 
 class LostBlockError(Exception):
     pass
@@ -48,9 +50,9 @@ class StackController():
         if state == "start" or state == "Found":
             self.cobot.set_color(GREEN)
         if state == self.bottom_block: # looking for bottom block
-            self.cobot.set_color(self.bottom_block.color)
+            self.cobot.set_color(RED)
         if state == self.top_block:
-            self.cobot.set_color(self.top_block.color)
+            self.cobot.set_color(BLUE)
         if state == "end" or state == "idle":
             self.cobot.set_color(PURPLE)
         if state == "failed":

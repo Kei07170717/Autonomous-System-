@@ -37,8 +37,8 @@ class StackController():
     def __init__(self, cobot: Cobot, visual_perceptor: VisualPerceptor) -> None:
         self.cobot = cobot
         self.vp = visual_perceptor
-        blue_block = Block(color=(120, 255, 255), classification_threshold=15.0)
-        red_block = Block(color=(0, 255, 255), classification_threshold=10.0)
+        blue_block = Block(color=(120, 255, 255), classification_threshold=20.0)
+        red_block = Block(color=(0, 255, 255), classification_threshold=20.0)
         # self.top_block: Block = blue_block
         # self.bottom_block: Block = red_block
         

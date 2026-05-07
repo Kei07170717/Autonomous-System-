@@ -17,13 +17,13 @@ def main():
     # In OpenCV HSV, Blue hue is around 120. 
     # (Adjust this to match the actual physical block you are testing)
     target_block = MockBlock(
-        color=(120, 255, 255), 
+        color=(0, 255, 255), 
         classification_threshold=20
     )
 
     print("Initializing Camera...")
     # Set debug=True to trigger your cv2.imshow windows
-    perceptor = VisualPerceptor(mm_per_pixel=0.09, debug=True)
+    perceptor = VisualPerceptor(mm_per_pixel=0.1, debug=False)
     
     # Give the camera hardware a second to warm up
     time.sleep(1)

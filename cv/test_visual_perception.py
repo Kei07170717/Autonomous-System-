@@ -17,8 +17,8 @@ def main():
     # In OpenCV HSV, Blue hue is around 120. 
     # (Adjust this to match the actual physical block you are testing)
     target_block = MockBlock(
-        color=(0, 255, 255), 
-        classification_threshold=20
+        color=(120, 255, 255), 
+        classification_threshold=10
     )
 
     print("Initializing Camera...")

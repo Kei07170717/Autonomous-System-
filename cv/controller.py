@@ -12,7 +12,7 @@ import itertools
 _OVERVIEW_HEIGHT = 200
 _GRABBING_HEIGHT = 135
 _STACKING_HEIGHT = 170
-_STACKED_BLOCK_THRESHOLD = 10.5
+_STACKED_BLOCK_THRESHOLD = 11
 _LOST_BLOCK_THRESHOLD = 5
 
 _DESCEND_RATE = 5
@@ -37,13 +37,13 @@ class StackController():
     def __init__(self, cobot: Cobot, visual_perceptor: VisualPerceptor) -> None:
         self.cobot = cobot
         self.vp = visual_perceptor
-        blue_block = Block(color=(120, 255, 255), classification_threshold=20.0)
-        red_block = Block(color=(0, 255, 255), classification_threshold=20.0)
-        # self.top_block: Block = blue_block
-        # self.bottom_block: Block = red_block
+        blue_block = Block(color=(120, 255, 255), classification_threshold=15.0)
+        red_block = Block(color=(0, 255, 255), classification_threshold=15.0)
+        self.top_block: Block = blue_block
+        self.bottom_block: Block = red_block
         
-        self.top_block: Block = red_block
-        self.bottom_block: Block = blue_block
+        # self.top_block: Block = red_block
+        # self.bottom_block: Block = blue_block
 
         self.operating_height = _OVERVIEW_HEIGHT
         self.vp.set_x_offset(_TOP_BLOCK_ALIGNMENT_OFFSET)
@@ -117,20 +117,41 @@ class StackController():
         
         if block_pos is None:
             return self._locate_top_block
-       
+      
+        aligned = False
+        missing_count = 0
         while True:
             time.sleep(0.2)
             block_pos = self.vp.get_block_pos(self.top_block)
-            if not self._is_xy_aligned(block_pos):
-                self._align_xy(self.top_block)
-                block_pos = self.vp.get_block_pos(self.top_block)
+            try:
+                aligned = self._is_xy_aligned(block_pos)
+                missing_count = 0
+            except Exception as e:
+                if missing_count >= 5:
+                    return self._locate_top_block
+                continue
+
+            if not aligned:
+                try:
+                    self._align_xy(self.top_block)
+                    block_pos = self.vp.get_block_pos(self.top_block)
+                    missing_count = 0
+                except Exception as e:
+                    if missing_count >= 5:
+                        return self._locate_top_block
+                    continue
             
             print(f"Operating height: ", self.operating_height)
             if abs(_GRABBING_HEIGHT - self.operating_height) <= 3:
+                try:
+                    self._align_xy(self.top_block, threshold=1)
+                    self.cobot.close_gripper()
+                    return self._locate_bottom_block
                 
-                self._align_xy(self.top_block, threshold=1)
-                self.cobot.close_gripper()
-                return self._locate_bottom_block
+                except Exception as e:
+                    if missing_count >= 5:
+                        return self._locate_top_block
+                    continue
                 
             self.cobot.descend(_DESCEND_RATE, 1)
             

@@ -26,30 +26,30 @@ class VisualPerceptor:
         h, s, v = block.color
         thresh = block.classification_threshold
 
-        # Bumped min_s up slightly to help reject brown wood
-        min_s = 100 
-        min_v = 50
+# Adaptive thresholds (important for shadows)
+        min_s = 70
+        min_v = 40
 
-        if h - thresh < 0:
+        if 0 <= h <= 10 or 170 <= h <= 179:
+            # Always treat as red → use dual mask
             lower1 = np.array([0, min_s, min_v], dtype=np.uint8)
-            upper1 = np.array([h + thresh, 255, 255], dtype=np.uint8)
-            mask1 = cv2.inRange(hsv, lower1, upper1)
-            
-            lower2 = np.array([180 + h - thresh, min_s, min_v], dtype=np.uint8)
+            upper1 = np.array([10, 255, 255], dtype=np.uint8)
+
+            lower2 = np.array([170, min_s, min_v], dtype=np.uint8)
             upper2 = np.array([179, 255, 255], dtype=np.uint8)
-            mask2 = cv2.inRange(hsv, lower2, upper2)
-            
-            mask = cv2.bitwise_or(mask1, mask2)
+
+            mask = cv2.bitwise_or(
+                cv2.inRange(hsv, lower1, upper1),
+                cv2.inRange(hsv, lower2, upper2)
+            )
         else:
-            lower_bound = np.array([max(0, h - thresh), min_s, min_v], dtype=np.uint8)
-            upper_bound = np.array([min(179, h + thresh), 255, 255], dtype=np.uint8)
-            mask = cv2.inRange(hsv, lower_bound, upper_bound)
-        
-        mask = cv2.GaussianBlur(mask, (5, 5), 0)
-        
-        kernel = np.ones((5, 5), np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+            lower = np.array([max(0, h - thresh), min_s, min_v], dtype=np.uint8)
+            upper = np.array([min(179, h + thresh), 255, 255], dtype=np.uint8)
+            mask = cv2.inRange(hsv, lower, upper)        
+
+        # kernel = np.ones((5, 5), np.uint8)
+        # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         

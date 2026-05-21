@@ -46,37 +46,6 @@ def create_writer(
         return HDF5Writer(
             obs_spec, action_spec, is_annotation_enabled, dataset_storage_manager
         )
-    # elif writer_type == "rlds":
-    #     try:
-    #         import tensorflow as tf
-    #         import tensorflow_datasets as tfds
-    #         from envlogger.backends import tfds_backend_writer
-
-    # dataset_config = tfds.rlds.rlds_base.DatasetConfig(
-    #     name="my_imitation_dataset",
-    #     observation_info=tfds.features.FeaturesDict(
-    #         {"arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
-    #          "gripper": tf.uint8}
-    #     ),
-    #     action_info=tfds.features.FeaturesDict(
-    #         {
-    #             "arm_angles": tfds.features.Tensor(shape=(6,), dtype=tf.float32),
-    #             "gripper": tfds.features.Tensor(shape=(), dtype=tf.uint8),
-    #         }
-    #     ),
-    #     # RLDS strictly expects reward and discount fields, even for imitation learning.
-    #     reward_info=tf.float32,
-    #     discount_info=tf.float64,  # Forced to use 64bits for some reason, TODO: lower this?
-    # )
-    # dataset_writer = tfds_backend_writer.TFDSBackendWriter(
-    #     data_directory=dataset_destination_path,
-    #     split_name="train",
-    #     max_episodes_per_file=20, # TODO: justify this number
-    #     ds_config=dataset_config,
-    # )
-    #     except ImportError as e:
-    #         print("")
-    #         raise e
     return None
 
 
